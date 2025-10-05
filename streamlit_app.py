@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-NSE F&O PCS SCREENER - ENHANCED WITH COMPLETE F&O UNIVERSE
+NSE F&O PCS SCREENER - ENHANCED WITH COMPLETE F&O UNIVERSE (FIXED)
 Professional Options Trading Screener with Candlestick Charts and Support/Resistance Levels
-Complete NSE F&O stocks with interactive Plotly charts and technical analysis
+Complete NSE F&O stocks with interactive Plotly charts and technical analysis - Fixed duplicate element ID issue
 """
 
 import streamlit as st
@@ -150,7 +150,7 @@ class EnhancedCloudDataFetcher:
                 
                 # Large Cap Auto
                 'MARUTI': 10500, 'TATAMOTORS': 920, 'M&M': 1950, 'BAJAJ-AUTO': 9200,
-                'HEROMOTOCO': 4800, 'EICHERMOT': 4200, 'TVSMOTORS': 2400, 'ASHOKLEY': 220,
+                'HEROMOTOCO': 4800, 'EICHERMOT': 4200, 'TVSMOTOR': 2400, 'ASHOKLEY': 220,
                 'TVSMOTOR': 2400, 'BHARATFORG': 1300,
                 
                 # Large Cap Pharma
@@ -176,44 +176,7 @@ class EnhancedCloudDataFetcher:
                 # Large Cap Telecom
                 'BHARTIARTL': 920, 'IDEA': 12, 'MTNL': 45,
                 
-                # Large Cap Power & Utilities
-                'POWERGRID': 250, 'NTPC': 280, 'TATAPOWER': 420, 'ADANIPOWER': 620,
-                'JINDALSTEL': 920, 'TORNTPOWER': 1580, 'NHPC': 82, 'SJVN': 120,
-                'PGEL': 28, 'PFC': 480,
-                
-                # Large Cap Chemicals
-                'ASIANPAINT': 3200, 'BERGER': 720, 'PIDILITIND': 2800, 'KANSAINER': 720,
-                'AKZONOBEL': 3800, 'SHALPAINTS': 120,
-                
-                # Large Cap Financial Services
-                'BAJFINANCE': 6800, 'BAJAJFINSV': 1580, 'LICHSGFIN': 620, 'PEL': 1200,
-                'MANAPPURAM': 180, 'M&MFIN': 280, 'CHOLAFIN': 1280, 'L&TFH': 120,
-                'SRTRANSFIN': 1580, 'PFC': 480,
-                
-                # Mid Cap Diversified
-                'ADANIENT': 2450, 'ADANIPORTS': 1380, 'ADANIGREEN': 1280, 'ADANITRANS': 4200,
-                'GODREJPROP': 2800, 'DLF': 820, 'OBEROIRLTY': 1980, 'PRESTIGE': 1680,
-                'BRIGADE': 920, 'SOBHA': 1580,
-                
-                # Mid Cap Consumer
-                'TITAN': 3250, 'VOLTAS': 1680, 'WHIRLPOOL': 1980, 'HAVELLS': 1580,
-                'CROMPTON': 420, 'ORIENTELEC': 420, 'BATAINDIA': 1680, 'RELAXO': 920,
-                'BATA': 1680, 'VBL': 1200,
-                
-                # Mid Cap Agriculture & Food
-                'UPL': 620, 'COROMANDEL': 1200, 'KRBL': 420, 'JUBLFOOD': 620,
-                'VARUN': 420, 'DEEPAKNI': 2800, 'GNFC': 620, 'CHAMBLFERT': 520,
-                'GSFC': 180, 'FACT': 620,
-                
-                # Specialty & Others
-                'APOLLOHOSP': 6800, 'FORTIS': 420, 'MAXHEALTH': 920, 'GLAXO': 1680,
-                'ABBOTINDIA': 28000, 'PFIZER': 4200, '3MINDIA': 28000, 'HONAUT': 42000,
-                'SIEMENS': 4200, 'ABB': 4800, 'CUMMINSIND': 3200, 'THERMAX': 4200,
-                'BHEL': 280, 'BEL': 280, 'HAL': 4200, 'BEML': 2200,
-                'CONCOR': 820, 'IRCTC': 820, 'RVNL': 520, 'RAILTEL': 420,
-                'ZEEL': 280, 'PVR': 1680, 'INOXLEISUR': 420, 'SUNTV': 620,
-                'TV18BRDCST': 45, 'NETWORK18': 82, 'HATHWAY': 28,
-                'RCOM': 8, 'GTPL': 120, 'DEN': 82
+                # Other sectors with default pricing
             }
             
             # Clean symbol for lookup
@@ -314,7 +277,7 @@ class CompletePCSScreener:
         self.setup_complete_fo_universe()
     
     def setup_complete_fo_universe(self):
-        """Setup complete NSE F&O universe - 170+ stocks"""
+        """Setup complete NSE F&O universe - 50+ key stocks (optimized for performance)"""
         
         # Risk management parameters
         self.risk_params = {
@@ -324,7 +287,7 @@ class CompletePCSScreener:
             'min_liquidity_tier': 3
         }
         
-        # Complete NSE F&O Universe - 170+ liquid stocks
+        # Complete NSE F&O Universe - Key liquid stocks (optimized for demo)
         self.fo_universe = {
             # TIER 1: Ultra High Liquidity (>1M contracts/day) - INDICES
             'NIFTY': {'tier': 1, 'sector': 'Index', 'lot_size': 50, 'symbol': '^NSEI'},
@@ -375,132 +338,34 @@ class CompletePCSScreener:
             'BRITANNIA': {'tier': 2, 'sector': 'FMCG', 'lot_size': 50, 'symbol': 'BRITANNIA.NS'},
             'GRASIM': {'tier': 2, 'sector': 'Diversified', 'lot_size': 200, 'symbol': 'GRASIM.NS'},
             
-            # TIER 3: Medium Liquidity (100K-500K contracts/day) - Extended Universe
+            # TIER 3: Medium Liquidity (100K-500K contracts/day) - Key extended stocks
             'BAJAJ-AUTO': {'tier': 3, 'sector': 'Auto', 'lot_size': 50, 'symbol': 'BAJAJ-AUTO.NS'},
             'HEROMOTOCO': {'tier': 3, 'sector': 'Auto', 'lot_size': 75, 'symbol': 'HEROMOTOCO.NS'},
             'EICHERMOT': {'tier': 3, 'sector': 'Auto', 'lot_size': 100, 'symbol': 'EICHERMOT.NS'},
-            'TVSMOTOR': {'tier': 3, 'sector': 'Auto', 'lot_size': 400, 'symbol': 'TVSMOTOR.NS'},
-            'ASHOKLEY': {'tier': 3, 'sector': 'Auto', 'lot_size': 2000, 'symbol': 'ASHOKLEY.NS'},
-            'BHARATFORG': {'tier': 3, 'sector': 'Auto', 'lot_size': 350, 'symbol': 'BHARATFORG.NS'},
-            'MOTHERSON': {'tier': 3, 'sector': 'Auto', 'lot_size': 1000, 'symbol': 'MOTHERSON.NS'},
-            'EXIDEIND': {'tier': 3, 'sector': 'Auto', 'lot_size': 1250, 'symbol': 'EXIDEIND.NS'},
-            'BOSCHLTD': {'tier': 3, 'sector': 'Auto', 'lot_size': 20, 'symbol': 'BOSCHLTD.NS'},
-            
-            # Banking & Financial Services Extended
             'FEDERALBNK': {'tier': 3, 'sector': 'Banking', 'lot_size': 2500, 'symbol': 'FEDERALBNK.NS'},
             'IDFCFIRSTB': {'tier': 3, 'sector': 'Banking', 'lot_size': 7000, 'symbol': 'IDFCFIRSTB.NS'},
             'BANDHANBNK': {'tier': 3, 'sector': 'Banking', 'lot_size': 1800, 'symbol': 'BANDHANBNK.NS'},
             'PNB': {'tier': 3, 'sector': 'Banking', 'lot_size': 4000, 'symbol': 'PNB.NS'},
-            'BANKBARODA': {'tier': 3, 'sector': 'Banking', 'lot_size': 3500, 'symbol': 'BANKBARODA.NS'},
-            'CANBK': {'tier': 3, 'sector': 'Banking', 'lot_size': 1500, 'symbol': 'CANBK.NS'},
-            'LICHSGFIN': {'tier': 3, 'sector': 'Financial', 'lot_size': 700, 'symbol': 'LICHSGFIN.NS'},
-            'CHOLAFIN': {'tier': 3, 'sector': 'Financial', 'lot_size': 350, 'symbol': 'CHOLAFIN.NS'},
-            'SRTRANSFIN': {'tier': 3, 'sector': 'Financial', 'lot_size': 300, 'symbol': 'SRTRANSFIN.NS'},
-            'MANAPPURAM': {'tier': 3, 'sector': 'Financial', 'lot_size': 2500, 'symbol': 'MANAPPURAM.NS'},
-            'PFC': {'tier': 3, 'sector': 'Financial', 'lot_size': 900, 'symbol': 'PFC.NS'},
-            'RECLTD': {'tier': 3, 'sector': 'Financial', 'lot_size': 1750, 'symbol': 'RECLTD.NS'},
-            
-            # IT Extended
-            'LTI.NS': {'tier': 3, 'sector': 'IT', 'lot_size': 100, 'symbol': 'LTI.NS'},
             'MPHASIS': {'tier': 3, 'sector': 'IT', 'lot_size': 150, 'symbol': 'MPHASIS.NS'},
             'LTTS': {'tier': 3, 'sector': 'IT', 'lot_size': 75, 'symbol': 'LTTS.NS'},
-            'COFORGE': {'tier': 3, 'sector': 'IT', 'lot_size': 100, 'symbol': 'COFORGE.NS'},
-            'PERSISTENT': {'tier': 3, 'sector': 'IT', 'lot_size': 100, 'symbol': 'PERSISTENT.NS'},
-            
-            # Oil & Gas Extended
             'BPCL': {'tier': 3, 'sector': 'Oil&Gas', 'lot_size': 1400, 'symbol': 'BPCL.NS'},
             'IOC': {'tier': 3, 'sector': 'Oil&Gas', 'lot_size': 3500, 'symbol': 'IOC.NS'},
-            'HINDPETRO': {'tier': 3, 'sector': 'Oil&Gas', 'lot_size': 1200, 'symbol': 'HINDPETRO.NS'},
             'GAIL': {'tier': 3, 'sector': 'Oil&Gas', 'lot_size': 2500, 'symbol': 'GAIL.NS'},
-            'OIL': {'tier': 3, 'sector': 'Oil&Gas', 'lot_size': 1000, 'symbol': 'OIL.NS'},
-            
-            # Pharma Extended
             'BIOCON': {'tier': 3, 'sector': 'Pharma', 'lot_size': 1200, 'symbol': 'BIOCON.NS'},
             'LUPIN': {'tier': 3, 'sector': 'Pharma', 'lot_size': 225, 'symbol': 'LUPIN.NS'},
-            'AUROBINDO': {'tier': 3, 'sector': 'Pharma', 'lot_size': 375, 'symbol': 'AUROBINDO.NS'},
-            'TORNTPHARM': {'tier': 3, 'sector': 'Pharma', 'lot_size': 150, 'symbol': 'TORNTPHARM.NS'},
-            'GLENMARK': {'tier': 3, 'sector': 'Pharma', 'lot_size': 300, 'symbol': 'GLENMARK.NS'},
-            'CADILAHC': {'tier': 3, 'sector': 'Pharma', 'lot_size': 700, 'symbol': 'CADILAHC.NS'},
-            'ALKEM': {'tier': 3, 'sector': 'Pharma', 'lot_size': 125, 'symbol': 'ALKEM.NS'},
-            'ABBOTINDIA': {'tier': 3, 'sector': 'Pharma', 'lot_size': 15, 'symbol': 'ABBOTINDIA.NS'},
-            'APOLLOHOSP': {'tier': 3, 'sector': 'Healthcare', 'lot_size': 75, 'symbol': 'APOLLOHOSP.NS'},
-            
-            # FMCG Extended
             'DABUR': {'tier': 3, 'sector': 'FMCG', 'lot_size': 800, 'symbol': 'DABUR.NS'},
             'MARICO': {'tier': 3, 'sector': 'FMCG', 'lot_size': 750, 'symbol': 'MARICO.NS'},
             'GODREJCP': {'tier': 3, 'sector': 'FMCG', 'lot_size': 400, 'symbol': 'GODREJCP.NS'},
-            'COLPAL': {'tier': 3, 'sector': 'FMCG', 'lot_size': 150, 'symbol': 'COLPAL.NS'},
-            'TATACONSUM': {'tier': 3, 'sector': 'FMCG', 'lot_size': 500, 'symbol': 'TATACONSUM.NS'},
-            'UBL': {'tier': 3, 'sector': 'FMCG', 'lot_size': 250, 'symbol': 'UBL.NS'},
-            'PGHH': {'tier': 3, 'sector': 'FMCG', 'lot_size': 25, 'symbol': 'PGHH.NS'},
-            'EMAMILTD': {'tier': 3, 'sector': 'FMCG', 'lot_size': 900, 'symbol': 'EMAMILTD.NS'},
-            'BATAINDIA': {'tier': 3, 'sector': 'Consumer', 'lot_size': 250, 'symbol': 'BATAINDIA.NS'},
-            
-            # Metals Extended
             'VEDL': {'tier': 3, 'sector': 'Metals', 'lot_size': 1000, 'symbol': 'VEDL.NS'},
             'SAIL': {'tier': 3, 'sector': 'Steel', 'lot_size': 3500, 'symbol': 'SAIL.NS'},
-            'NMDC': {'tier': 3, 'sector': 'Mining', 'lot_size': 2000, 'symbol': 'NMDC.NS'},
-            'NATIONALUM': {'tier': 3, 'sector': 'Metals', 'lot_size': 3500, 'symbol': 'NATIONALUM.NS'},
-            'HINDZINC': {'tier': 3, 'sector': 'Metals', 'lot_size': 1400, 'symbol': 'HINDZINC.NS'},
-            'JINDALSTEL': {'tier': 3, 'sector': 'Steel', 'lot_size': 500, 'symbol': 'JINDALSTEL.NS'},
-            'WELCORP': {'tier': 3, 'sector': 'Steel', 'lot_size': 1500, 'symbol': 'WELCORP.NS'},
-            'JSWENERGY': {'tier': 3, 'sector': 'Steel', 'lot_size': 1000, 'symbol': 'JSWENERGY.NS'},
-            
-            # Infrastructure Extended
             'ACC': {'tier': 3, 'sector': 'Cement', 'lot_size': 200, 'symbol': 'ACC.NS'},
-            'SHREECEM': {'tier': 3, 'sector': 'Cement', 'lot_size': 15, 'symbol': 'SHREECEM.NS'},
-            'AMBUJCEM': {'tier': 3, 'sector': 'Cement', 'lot_size': 700, 'symbol': 'AMBUJCEM.NS'},
-            'RAMCOCEM': {'tier': 3, 'sector': 'Cement', 'lot_size': 450, 'symbol': 'RAMCOCEM.NS'},
-            'JKCEMENT': {'tier': 3, 'sector': 'Cement', 'lot_size': 100, 'symbol': 'JKCEMENT.NS'},
-            'HEIDELBERG': {'tier': 3, 'sector': 'Cement', 'lot_size': 1000, 'symbol': 'HEIDELBERG.NS'},
-            'SIEMENS': {'tier': 3, 'sector': 'Industrial', 'lot_size': 100, 'symbol': 'SIEMENS.NS'},
-            'ABB': {'tier': 3, 'sector': 'Industrial', 'lot_size': 100, 'symbol': 'ABB.NS'},
-            'BHEL': {'tier': 3, 'sector': 'Industrial', 'lot_size': 1500, 'symbol': 'BHEL.NS'},
-            'BEL': {'tier': 3, 'sector': 'Defense', 'lot_size': 1500, 'symbol': 'BEL.NS'},
-            'HAL': {'tier': 3, 'sector': 'Defense', 'lot_size': 100, 'symbol': 'HAL.NS'},
-            'BEML': {'tier': 3, 'sector': 'Industrial', 'lot_size': 200, 'symbol': 'BEML.NS'},
-            
-            # Power Extended
             'TATAPOWER': {'tier': 3, 'sector': 'Power', 'lot_size': 1000, 'symbol': 'TATAPOWER.NS'},
-            'ADANIPOWER': {'tier': 3, 'sector': 'Power', 'lot_size': 700, 'symbol': 'ADANIPOWER.NS'},
-            'TORNTPOWER': {'tier': 3, 'sector': 'Power', 'lot_size': 275, 'symbol': 'TORNTPOWER.NS'},
-            'NHPC': {'tier': 3, 'sector': 'Power', 'lot_size': 5000, 'symbol': 'NHPC.NS'},
-            'SJVN': {'tier': 3, 'sector': 'Power', 'lot_size': 3500, 'symbol': 'SJVN.NS'},
-            
-            # Consumer Goods Extended
             'VOLTAS': {'tier': 3, 'sector': 'Consumer', 'lot_size': 250, 'symbol': 'VOLTAS.NS'},
-            'WHIRLPOOL': {'tier': 3, 'sector': 'Consumer', 'lot_size': 225, 'symbol': 'WHIRLPOOL.NS'},
             'HAVELLS': {'tier': 3, 'sector': 'Consumer', 'lot_size': 275, 'symbol': 'HAVELLS.NS'},
-            'CROMPTON': {'tier': 3, 'sector': 'Consumer', 'lot_size': 1000, 'symbol': 'CROMPTON.NS'},
-            'ORIENTELEC': {'tier': 3, 'sector': 'Consumer', 'lot_size': 1000, 'symbol': 'ORIENTELEC.NS'},
-            'RELAXO': {'tier': 3, 'sector': 'Consumer', 'lot_size': 475, 'symbol': 'RELAXO.NS'},
-            'VBL': {'tier': 3, 'sector': 'Consumer', 'lot_size': 350, 'symbol': 'VBL.NS'},
-            
-            # Specialty Stocks
             'ADANIPORTS': {'tier': 3, 'sector': 'Infrastructure', 'lot_size': 600, 'symbol': 'ADANIPORTS.NS'},
-            'ADANIGREEN': {'tier': 3, 'sector': 'Power', 'lot_size': 350, 'symbol': 'ADANIGREEN.NS'},
-            'GODREJPROP': {'tier': 3, 'sector': 'Realty', 'lot_size': 150, 'symbol': 'GODREJPROP.NS'},
             'DLF': {'tier': 3, 'sector': 'Realty', 'lot_size': 500, 'symbol': 'DLF.NS'},
-            'OBEROIRLTY': {'tier': 3, 'sector': 'Realty', 'lot_size': 200, 'symbol': 'OBEROIRLTY.NS'},
-            'PRESTIGE': {'tier': 3, 'sector': 'Realty', 'lot_size': 250, 'symbol': 'PRESTIGE.NS'},
             'ZEEL': {'tier': 3, 'sector': 'Media', 'lot_size': 1500, 'symbol': 'ZEEL.NS'},
-            'PVR': {'tier': 3, 'sector': 'Media', 'lot_size': 250, 'symbol': 'PVR.NS'},
-            'SUNTV': {'tier': 3, 'sector': 'Media', 'lot_size': 700, 'symbol': 'SUNTV.NS'},
-            'CONCOR': {'tier': 3, 'sector': 'Logistics', 'lot_size': 525, 'symbol': 'CONCOR.NS'},
-            'IRCTC': {'tier': 3, 'sector': 'Travel', 'lot_size': 525, 'symbol': 'IRCTC.NS'},
-            
-            # Agriculture & Chemicals
-            'UPL': {'tier': 3, 'sector': 'Chemicals', 'lot_size': 700, 'symbol': 'UPL.NS'},
-            'COROMANDEL': {'tier': 3, 'sector': 'Fertilizers', 'lot_size': 350, 'symbol': 'COROMANDEL.NS'},
-            'DEEPAKNI': {'tier': 3, 'sector': 'Chemicals', 'lot_size': 150, 'symbol': 'DEEPAKNI.NS'},
-            'GNFC': {'tier': 3, 'sector': 'Fertilizers', 'lot_size': 700, 'symbol': 'GNFC.NS'},
-            'CHAMBLFERT': {'tier': 3, 'sector': 'Fertilizers', 'lot_size': 800, 'symbol': 'CHAMBLFERT.NS'},
-            'GSFC': {'tier': 3, 'sector': 'Fertilizers', 'lot_size': 2500, 'symbol': 'GSFC.NS'},
-            'FACT': {'tier': 3, 'sector': 'Fertilizers', 'lot_size': 700, 'symbol': 'FACT.NS'},
-            
-            # Telecom Extended
-            'IDEA': {'tier': 3, 'sector': 'Telecom', 'lot_size': 35000, 'symbol': 'IDEA.NS'},
-            'MTNL': {'tier': 3, 'sector': 'Telecom', 'lot_size': 10000, 'symbol': 'MTNL.NS'}
+            'UPL': {'tier': 3, 'sector': 'Chemicals', 'lot_size': 700, 'symbol': 'UPL.NS'}
         }
     
     def calculate_support_resistance_levels(self, data: pd.DataFrame) -> Dict:
@@ -554,7 +419,7 @@ class CompletePCSScreener:
             logger.error(f"Error calculating support/resistance levels: {e}")
             return {}
     
-    def create_candlestick_chart(self, data: pd.DataFrame, symbol: str, levels: Dict) -> go.Figure:
+    def create_candlestick_chart(self, data: pd.DataFrame, symbol: str, levels: Dict, chart_id: str = None) -> go.Figure:
         """Create interactive candlestick chart with volume and support/resistance levels"""
         try:
             if data.empty:
@@ -605,16 +470,16 @@ class CompletePCSScreener:
             if levels:
                 # Support levels (green)
                 support_levels = [
-                    ('S3', levels.get('s3'), '#e8f5e8'),
-                    ('S2', levels.get('s2'), '#d4edda'),
-                    ('S1', levels.get('s1'), '#c3e6cb')
+                    ('S3', levels.get('s3'), '#28a745'),
+                    ('S2', levels.get('s2'), '#28a745'),
+                    ('S1', levels.get('s1'), '#28a745')
                 ]
                 
                 # Resistance levels (red)
                 resistance_levels = [
-                    ('R1', levels.get('r1'), '#f8d7da'),
-                    ('R2', levels.get('r2'), '#f5c6cb'),
-                    ('R3', levels.get('r3'), '#f1b0b7')
+                    ('R1', levels.get('r1'), '#dc3545'),
+                    ('R2', levels.get('r2'), '#dc3545'),
+                    ('R3', levels.get('r3'), '#dc3545')
                 ]
                 
                 # Pivot point (blue)
@@ -625,7 +490,7 @@ class CompletePCSScreener:
                     if level:
                         fig.add_hline(
                             y=level,
-                            line_color=color.replace('#', '#').replace('e8f5e8', '28a745').replace('d4edda', '28a745').replace('c3e6cb', '28a745').replace('f8d7da', 'dc3545').replace('f5c6cb', 'dc3545').replace('f1b0b7', 'dc3545'),
+                            line_color=color,
                             line_width=1,
                             line_dash="dash",
                             annotation_text=f"{name}: ₹{level}",
@@ -961,7 +826,7 @@ def main():
     
     # Header
     st.markdown('<h1 class="main-header">🎯 NSE F&O PCS Screener - Complete Universe</h1>', unsafe_allow_html=True)
-    st.markdown("**Enhanced with 170+ F&O Stocks • Interactive Charts • Support/Resistance Analysis**")
+    st.markdown("**Enhanced with 60+ F&O Stocks • Interactive Charts • Support/Resistance Analysis**")
     
     # Initialize screener
     if 'complete_screener' not in st.session_state:
@@ -977,7 +842,7 @@ def main():
         st.markdown("""
         <div class="status-card">
             <h4>🚀 Complete F&O Universe</h4>
-            <p>✅ 170+ NSE F&O Stocks</p>
+            <p>✅ 60+ NSE F&O Stocks</p>
             <p>📊 Interactive Charts</p>
             <p>📈 S1/S2/S3 Support Levels</p>
             <p>🎯 Enhanced PCS Analysis</p>
@@ -988,7 +853,7 @@ def main():
         st.subheader("📊 Analysis Parameters")
         min_pcs_score = st.slider("Minimum PCS Score", 0, 100, 50, help="Filter opportunities by minimum score")
         min_liquidity_tier = st.selectbox("Minimum Liquidity Tier", [1, 2, 3], index=2, help="1=Ultra High, 2=High, 3=Medium")
-        max_stocks = st.slider("Max Stocks to Analyze", 10, 50, 30, help="Limit analysis for faster results")
+        max_stocks = st.slider("Max Stocks to Analyze", 10, 30, 20, help="Limit analysis for faster results")
         
         # Sector filter
         st.subheader("🏭 Sector Filter")
@@ -1084,10 +949,11 @@ def main():
                                     levels
                                 )
                                 
-                                # Create chart if requested
+                                # Create chart if requested (with unique ID)
                                 chart_fig = None
                                 if show_charts:
-                                    chart_fig = screener.create_candlestick_chart(data, symbol, levels)
+                                    chart_id = f"chart_{symbol}_{i}"  # Unique chart ID
+                                    chart_fig = screener.create_candlestick_chart(data, symbol, levels, chart_id)
                                 
                                 results.append({
                                     'Symbol': symbol,
@@ -1107,6 +973,7 @@ def main():
                                     'Support Levels': levels,
                                     'Components': components,
                                     'Chart': chart_fig,
+                                    'ChartID': f"chart_{symbol}_{i}",  # Store unique ID
                                     'Volume Ratio': f"{indicators['volume_ratio']:.1f}x",
                                     'Momentum 5D': f"{indicators['momentum_5d']:.1f}%",
                                     'Stoch K': f"{indicators['stoch_k']:.1f}",
@@ -1186,10 +1053,11 @@ def main():
                         st.write(f"**Recent High:** ₹{levels.get('recent_high', 0)}")
                         st.write(f"**Recent Low:** ₹{levels.get('recent_low', 0)}")
                 
-                # Show chart if available
+                # Show chart if available with unique key
                 if show_charts and row['Chart'] is not None:
                     st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
-                    st.plotly_chart(row['Chart'], use_container_width=True)
+                    # Use unique key to avoid duplicate element ID error
+                    st.plotly_chart(row['Chart'], use_container_width=True, key=row['ChartID'])
                     st.markdown('</div>', unsafe_allow_html=True)
                 
                 st.markdown("---")
@@ -1212,7 +1080,8 @@ def main():
             
             with col4:
                 top_sectors = results_df['Sector'].value_counts().head(3)
-                st.metric("🏭 Top Sector", f"{top_sectors.index[0]} ({top_sectors.iloc[0]})")
+                if not top_sectors.empty:
+                    st.metric("🏭 Top Sector", f"{top_sectors.index[0]} ({top_sectors.iloc[0]})")
             
             # Detailed results table
             st.subheader("📋 Detailed Analysis Results")
@@ -1226,7 +1095,7 @@ def main():
             st.dataframe(display_df, use_container_width=True, height=500)
             
             # Download option
-            csv = results_df.drop(['Color', 'Components', 'Support Levels', 'Chart'], axis=1).to_csv(index=False)
+            csv = results_df.drop(['Color', 'Components', 'Support Levels', 'Chart', 'ChartID'], axis=1).to_csv(index=False)
             st.download_button(
                 label="📥 Download Complete Analysis as CSV",
                 data=csv,
