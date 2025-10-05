@@ -1,6 +1,4 @@
-streamlit_app.py
 
-Download
 #!/usr/bin/env python3
 """
 NSE F&O PCS SCREENER - ENHANCED WITH COMPLETE F&O UNIVERSE
