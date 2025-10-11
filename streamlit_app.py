@@ -1,5 +1,5 @@
 """
-NSE F&O PCS Screener - On-Demand Version
+NSE F&O PCS Screener - On-Demand Version (Fixed)
 Real-time pattern detection when you click "Run Screening"
 Complete Nifty F&O universe with TradingView integration
 """
@@ -17,72 +17,167 @@ import time
 import sqlite3
 import json
 
-# Set page config for dark mode
+# Set page config (without theme parameter)
 st.set_page_config(
     page_title="NSE F&O PCS Screener", 
     page_icon="📈", 
     layout="wide",
-    initial_sidebar_state="expanded",
-    theme={
-        "primaryColor": "#00ff00",
-        "backgroundColor": "#0e1117",
-        "secondaryBackgroundColor": "#262730",
-        "textColor": "#ffffff"
-    }
+    initial_sidebar_state="expanded"
 )
 
-# Dark mode CSS
+# Enhanced Dark mode CSS
 st.markdown("""
 <style>
+    /* Main app styling */
     .stApp {
-        background-color: #0e1117;
-        color: #ffffff;
+        background-color: #0e1117 !important;
+        color: #ffffff !important;
     }
+    
+    /* Main container */
     .main .block-container {
-        background-color: #0e1117;
-        color: #ffffff;
+        background-color: #0e1117 !important;
+        color: #ffffff !important;
+        padding-top: 2rem;
     }
+    
+    /* Sidebar styling */
+    .css-1d391kg, .css-1lcbmhc {
+        background-color: #262730 !important;
+    }
+    
+    /* Selectbox styling */
     .stSelectbox > div > div {
-        background-color: #262730;
-        color: #ffffff;
+        background-color: #262730 !important;
+        color: #ffffff !important;
+        border: 1px solid #444 !important;
     }
+    
+    /* Text input styling */
+    .stTextArea > div > div > textarea {
+        background-color: #262730 !important;
+        color: #ffffff !important;
+        border: 1px solid #444 !important;
+    }
+    
+    /* Slider styling */
+    .stSlider > div > div > div {
+        background-color: #262730 !important;
+    }
+    
+    /* Button styling */
     .stButton > button {
-        background-color: #00ff00;
-        color: #000000;
-        border: none;
-        border-radius: 10px;
-        font-weight: bold;
-        width: 100%;
-        height: 50px;
+        background: linear-gradient(90deg, #00ff00, #00cc00) !important;
+        color: #000000 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: bold !important;
+        width: 100% !important;
+        height: 50px !important;
+        font-size: 16px !important;
+        box-shadow: 0 4px 8px rgba(0,255,0,0.3) !important;
     }
+    
     .stButton > button:hover {
-        background-color: #00cc00;
-        color: #000000;
+        background: linear-gradient(90deg, #00cc00, #009900) !important;
+        color: #000000 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 12px rgba(0,255,0,0.4) !important;
     }
+    
+    /* Metric styling */
+    .css-1xarl3l {
+        background-color: #262730 !important;
+        border: 1px solid #444 !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background-color: #262730 !important;
+        color: #ffffff !important;
+        border: 1px solid #444 !important;
+        border-radius: 8px !important;
+    }
+    
+    .streamlit-expanderContent {
+        background-color: #1e1e2e !important;
+        border: 1px solid #444 !important;
+        border-top: none !important;
+        border-radius: 0 0 8px 8px !important;
+    }
+    
+    /* Progress bar styling */
+    .stProgress > div > div > div {
+        background-color: #00ff00 !important;
+    }
+    
+    /* Custom cards */
     .metric-card {
-        background-color: #262730;
-        padding: 20px;
-        border-radius: 10px;
-        border-left: 5px solid #00ff00;
-        margin: 10px 0;
+        background-color: #262730 !important;
+        padding: 20px !important;
+        border-radius: 10px !important;
+        border-left: 5px solid #00ff00 !important;
+        margin: 10px 0 !important;
+        color: #ffffff !important;
     }
+    
     .pattern-card {
-        background-color: #1e1e2e;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #444;
-        margin: 10px 0;
+        background-color: #1e1e2e !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+        border: 1px solid #444 !important;
+        margin: 10px 0 !important;
+        color: #ffffff !important;
     }
+    
     .success-pattern {
-        border-left: 5px solid #00ff00;
+        border-left: 5px solid #00ff00 !important;
     }
+    
     .watch-pattern {
-        border-left: 5px solid #ffaa00;
+        border-left: 5px solid #ffaa00 !important;
     }
+    
     .tradingview-embed {
-        background-color: #131722;
-        border-radius: 8px;
-        margin: 10px 0;
+        background-color: #131722 !important;
+        border-radius: 8px !important;
+        margin: 10px 0 !important;
+    }
+    
+    /* Headers and text */
+    h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
+    }
+    
+    .stMarkdown {
+        color: #ffffff !important;
+    }
+    
+    /* Success/warning/error messages */
+    .stSuccess {
+        background-color: #1e4d1e !important;
+        border: 1px solid #00ff00 !important;
+        color: #ffffff !important;
+    }
+    
+    .stWarning {
+        background-color: #4d4d1e !important;
+        border: 1px solid #ffaa00 !important;
+        color: #ffffff !important;
+    }
+    
+    .stError {
+        background-color: #4d1e1e !important;
+        border: 1px solid #ff0000 !important;
+        color: #ffffff !important;
+    }
+    
+    .stInfo {
+        background-color: #1e2e4d !important;
+        border: 1px solid #0099ff !important;
+        color: #ffffff !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -109,43 +204,43 @@ NSE_FO_UNIVERSE = [
     'ABB.NS', 'ABBOTINDIA.NS', 'ABCAPITAL.NS', 'ABFRL.NS', 'ACC.NS',
     'ADANIGREEN.NS', 'ADANISOLAR.NS', 'AETHER.NS', 'AFFLE.NS', 'AJANTPHARM.NS',
     'ALKEM.NS', 'AMBUJACEM.NS', 'ANGELONE.NS', 'APLAPOLLO.NS', 'APOLLOTYRE.NS',
-    'ASHOKLEY.NS', 'ASIANPAINT.NS', 'ASTRAL.NS', 'ATUL.NS', 'AUBANK.NS',
+    'ASHOKLEY.NS', 'ASTRAL.NS', 'ATUL.NS', 'AUBANK.NS',
     'AUROPHARMA.NS', 'BALKRISIND.NS', 'BALRAMCHIN.NS', 'BANDHANBNK.NS', 'BATAINDIA.NS',
-    'BAYERCROP.NS', 'BEL.NS', 'BERGEPAINT.NS', 'BHARATFORG.NS', 'BHARTIARTL.NS',
+    'BAYERCROP.NS', 'BEL.NS', 'BERGEPAINT.NS', 'BHARATFORG.NS',
     'BIOCON.NS', 'BOSCHLTD.NS', 'BSOFT.NS', 'CADILAHC.NS', 'CAMS.NS',
-    'CANFINHOME.NS', 'CHAMBLFERT.NS', 'CHOLAFIN.NS', 'CIPLA.NS', 'CLEAN.NS',
-    'CNXMIDCAP.NS', 'COFORGE.NS', 'COLPAL.NS', 'CONCOR.NS', 'COROMANDEL.NS',
+    'CANFINHOME.NS', 'CHAMBLFERT.NS', 'CHOLAFIN.NS', 'CLEAN.NS',
+    'COFORGE.NS', 'COLPAL.NS', 'CONCOR.NS', 'COROMANDEL.NS',
     'CROMPTON.NS', 'CUB.NS', 'CUMMINSIND.NS', 'CYIENT.NS', 'DABUR.NS',
-    'DALBHARAT.NS', 'DEEPAKNTR.NS', 'DELTACORP.NS', 'DHANUKA.NS', 'DISHTV.NS',
+    'DALBHARAT.NS', 'DEEPAKNTR.NS', 'DELTACORP.NS', 'DHANUKA.NS',
     'DLF.NS', 'DIXON.NS', 'DMART.NS', 'ESCORTS.NS', 'EXIDEIND.NS',
-    'FEDERALBNK.NS', 'FINEORG.NS', 'FORTIS.NS', 'FSL.NS', 'GAIL.NS',
+    'FSL.NS', 'GAIL.NS',
     'GLENMARK.NS', 'GMRINFRA.NS', 'GNFC.NS', 'GODREJAGRO.NS', 'GODREJIND.NS',
     'GODREJPROP.NS', 'GRANULES.NS', 'GRAPHITE.NS', 'GUJGASLTD.NS', 'HAL.NS',
     'HAVELLS.NS', 'HDFCAMC.NS', 'HDFCLIFE.NS', 'HINDCOPPER.NS', 'HINDPETRO.NS',
-    'HINDUNILVR.NS', 'HONAUT.NS', 'HUDCO.NS', 'ICICIPRULI.NS', 'IDEA.NS',
+    'HONAUT.NS', 'HUDCO.NS', 'ICICIPRULI.NS', 'IDEA.NS',
     'IDFC.NS', 'IEX.NS', 'IGL.NS', 'INDIGO.NS', 'INDIACEM.NS',
     'INDIANB.NS', 'INDIAMART.NS', 'INDOCO.NS', 'INDUSTOWER.NS', 'INFIBEAM.NS',
     'INTELLECT.NS', 'IOB.NS', 'IPCALAB.NS', 'IRB.NS', 'IRCTC.NS',
-    'ISEC.NS', 'ITC.NS', 'JKCEMENT.NS', 'JKLAKSHMI.NS', 'JMFINANCIL.NS',
+    'ISEC.NS', 'JKCEMENT.NS', 'JKLAKSHMI.NS', 'JMFINANCIL.NS',
     'JINDALSAW.NS', 'JINDALSTEL.NS', 'JSWENERGY.NS', 'JUBLFOOD.NS', 'JUSTDIAL.NS',
-    'KANSAINER.NS', 'KEI.NS', 'KOTAKBANK.NS', 'KPITTECH.NS', 'KRBL.NS',
+    'KANSAINER.NS', 'KEI.NS', 'KPITTECH.NS', 'KRBL.NS',
     'L&TFH.NS', 'LALPATHLAB.NS', 'LAURUSLABS.NS', 'LICHSGFIN.NS', 'LUPIN.NS',
     'LUXIND.NS', 'MARICO.NS', 'MAXHEALTH.NS', 'MCDOWELL-N.NS', 'MCX.NS',
     'METROPOLIS.NS', 'MFSL.NS', 'MGL.NS', 'MINDACORP.NS', 'MINDTREE.NS',
     'MOTHERSON.NS', 'MPHASIS.NS', 'MRF.NS', 'MUTHOOTFIN.NS', 'NATIONALUM.NS',
-    'NAUKRI.NS', 'NAVINFLUOR.NS', 'NESTLEIND.NS', 'NMDC.NS', 'NOCIL.NS',
-    'NYKAA.NS', 'OBEROIRLTY.NS', 'OFSS.NS', 'OIL.NS', 'ONGC.NS',
+    'NAUKRI.NS', 'NAVINFLUOR.NS', 'NMDC.NS', 'NOCIL.NS',
+    'NYKAA.NS', 'OBEROIRLTY.NS', 'OFSS.NS', 'OIL.NS',
     'PAGEIND.NS', 'PAYTM.NS', 'PGHH.NS', 'PIDILITIND.NS', 'PIIND.NS',
-    'PNB.NS', 'POLYCAB.NS', 'POLYMED.NS', 'POWERGRID.NS', 'PRAJIND.NS',
+    'POLYCAB.NS', 'POLYMED.NS', 'PRAJIND.NS',
     'PRESTIGE.NS', 'PVRINOX.NS', 'QUESS.NS', 'RADICO.NS', 'RAIN.NS',
-    'RAMCOCEM.NS', 'RBLBANK.NS', 'RECLTD.NS', 'REDINGTON.NS', 'RELCAPITAL.NS',
-    'RELIANCE.NS', 'RELINFRA.NS', 'RNAM.NS', 'SAIL.NS', 'SBICARD.NS',
-    'SBILIFE.NS', 'SHREECEM.NS', 'SIEMENS.NS', 'SRF.NS', 'STAR.NS',
+    'RAMCOCEM.NS', 'RECLTD.NS', 'REDINGTON.NS', 'RELCAPITAL.NS',
+    'RELINFRA.NS', 'RNAM.NS', 'SAIL.NS', 'SBICARD.NS',
+    'SHREECEM.NS', 'SIEMENS.NS', 'SRF.NS', 'STAR.NS',
     'SUMICHEM.NS', 'SUNTV.NS', 'SYNGENE.NS', 'TATACHEM.NS', 'TATACOMM.NS',
-    'TATACONSUM.NS', 'TATAMTRDVR.NS', 'TATAPOWER.NS', 'TATASTEEL.NS', 'TCS.NS',
-    'TECHM.NS', 'TITAN.NS', 'TORNTPHARM.NS', 'TORNTPOWER.NS', 'TRENT.NS',
-    'TRIDENT.NS', 'TVSMOTOR.NS', 'UBL.NS', 'UJJIVAN.NS', 'ULTRACEMCO.NS',
-    'UPL.NS', 'VEDL.NS', 'VOLTAS.NS', 'WHIRLPOOL.NS', 'WIPRO.NS',
+    'TATACONSUM.NS', 'TATAMTRDVR.NS', 'TATAPOWER.NS',
+    'TORNTPHARM.NS', 'TORNTPOWER.NS',
+    'TRIDENT.NS', 'TVSMOTOR.NS', 'UBL.NS', 'UJJIVAN.NS',
+    'UPL.NS', 'VEDL.NS', 'VOLTAS.NS', 'WHIRLPOOL.NS',
     'YESBANK.NS', 'ZEEL.NS', 'ZENSARTECH.NS', 'ZYDUSLIFE.NS'
 ]
 
@@ -546,8 +641,8 @@ def main():
     # Header
     st.markdown("""
     <div style='text-align: center; padding: 20px; background: linear-gradient(90deg, #0e1117 0%, #262730 50%, #0e1117 100%); border-radius: 10px; margin-bottom: 20px;'>
-        <h1 style='color: #00ff00; margin: 0;'>📈 NSE F&O PCS Screener</h1>
-        <p style='color: #ffffff; margin: 5px 0 0 0;'>Real-time Pattern Detection • Fresh Confirmation • TradingView Integration</p>
+        <h1 style='color: #00ff00; margin: 0; text-shadow: 0 0 10px rgba(0,255,0,0.5);'>📈 NSE F&O PCS Screener</h1>
+        <p style='color: #ffffff; margin: 5px 0 0 0; font-size: 16px;'>Real-time Pattern Detection • Fresh Confirmation • TradingView Integration</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -590,13 +685,12 @@ def main():
     
     with col1:
         # Run screening button
-        if st.button("🚀 Run Live Screening", type="primary", use_container_width=True):
+        if st.button("🚀 Run Live Screening", type="primary"):
             screener = OnDemandPatternScreener()
             
             # Progress tracking
             progress_bar = st.progress(0)
             status_text = st.empty()
-            results_container = st.empty()
             
             status_text.text("🔍 Initializing screening process...")
             
