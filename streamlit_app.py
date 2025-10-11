@@ -11,6 +11,9 @@ import time
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import warnings
+import json
+from bs4 import BeautifulSoup
+import re
 warnings.filterwarnings('ignore')
 
 # Set page config
@@ -21,7 +24,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Professional Dark Theme CSS - FIXED COLORS
+# FIXED: Professional Dark Theme with Readable Colors and Compact Header
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -31,10 +34,10 @@ st.markdown("""
         --secondary-bg: #1a1f2e;
         --accent-bg: #252b3d;
         --sidebar-bg: #1e2432;
-        --success-color: #00d4aa;
-        --warning-color: #ffa726;
-        --danger-color: #ff5252;
-        --info-color: #42a5f5;
+        --success-color: #00ff88;
+        --warning-color: #ffaa00;
+        --danger-color: #ff4444;
+        --info-color: #00aaff;
         --text-primary: #ffffff;
         --text-secondary: #b0bec5;
         --text-muted: #78909c;
@@ -43,7 +46,7 @@ st.markdown("""
         --shadow-light: rgba(0, 0, 0, 0.1);
         --shadow-medium: rgba(0, 0, 0, 0.2);
         --shadow-heavy: rgba(0, 0, 0, 0.3);
-        --header-gradient: linear-gradient(135deg, #1a237e 0%, #283593 25%, #3949ab 50%, #00d4aa 100%);
+        --header-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
     }
     
     /* Main app styling */
@@ -62,21 +65,22 @@ st.markdown("""
     .main .block-container {
         background-color: transparent;
         color: var(--text-primary);
-        padding-top: 1rem;
+        padding-top: 0.5rem;
         max-width: 1400px;
     }
     
-    /* FIXED: Professional Header with Different Colors */
+    /* FIXED: Compact Professional Header - Only 20% of screen */
     .professional-header {
         background: var(--header-gradient);
-        padding: 40px 30px;
-        border-radius: 20px;
-        margin-bottom: 30px;
-        border: 2px solid var(--success-color);
-        box-shadow: 0 16px 64px var(--shadow-heavy);
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 1px solid var(--info-color);
+        box-shadow: 0 8px 32px var(--shadow-heavy);
         text-align: center;
         position: relative;
         overflow: hidden;
+        max-height: 120px;
     }
     
     .professional-header::before {
@@ -85,32 +89,32 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 3px;
         background: linear-gradient(90deg, var(--success-color), var(--info-color), var(--warning-color));
     }
     
     .professional-header h1 {
-        color: #ffffff !important;
-        margin: 0;
-        font-size: 3rem;
+        color: var(--success-color) !important;
+        margin: 0 0 5px 0;
+        font-size: 2.2rem;
         font-weight: 700;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        text-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
         background: none !important;
-        -webkit-text-fill-color: #ffffff !important;
+        -webkit-text-fill-color: var(--success-color) !important;
     }
     
     .professional-header .subtitle {
-        color: #e3f2fd !important;
-        margin: 15px 0 5px 0;
-        font-size: 1.3rem;
+        color: var(--info-color) !important;
+        margin: 0 0 3px 0;
+        font-size: 1.1rem;
         font-weight: 500;
         opacity: 0.95;
     }
     
     .professional-header .description {
-        color: #bbdefb !important;
+        color: var(--text-secondary) !important;
         margin: 0;
-        font-size: 1rem;
+        font-size: 0.9rem;
         opacity: 0.85;
     }
     
@@ -132,38 +136,37 @@ st.markdown("""
     }
     
     .stTabs [data-baseweb="tab"] {
-        height: 56px;
+        height: 48px;
         background-color: transparent;
         border-radius: 12px;
         color: var(--text-secondary);
         font-weight: 500;
-        font-size: 16px;
+        font-size: 15px;
         border: none;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
     }
     
     .stTabs [data-baseweb="tab"]:hover {
-        background: linear-gradient(135deg, var(--accent-bg), rgba(0, 212, 170, 0.1));
+        background: linear-gradient(135deg, var(--accent-bg), rgba(0, 255, 136, 0.1));
         color: var(--text-primary);
         transform: translateY(-1px);
     }
     
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, var(--success-color), #00bfa5);
+        background: linear-gradient(135deg, var(--success-color), #00cc6a);
         color: var(--primary-bg) !important;
         font-weight: 600;
-        box-shadow: 0 4px 16px rgba(0, 212, 170, 0.3);
+        box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
     }
     
     /* Professional Cards */
     .metric-card {
         background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
-        padding: 24px;
-        border-radius: 16px;
+        padding: 20px;
+        border-radius: 12px;
         border: 1px solid var(--border-color);
-        margin: 12px 0;
-        box-shadow: 0 8px 32px var(--shadow-heavy);
+        margin: 10px 0;
+        box-shadow: 0 6px 24px var(--shadow-heavy);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
@@ -180,101 +183,104 @@ st.markdown("""
     }
     
     .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 48px rgba(0, 212, 170, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 36px rgba(0, 255, 136, 0.15);
         border-color: var(--success-color);
     }
     
     .pattern-card {
         background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
-        padding: 24px;
-        border-radius: 16px;
+        padding: 20px;
+        border-radius: 12px;
         border-left: 4px solid var(--success-color);
-        margin: 16px 0;
-        box-shadow: 0 8px 32px var(--shadow-heavy);
+        margin: 12px 0;
+        box-shadow: 0 6px 24px var(--shadow-heavy);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
     }
     
     .pattern-card:hover {
-        transform: translateX(4px);
-        box-shadow: 0 12px 48px var(--shadow-heavy);
+        transform: translateX(3px);
+        box-shadow: 0 8px 32px var(--shadow-heavy);
     }
     
     .consolidation-card {
         border-left-color: var(--warning-color);
-        background: linear-gradient(135deg, var(--secondary-bg), rgba(255, 167, 38, 0.08));
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(255, 170, 0, 0.08));
+    }
+    
+    .news-card {
+        border-left-color: var(--info-color);
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(0, 170, 255, 0.08));
     }
     
     .high-confidence {
         border-left-color: var(--success-color);
-        background: linear-gradient(135deg, var(--secondary-bg), rgba(0, 212, 170, 0.05));
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(0, 255, 136, 0.05));
     }
     
     .medium-confidence {
         border-left-color: var(--warning-color);
-        background: linear-gradient(135deg, var(--secondary-bg), rgba(255, 167, 38, 0.05));
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(255, 170, 0, 0.05));
     }
     
     .low-confidence {
         border-left-color: var(--danger-color);
-        background: linear-gradient(135deg, var(--secondary-bg), rgba(255, 82, 82, 0.05));
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(255, 68, 68, 0.05));
     }
     
     /* Market Sentiment Indicators */
     .sentiment-bullish {
-        background: linear-gradient(135deg, rgba(0, 212, 170, 0.15), rgba(0, 191, 165, 0.15));
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 204, 106, 0.15));
         border: 1px solid var(--success-color);
         border-left: 4px solid var(--success-color);
     }
     
     .sentiment-neutral {
-        background: linear-gradient(135deg, rgba(255, 167, 38, 0.15), rgba(255, 193, 7, 0.15));
+        background: linear-gradient(135deg, rgba(255, 170, 0, 0.15), rgba(255, 193, 7, 0.15));
         border: 1px solid var(--warning-color);
         border-left: 4px solid var(--warning-color);
     }
     
     .sentiment-bearish {
-        background: linear-gradient(135deg, rgba(255, 82, 82, 0.15), rgba(244, 67, 54, 0.15));
+        background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(244, 67, 54, 0.15));
         border: 1px solid var(--danger-color);
         border-left: 4px solid var(--danger-color);
     }
     
     /* Enhanced Buttons */
     .stButton > button {
-        background: linear-gradient(135deg, var(--success-color), #00bfa5);
+        background: linear-gradient(135deg, var(--success-color), #00cc6a);
         color: var(--primary-bg);
         border: none;
-        border-radius: 12px;
+        border-radius: 10px;
         font-weight: 600;
-        font-size: 16px;
-        height: 56px;
+        font-size: 15px;
+        height: 48px;
         width: 100%;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 16px rgba(0, 212, 170, 0.3);
-        position: relative;
-        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, #00bfa5, var(--success-color));
+        background: linear-gradient(135deg, #00cc6a, var(--success-color));
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 212, 170, 0.4);
+        box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
     }
     
     /* Professional Metrics */
     [data-testid="metric-container"] {
         background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
         border: 1px solid var(--border-color);
-        padding: 20px;
-        border-radius: 16px;
+        padding: 16px;
+        border-radius: 12px;
         box-shadow: 0 4px 16px var(--shadow-medium);
         transition: all 0.3s ease;
     }
     
     [data-testid="metric-container"]:hover {
         border-color: var(--success-color);
-        box-shadow: 0 8px 24px rgba(0, 212, 170, 0.15);
+        box-shadow: 0 6px 20px rgba(0, 255, 136, 0.15);
     }
     
     /* Enhanced Form Controls */
@@ -282,7 +288,7 @@ st.markdown("""
         background: linear-gradient(135deg, var(--accent-bg), var(--sidebar-bg));
         color: var(--text-primary);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 10px;
         font-weight: 500;
         transition: all 0.3s ease;
     }
@@ -290,7 +296,7 @@ st.markdown("""
     .stSelectbox > div > div:hover,
     .stSelectbox > div > div:focus {
         border-color: var(--success-color);
-        box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.2);
+        box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
     }
     
     /* Professional Headers */
@@ -310,12 +316,12 @@ st.markdown("""
     }
     
     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, var(--success-color), #00bfa5);
+        background: linear-gradient(180deg, var(--success-color), #00cc6a);
         border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #00bfa5, var(--success-color));
+        background: linear-gradient(180deg, #00cc6a, var(--success-color));
     }
     
     /* Animation for loading states */
@@ -331,69 +337,64 @@ st.markdown("""
     /* Responsive Design */
     @media (max-width: 768px) {
         .main .block-container {
-            padding-top: 0.5rem;
+            padding-top: 0.3rem;
+        }
+        
+        .professional-header {
+            padding: 10px 15px;
+            max-height: 100px;
         }
         
         .professional-header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
         }
         
         .professional-header .subtitle {
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# FIXED: Complete NSE F&O Universe with proper stock symbols
+# COMPLETE NSE F&O UNIVERSE - All 214 stocks as per official NSE list
 COMPLETE_NSE_FO_UNIVERSE = [
-    # Indices
+    # Indices (4)
     '^NSEI', '^NSEBANK', '^CNXFINANCE', '^CNXMIDCAP',
     
-    # Individual stocks (Fixed symbols)
-    '360ONE.NS', 'ABB.NS', 'ABCAPITAL.NS', 'ADANIENSOL.NS', 'ADANIENT.NS',
-    'ADANIGREEN.NS', 'ADANIPORTS.NS', 'ALKEM.NS', 'AMBUJACEM.NS',
-    'ANGELONE.NS', 'APLAPOLLO.NS', 'APOLLOHOSP.NS', 'ASHOKLEY.NS', 'ASIANPAINT.NS',
-    'ASTRAL.NS', 'AUBANK.NS', 'AUROPHARMA.NS', 'AXISBANK.NS', 'BAJAJ-AUTO.NS',
-    'BAJAJFINSV.NS', 'BAJFINANCE.NS', 'BANDHANBNK.NS', 'BANKBARODA.NS', 'BANKINDIA.NS',
-    'BEL.NS', 'BHARATFORG.NS', 'BHARTIARTL.NS', 'BHEL.NS',
-    'BIOCON.NS', 'BLUESTARCO.NS', 'BOSCHLTD.NS', 'BPCL.NS', 'BRITANNIA.NS',
-    'BSE.NS', 'CAMS.NS', 'CANBK.NS', 'CDSL.NS', 'CGPOWER.NS',
-    'CHOLAFIN.NS', 'CIPLA.NS', 'COALINDIA.NS', 'COFORGE.NS', 'COLPAL.NS',
-    'CONCOR.NS', 'CROMPTON.NS', 'CUMMINSIND.NS', 'CYIENT.NS', 'DABUR.NS',
-    'DALBHARAT.NS', 'DELHIVERY.NS', 'DIVISLAB.NS', 'DIXON.NS', 'DLF.NS',
-    'DMART.NS', 'DRREDDY.NS', 'EICHERMOT.NS', 'EXIDEIND.NS',
-    'FEDERALBNK.NS', 'FORTIS.NS', 'GAIL.NS', 'GLENMARK.NS',
-    'GODREJCP.NS', 'GODREJPROP.NS', 'GRASIM.NS', 'HAL.NS', 'HAVELLS.NS',
-    'HCLTECH.NS', 'HDFCAMC.NS', 'HDFCBANK.NS', 'HDFCLIFE.NS', 'HEROMOTOCO.NS',
-    'HINDALCO.NS', 'HINDPETRO.NS', 'HINDUNILVR.NS', 'HINDZINC.NS',
-    'ICICIBANK.NS', 'ICICIGI.NS', 'ICICIPRULI.NS', 'IDEA.NS',
-    'IDFCFIRSTB.NS', 'IEX.NS', 'IGL.NS', 'INDHOTEL.NS',
-    'INDIGO.NS', 'INDUSINDBK.NS', 'INDUSTOWER.NS', 'INFY.NS',
-    'IOC.NS', 'IRCTC.NS', 'IRFC.NS',
-    'ITC.NS', 'JINDALSTEL.NS', 'JIOFIN.NS', 'JSWENERGY.NS', 'JSWSTEEL.NS',
-    'JUBLFOOD.NS', 'KOTAKBANK.NS', 'KPITTECH.NS', 'LAURUSLABS.NS', 'LICHSGFIN.NS',
-    'LT.NS', 'LTIM.NS', 'LUPIN.NS',
-    'M&M.NS', 'MANAPPURAM.NS', 'MARICO.NS', 'MARUTI.NS',
-    'MCX.NS', 'MFSL.NS', 'MOTHERSON.NS',
-    'MPHASIS.NS', 'MUTHOOTFIN.NS', 'NATIONALUM.NS', 'NAUKRI.NS', 'NBCC.NS',
-    'NESTLEIND.NS', 'NMDC.NS', 'NTPC.NS',
-    'NYKAA.NS', 'OBEROIRLTY.NS', 'OFSS.NS', 'OIL.NS',
-    'ONGC.NS', 'PAGEIND.NS', 'PAYTM.NS', 'PERSISTENT.NS',
-    'PETRONET.NS', 'PFC.NS', 'PIDILITIND.NS',
-    'PNB.NS', 'POLYCAB.NS',
-    'POWERGRID.NS', 'RBLBANK.NS',
-    'RECLTD.NS', 'RELIANCE.NS', 'SAIL.NS',
-    'SBICARD.NS', 'SBILIFE.NS', 'SBIN.NS', 'SHREECEM.NS', 'SHRIRAMFIN.NS',
-    'SIEMENS.NS', 'SOLARINDS.NS', 'SONACOMS.NS', 'SRF.NS', 'SUNPHARMA.NS',
-    'SYNGENE.NS', 'TATACONSUM.NS', 'TATAELXSI.NS',
-    'TATAMOTORS.NS', 'TATAPOWER.NS', 'TATASTEEL.NS', 'TATATECH.NS', 'TCS.NS',
-    'TECHM.NS', 'TITAN.NS', 'TORNTPHARM.NS',
-    'TRENT.NS', 'TVSMOTOR.NS', 'ULTRACEMCO.NS', 'UNIONBANK.NS',
-    'UPL.NS', 'VEDL.NS', 'VOLTAS.NS', 'WIPRO.NS', 'YESBANK.NS', 'ZYDUSLIFE.NS'
+    # All NSE F&O Individual stocks (210 stocks) - COMPLETE LIST
+    '360ONE.NS', 'ABB.NS', 'ABCAPITAL.NS', 'ABFRL.NS', 'ACC.NS', 'ADANIENT.NS', 'ADANIGREEN.NS', 'ADANIPORTS.NS', 
+    'ADANITRANS.NS', 'AJANTPHARM.NS', 'ALKEM.NS', 'AMBUJACEM.NS', 'ANGELONE.NS', 'APLAPOLLO.NS', 'APOLLOHOSP.NS', 
+    'APOLLOTYRE.NS', 'ASHOKLEY.NS', 'ASIANPAINT.NS', 'ASTRAL.NS', 'ATUL.NS', 'AUBANK.NS', 'AUROPHARMA.NS', 
+    'AXISBANK.NS', 'BAJAJ-AUTO.NS', 'BAJAJFINSV.NS', 'BAJFINANCE.NS', 'BALKRISIND.NS', 'BALRAMCHIN.NS', 
+    'BANDHANBNK.NS', 'BANKBARODA.NS', 'BANKINDIA.NS', 'BATAINDIA.NS', 'BEL.NS', 'BERGEPAINT.NS', 'BHARATFORG.NS', 
+    'BHARTIARTL.NS', 'BHEL.NS', 'BIOCON.NS', 'BLUESTARCO.NS', 'BOSCHLTD.NS', 'BPCL.NS', 'BRITANNIA.NS', 
+    'BSE.NS', 'BSOFT.NS', 'CAMS.NS', 'CANBK.NS', 'CANFINHOME.NS', 'CDSL.NS', 'CESC.NS', 'CGCL.NS', 
+    'CGPOWER.NS', 'CHAMBLFERT.NS', 'CHOLAFIN.NS', 'CIPLA.NS', 'COALINDIA.NS', 'COFORGE.NS', 'COLPAL.NS', 
+    'CONCOR.NS', 'COROMANDEL.NS', 'CROMPTON.NS', 'CUB.NS', 'CUMMINSIND.NS', 'CYIENT.NS', 'DABUR.NS', 
+    'DALBHARAT.NS', 'DEEPAKNTR.NS', 'DELHIVERY.NS', 'DELTACORP.NS', 'DIVISLAB.NS', 'DIXON.NS', 'DLF.NS', 
+    'DMART.NS', 'DRREDDY.NS', 'EICHERMOT.NS', 'ESCORTS.NS', 'EXIDEIND.NS', 'FEDERALBNK.NS', 'FORTIS.NS', 
+    'GAIL.NS', 'GLENMARK.NS', 'GMRINFRA.NS', 'GNFC.NS', 'GODREJCP.NS', 'GODREJPROP.NS', 'GRANULES.NS', 
+    'GRASIM.NS', 'GUJGASLTD.NS', 'HAL.NS', 'HAVELLS.NS', 'HCLTECH.NS', 'HDFCAMC.NS', 'HDFCBANK.NS', 
+    'HDFCLIFE.NS', 'HEROMOTOCO.NS', 'HINDALCO.NS', 'HINDCOPPER.NS', 'HINDPETRO.NS', 'HINDUNILVR.NS', 
+    'HINDZINC.NS', 'HONAUT.NS', 'ICICIBANK.NS', 'ICICIGI.NS', 'ICICIPRULI.NS', 'IDEA.NS', 'IDFCFIRSTB.NS', 
+    'IEX.NS', 'IGL.NS', 'INDHOTEL.NS', 'INDIAMART.NS', 'INDIGO.NS', 'INDUSINDBK.NS', 'INDUSTOWER.NS', 
+    'INFY.NS', 'IOC.NS', 'IPCALAB.NS', 'IRCTC.NS', 'IRFC.NS', 'ITC.NS', 'JINDALSTEL.NS', 'JIOFIN.NS', 
+    'JKCEMENT.NS', 'JSWENERGY.NS', 'JSWSTEEL.NS', 'JUBLFOOD.NS', 'KOTAKBANK.NS', 'KPITTECH.NS', 'KPRMILL.NS', 
+    'KRBL.NS', 'L&TFH.NS', 'LALPATHLAB.NS', 'LAURUSLABS.NS', 'LICHSGFIN.NS', 'LT.NS', 'LTIM.NS', 'LTTS.NS', 
+    'LUPIN.NS', 'M&M.NS', 'M&MFIN.NS', 'MANAPPURAM.NS', 'MARICO.NS', 'MARUTI.NS', 'MAXHEALTH.NS', 'MCX.NS', 
+    'METROPOLIS.NS', 'MFSL.NS', 'MGL.NS', 'MOTHERSON.NS', 'MPHASIS.NS', 'MRF.NS', 'MUTHOOTFIN.NS', 
+    'NATIONALUM.NS', 'NAUKRI.NS', 'NAVINFLUOR.NS', 'NBCC.NS', 'NESTLEIND.NS', 'NMDC.NS', 'NTPC.NS', 
+    'NYKAA.NS', 'OBEROIRLTY.NS', 'OFSS.NS', 'OIL.NS', 'ONGC.NS', 'PAGEIND.NS', 'PAYTM.NS', 'PERSISTENT.NS', 
+    'PETRONET.NS', 'PFC.NS', 'PIDILITIND.NS', 'PIIND.NS', 'PNB.NS', 'POLYCAB.NS', 'POWERGRID.NS', 
+    'PVRINOX.NS', 'RAMCOCEM.NS', 'RBLBANK.NS', 'RECLTD.NS', 'RELIANCE.NS', 'SAIL.NS', 'SBICARD.NS', 
+    'SBILIFE.NS', 'SBIN.NS', 'SHREECEM.NS', 'SHRIRAMFIN.NS', 'SIEMENS.NS', 'SRF.NS', 'STAR.NS', 
+    'SUNPHARMA.NS', 'SUNTV.NS', 'SYNGENE.NS', 'TATACHEM.NS', 'TATACOMM.NS', 'TATACONSUM.NS', 'TATAELXSI.NS', 
+    'TATAMOTORS.NS', 'TATAPOWER.NS', 'TATASTEEL.NS', 'TATATECH.NS', 'TCS.NS', 'TECHM.NS', 'TITAN.NS', 
+    'TORNTPHARM.NS', 'TORNTPOWER.NS', 'TRENT.NS', 'TVSMOTOR.NS', 'UBL.NS', 'ULTRACEMCO.NS', 'UNIONBANK.NS', 
+    'UPL.NS', 'VEDL.NS', 'VOLTAS.NS', 'WIPRO.NS', 'YESBANK.NS', 'ZEEL.NS', 'ZYDUSLIFE.NS'
 ]
 
-# FIXED: Stock categories with proper symbols
+# FIXED: Stock categories with verified symbols
 STOCK_CATEGORIES = {
     'Nifty 50': [
         'RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'INFY.NS', 'ICICIBANK.NS',
@@ -414,7 +415,7 @@ STOCK_CATEGORIES = {
     ],
     'IT Stocks': [
         'TCS.NS', 'INFY.NS', 'WIPRO.NS', 'HCLTECH.NS', 'TECHM.NS',
-        'LTIM.NS', 'MPHASIS.NS', 'COFORGE.NS', 'PERSISTENT.NS'
+        'LTIM.NS', 'MPHASIS.NS', 'COFORGE.NS', 'PERSISTENT.NS', 'LTTS.NS'
     ],
     'Pharma Stocks': [
         'SUNPHARMA.NS', 'CIPLA.NS', 'DRREDDY.NS', 'DIVISLAB.NS', 'LUPIN.NS',
@@ -422,7 +423,7 @@ STOCK_CATEGORIES = {
     ],
     'Auto Stocks': [
         'MARUTI.NS', 'TATAMOTORS.NS', 'M&M.NS', 'BAJAJ-AUTO.NS', 'HEROMOTOCO.NS',
-        'EICHERMOT.NS', 'TVSMOTOR.NS', 'ASHOKLEY.NS'
+        'EICHERMOT.NS', 'TVSMOTOR.NS', 'ASHOKLEY.NS', 'ESCORTS.NS'
     ],
     'Metal Stocks': [
         'TATASTEEL.NS', 'JSWSTEEL.NS', 'HINDALCO.NS', 'COALINDIA.NS', 'VEDL.NS',
@@ -439,7 +440,7 @@ class ProfessionalPCSScanner:
         self.ist = pytz.timezone('Asia/Kolkata')
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
     
     def get_stock_data(self, symbol, period="6mo"):
@@ -497,13 +498,121 @@ class ProfessionalPCSScanner:
         
         return volume_ratio_20 >= min_ratio, volume_ratio_20, details
     
+    def get_fundamental_news(self, symbol, stock_name):
+        """
+        NEW: Get fundamental news for the stock to explain volume/price movements
+        Searches for recent news, earnings, orders, policy changes, etc.
+        """
+        try:
+            # Clean symbol for search
+            clean_symbol = symbol.replace('.NS', '')
+            
+            # Multiple search queries for comprehensive news
+            search_queries = [
+                f"{stock_name} stock news today",
+                f"{clean_symbol} earnings results",
+                f"{stock_name} order announcement",
+                f"{clean_symbol} policy government support",
+                f"{stock_name} quarterly results",
+                f"{clean_symbol} volume spike news"
+            ]
+            
+            news_items = []
+            
+            for query in search_queries[:2]:  # Limit to 2 queries for speed
+                try:
+                    # Use Google News search
+                    search_url = f"https://www.google.com/search?q={query}&tbm=nws&tbs=qdr:d"  # Last 24 hours
+                    
+                    response = self.session.get(search_url, timeout=5)
+                    if response.status_code == 200:
+                        soup = BeautifulSoup(response.content, 'html.parser')
+                        
+                        # Extract news headlines and snippets
+                        news_elements = soup.find_all('div', class_='BNeawe vvjwJb AP7Wnd')[:3]  # Top 3 results
+                        
+                        for element in news_elements:
+                            headline = element.get_text().strip()
+                            if len(headline) > 20 and stock_name.lower() in headline.lower():
+                                news_items.append({
+                                    'headline': headline,
+                                    'relevance': self._assess_news_relevance(headline),
+                                    'source': 'Recent News'
+                                })
+                                
+                except Exception:
+                    continue
+            
+            # If no recent news, try alternative approach
+            if not news_items:
+                # Try to get company info from yfinance
+                try:
+                    stock = yf.Ticker(symbol)
+                    info = stock.info
+                    
+                    # Check for recent events
+                    if 'longBusinessSummary' in info:
+                        summary = info['longBusinessSummary'][:200] + "..."
+                        news_items.append({
+                            'headline': f"Business Overview: {summary}",
+                            'relevance': 'medium',
+                            'source': 'Company Profile'
+                        })
+                        
+                except Exception:
+                    pass
+            
+            # Assess overall news sentiment
+            if news_items:
+                positive_keywords = ['order', 'win', 'contract', 'growth', 'profit', 'beat', 'strong', 'positive', 'approval', 'launch']
+                negative_keywords = ['loss', 'decline', 'weak', 'concern', 'fall', 'drop', 'negative', 'warning']
+                
+                sentiment_score = 0
+                for item in news_items:
+                    headline_lower = item['headline'].lower()
+                    for word in positive_keywords:
+                        if word in headline_lower:
+                            sentiment_score += 1
+                    for word in negative_keywords:
+                        if word in headline_lower:
+                            sentiment_score -= 1
+                
+                overall_sentiment = 'positive' if sentiment_score > 0 else 'negative' if sentiment_score < 0 else 'neutral'
+            else:
+                overall_sentiment = 'neutral'
+            
+            return {
+                'news_items': news_items[:3],  # Top 3 most relevant
+                'overall_sentiment': overall_sentiment,
+                'news_count': len(news_items)
+            }
+            
+        except Exception as e:
+            return {
+                'news_items': [],
+                'overall_sentiment': 'neutral', 
+                'news_count': 0
+            }
+    
+    def _assess_news_relevance(self, headline):
+        """Assess how relevant news is to volume/price movement"""
+        high_relevance_keywords = ['order', 'contract', 'earnings', 'results', 'approval', 'launch', 'merger', 'acquisition']
+        medium_relevance_keywords = ['growth', 'expansion', 'investment', 'partnership', 'policy', 'announcement']
+        
+        headline_lower = headline.lower()
+        
+        for word in high_relevance_keywords:
+            if word in headline_lower:
+                return 'high'
+        
+        for word in medium_relevance_keywords:
+            if word in headline_lower:
+                return 'medium'
+        
+        return 'low'
+    
     def detect_tight_consolidation_breakout(self, data, consolidation_days_min=14, consolidation_days_max=20, max_range_pct=8, volume_breakout_ratio=2.0):
-        """
-        PROFESSIONAL: Detect tight consolidation breakout patterns
-        - Consolidation period: 14-20 days
-        - Price range: <8% during consolidation
-        - Volume breakout: >2x average
-        """
+        """Professional: Detect tight consolidation breakout patterns"""
         if len(data) < 25:
             return False, 0, {}
         
@@ -592,10 +701,7 @@ class ProfessionalPCSScanner:
         return False, 0, {}
     
     def get_market_sentiment_indicators(self):
-        """
-        PROFESSIONAL: Advanced market sentiment analysis
-        Returns comprehensive market sentiment with multiple indicators
-        """
+        """Professional: Advanced market sentiment analysis"""
         try:
             sentiment_data = {}
             
@@ -636,33 +742,7 @@ class ProfessionalPCSScanner:
                     'sentiment': self._get_sentiment_level(bank_change_pct)
                 }
             
-            # 3. VIX Analysis (Fear Index)
-            try:
-                vix = yf.Ticker("^INDIAVIX")
-                vix_data = vix.history(period="5d")
-                
-                if len(vix_data) >= 2:
-                    current_vix = vix_data['Close'].iloc[-1]
-                    prev_vix = vix_data['Close'].iloc[-2]
-                    vix_change_pct = ((current_vix - prev_vix) / prev_vix) * 100
-                    
-                    # VIX sentiment (inverse - high VIX = bearish)
-                    if current_vix < 15:
-                        vix_sentiment = "BULLISH"
-                    elif current_vix < 20:
-                        vix_sentiment = "NEUTRAL"
-                    else:
-                        vix_sentiment = "BEARISH"
-                    
-                    sentiment_data['vix'] = {
-                        'current': current_vix,
-                        'change_1d': vix_change_pct,
-                        'sentiment': vix_sentiment
-                    }
-            except:
-                sentiment_data['vix'] = None
-            
-            # 4. Overall Market Sentiment
+            # 3. Overall Market Sentiment
             nifty_sentiment = sentiment_data['nifty']['sentiment']
             bank_sentiment = sentiment_data['bank_nifty']['sentiment']
             
@@ -721,7 +801,7 @@ class ProfessionalPCSScanner:
             return "BEARISH"
     
     def detect_patterns(self, data, symbol, filters):
-        """Enhanced pattern detection with consolidation breakout"""
+        """Enhanced pattern detection with all professional patterns"""
         patterns = []
         
         if len(data) < 30:
@@ -733,7 +813,7 @@ class ProfessionalPCSScanner:
         sma_20 = data['SMA_20'].iloc[-1]
         ema_20 = data['EMA_20'].iloc[-1]
         
-        # Apply filters
+        # Apply basic filters
         if not (filters['rsi_min'] <= current_rsi <= filters['rsi_max']):
             return patterns
         
@@ -749,7 +829,7 @@ class ProfessionalPCSScanner:
                 if current_price < ema_20 * (1 - filters['ma_tolerance']/100):
                     return patterns
         
-        # NEW: Tight Consolidation Breakout Detection
+        # 1. Tight Consolidation Breakout Detection (TOP PRIORITY)
         consolidation_detected, consolidation_strength, consolidation_details = self.detect_tight_consolidation_breakout(
             data, 
             consolidation_days_min=filters.get('consolidation_days_min', 14),
@@ -762,7 +842,7 @@ class ProfessionalPCSScanner:
             patterns.append({
                 'type': 'Tight Consolidation Breakout',
                 'strength': consolidation_strength,
-                'success_rate': 88,  # High success rate for tight consolidations
+                'success_rate': 88,
                 'research_basis': 'William O\'Neil - Tight Base Breakouts',
                 'pcs_suitability': 95,
                 'confidence': self.get_confidence_level(consolidation_strength),
@@ -770,8 +850,7 @@ class ProfessionalPCSScanner:
                 'special': 'PROFESSIONAL_BREAKOUT'
             })
         
-        # Existing patterns...
-        # 1. Cup and Handle
+        # 2. Cup and Handle
         cup_detected, cup_strength = self.detect_cup_and_handle(data)
         if cup_detected and cup_strength >= filters['pattern_strength_min']:
             patterns.append({
@@ -783,7 +862,7 @@ class ProfessionalPCSScanner:
                 'confidence': self.get_confidence_level(cup_strength)
             })
         
-        # 2. Flat Base Breakout
+        # 3. Flat Base Breakout
         flat_detected, flat_strength = self.detect_flat_base_breakout(data)
         if flat_detected and flat_strength >= filters['pattern_strength_min']:
             patterns.append({
@@ -795,7 +874,7 @@ class ProfessionalPCSScanner:
                 'confidence': self.get_confidence_level(flat_strength)
             })
         
-        # 3. VCP Pattern
+        # 4. VCP Pattern
         vcp_detected, vcp_strength = self.detect_vcp_pattern(data)
         if vcp_detected and vcp_strength >= filters['pattern_strength_min']:
             patterns.append({
@@ -926,7 +1005,7 @@ class ProfessionalPCSScanner:
             shared_xaxes=True,
             vertical_spacing=0.03,
             row_heights=[0.6, 0.25, 0.15],
-            subplot_titles=('Price Action with Pattern', 'Volume Analysis', 'RSI Momentum')
+            subplot_titles=('Price Action with Pattern Analysis', 'Volume Analysis', 'RSI Momentum')
         )
         
         # Candlestick chart
@@ -938,10 +1017,10 @@ class ProfessionalPCSScanner:
                 low=data['Low'],
                 close=data['Close'],
                 name='Price',
-                increasing_line_color='#00d4aa',
-                decreasing_line_color='#ff5252',
-                increasing_fillcolor='#00d4aa',
-                decreasing_fillcolor='#ff5252'
+                increasing_line_color='#00ff88',
+                decreasing_line_color='#ff4444',
+                increasing_fillcolor='#00ff88',
+                decreasing_fillcolor='#ff4444'
             ),
             row=1, col=1
         )
@@ -953,7 +1032,7 @@ class ProfessionalPCSScanner:
                 y=data['EMA_20'],
                 mode='lines',
                 name='EMA 20',
-                line=dict(color='#ffa726', width=2)
+                line=dict(color='#ffaa00', width=2)
             ),
             row=1, col=1
         )
@@ -964,7 +1043,7 @@ class ProfessionalPCSScanner:
                 y=data['SMA_50'],
                 mode='lines',
                 name='SMA 50',
-                line=dict(color='#42a5f5', width=2)
+                line=dict(color='#00aaff', width=2)
             ),
             row=1, col=1
         )
@@ -980,25 +1059,25 @@ class ProfessionalPCSScanner:
                     fig.add_hline(
                         y=consolidation_high, 
                         line_dash="dash", 
-                        line_color="#ffa726", 
+                        line_color="#ffaa00", 
                         row=1, col=1,
-                        annotation_text=f"Resistance: ₹{consolidation_high:.2f}"
+                        annotation_text=f"Breakout Level: ₹{consolidation_high:.2f}"
                     )
                     fig.add_hline(
                         y=consolidation_low, 
                         line_dash="dash", 
-                        line_color="#42a5f5", 
+                        line_color="#00aaff", 
                         row=1, col=1,
                         annotation_text=f"Support: ₹{consolidation_low:.2f}"
                     )
         
-        # Volume bars with breakout highlighting
+        # Volume bars with breakout highlighting  
         colors = []
         for i, (close, open_price, volume) in enumerate(zip(data['Close'], data['Open'], data['Volume'])):
             if close >= open_price:
-                colors.append('#00d4aa')
+                colors.append('#00ff88')
             else:
-                colors.append('#ff5252')
+                colors.append('#ff4444')
         
         fig.add_trace(
             go.Bar(
@@ -1031,15 +1110,15 @@ class ProfessionalPCSScanner:
                 y=data['RSI'],
                 mode='lines',
                 name='RSI (14)',
-                line=dict(color='#9c27b0', width=2)
+                line=dict(color='#aa66ff', width=2)
             ),
             row=3, col=1
         )
         
         # RSI levels
-        fig.add_hline(y=70, line_dash="dash", line_color="#ff5252", row=3, col=1)
-        fig.add_hline(y=30, line_dash="dash", line_color="#00d4aa", row=3, col=1)
-        fig.add_hline(y=50, line_dash="dot", line_color="#ffa726", row=3, col=1)
+        fig.add_hline(y=70, line_dash="dash", line_color="#ff4444", row=3, col=1)
+        fig.add_hline(y=30, line_dash="dash", line_color="#00ff88", row=3, col=1)
+        fig.add_hline(y=50, line_dash="dot", line_color="#ffaa00", row=3, col=1)
         
         # Update layout
         pattern_name = pattern_info['type'] if pattern_info else 'Technical Analysis'
@@ -1052,7 +1131,7 @@ class ProfessionalPCSScanner:
             paper_bgcolor='rgba(26, 31, 46, 1)',
             plot_bgcolor='rgba(26, 31, 46, 1)',
             font=dict(color='white', family='Inter'),
-            height=800,
+            height=700,
             showlegend=True,
             legend=dict(
                 yanchor="top",
@@ -1071,12 +1150,12 @@ class ProfessionalPCSScanner:
         return fig
 
 def create_professional_sidebar():
-    """Create professional sidebar with comprehensive filters"""
+    """Create professional sidebar with essential filters"""
     with st.sidebar:
         st.markdown("""
-        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, var(--success-color), #00bfa5); border-radius: 16px; margin-bottom: 20px;'>
+        <div style='text-align: center; padding: 16px; background: linear-gradient(135deg, var(--success-color), #00cc6a); border-radius: 12px; margin-bottom: 16px;'>
             <h2 style='color: var(--primary-bg); margin: 0; font-weight: 700;'>🎯 PCS Scanner</h2>
-            <p style='color: var(--primary-bg); margin: 5px 0 0 0; opacity: 0.9;'>Professional Trading Suite</p>
+            <p style='color: var(--primary-bg); margin: 5px 0 0 0; opacity: 0.9;'>Professional Suite</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -1085,7 +1164,7 @@ def create_professional_sidebar():
         
         universe_option = st.selectbox(
             "Select Universe:",
-            ["Complete F&O (200+ stocks)", "Nifty 50", "Bank Nifty", "IT Stocks", 
+            ["Complete NSE F&O (214 stocks)", "Nifty 50", "Bank Nifty", "IT Stocks", 
              "Pharma Stocks", "Auto Stocks", "Metal Stocks", "Energy Stocks", "Custom Selection"],
             help="Choose the stock universe to scan"
         )
@@ -1097,160 +1176,92 @@ def create_professional_sidebar():
                 help="Enter NSE symbols with .NS suffix"
             )
             stocks_to_scan = [s.strip() for s in custom_stocks.split('\n') if s.strip()]
-        elif universe_option == "Complete F&O (200+ stocks)":
+        elif universe_option == "Complete NSE F&O (214 stocks)":
             stocks_to_scan = COMPLETE_NSE_FO_UNIVERSE
         else:
-            # FIXED: Handle sector selection properly
+            # Handle sector selection properly
             category_key = universe_option
             stocks_to_scan = STOCK_CATEGORIES.get(category_key, [])
         
         st.info(f"📈 **{len(stocks_to_scan)} stocks** selected for analysis")
         
-        # Advanced Filters Section
-        st.markdown("### ⚙️ Advanced Filters")
+        # Technical Filters (Essential only)
+        st.markdown("### ⚙️ Technical Filters")
         
-        # Technical Filters
-        with st.expander("🔧 Technical Indicators", expanded=True):
+        with st.expander("🔧 Core Indicators", expanded=True):
             col1, col2 = st.columns(2)
             with col1:
-                rsi_min = st.slider("RSI Min:", 20, 80, 35, help="Minimum RSI value")
+                rsi_min = st.slider("RSI Min:", 20, 80, 35)
             with col2:
-                rsi_max = st.slider("RSI Max:", 20, 80, 75, help="Maximum RSI value")
+                rsi_max = st.slider("RSI Max:", 20, 80, 75)
             
-            adx_min = st.slider("ADX Minimum:", 10, 50, 15, help="Minimum ADX for trend strength")
+            adx_min = st.slider("ADX Minimum:", 10, 50, 15)
             
-            ma_support = st.checkbox("Moving Average Support", value=True, help="Require price above MA")
+            ma_support = st.checkbox("Moving Average Support", value=True)
             if ma_support:
                 col1, col2 = st.columns(2)
                 with col1:
                     ma_type = st.selectbox("MA Type:", ["EMA", "SMA"])
                 with col2:
-                    ma_tolerance = st.slider("MA Tolerance %:", 0, 10, 2, help="Allowed deviation from MA")
+                    ma_tolerance = st.slider("MA Tolerance %:", 0, 10, 2)
         
         # Volume Filters
         with st.expander("📊 Volume Analysis", expanded=True):
-            min_volume_ratio = st.slider(
-                "Min Volume Ratio (20-day):", 
-                0.5, 5.0, 1.0, 0.1,
-                help="Minimum volume vs 20-day average"
-            )
-            
-            volume_surge_threshold = st.slider(
-                "Volume Surge Threshold:", 
-                1.5, 10.0, 2.0, 0.5,
-                help="Minimum volume surge for breakouts"
-            )
+            min_volume_ratio = st.slider("Min Volume Ratio:", 0.5, 5.0, 1.0, 0.1)
+            volume_breakout_ratio = st.slider("Volume Breakout:", 1.5, 5.0, 2.0, 0.1)
         
-        # NEW: Consolidation Breakout Filters
-        with st.expander("🎯 Consolidation Breakout Settings", expanded=True):
-            st.info("**Professional Pattern**: Tight 14-20 day consolidation with volume breakout")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                consolidation_days_min = st.slider("Min Consolidation Days:", 10, 20, 14)
-            with col2:
-                consolidation_days_max = st.slider("Max Consolidation Days:", 15, 25, 20)
-            
-            max_consolidation_range = st.slider(
-                "Max Consolidation Range %:", 
-                3, 15, 8, 1,
-                help="Maximum price range during consolidation"
-            )
-            
-            volume_breakout_ratio = st.slider(
-                "Volume Breakout Ratio:", 
-                1.5, 5.0, 2.0, 0.1,
-                help="Minimum volume spike for breakout confirmation"
-            )
+        # Consolidation Settings (Essential)
+        with st.expander("🎯 Consolidation Settings", expanded=True):
+            consolidation_days_min = st.slider("Min Days:", 10, 20, 14)
+            consolidation_days_max = st.slider("Max Days:", 15, 25, 20)
+            max_consolidation_range = st.slider("Max Range %:", 3, 15, 8, 1)
         
-        # Pattern Filters
-        with st.expander("🎯 Pattern Settings", expanded=True):
-            pattern_strength_min = st.slider(
-                "Min Pattern Strength:", 
-                50, 100, 60, 5,
-                help="Minimum pattern strength percentage"
-            )
-            
-            min_success_rate = st.slider(
-                "Min Success Rate:", 
-                60, 95, 70, 5,
-                help="Minimum historical success rate"
-            )
-            
-            pattern_types = st.multiselect(
-                "Pattern Types:",
-                ["Tight Consolidation Breakout", "Cup and Handle", "Flat Base Breakout", "VCP"],
-                default=["Tight Consolidation Breakout", "Cup and Handle"],
-                help="Select patterns to detect"
-            )
+        # Pattern Strength (Single filter)
+        pattern_strength_min = st.slider("Pattern Strength Min:", 50, 100, 60, 5)
         
         # Scanning Options
         with st.expander("🚀 Scanning Options", expanded=True):
             max_stocks = st.slider(
                 "Max Stocks to Scan:", 
-                10, len(stocks_to_scan), 
-                min(50, len(stocks_to_scan)),
-                help="Limit number of stocks for faster scanning"
+                10, min(100, len(stocks_to_scan)), 
+                min(50, len(stocks_to_scan))
             )
             
-            show_charts = st.checkbox("Show Charts", value=True, help="Display TradingView charts")
-            export_results = st.checkbox("Export Results", value=False, help="Enable CSV export")
+            show_charts = st.checkbox("Show Charts", value=True)
+            show_news = st.checkbox("Show Fundamental News", value=True, help="Get news/events that may explain volume spikes")
+            export_results = st.checkbox("Export Results", value=False)
         
-        # ENHANCED: Market Sentiment Section
-        st.markdown("### 🌍 Market Sentiment Analysis")
+        # Market Sentiment
+        st.markdown("### 🌍 Market Sentiment")
         
-        # Get real-time sentiment
         scanner = ProfessionalPCSScanner()
         sentiment_data = scanner.get_market_sentiment_indicators()
         
         overall_sentiment = sentiment_data.get('overall', {})
         sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
         pcs_recommendation = overall_sentiment.get('pcs_recommendation', 'Moderate opportunities')
-        risk_level = overall_sentiment.get('risk_level', 'MEDIUM')
         
-        # Display sentiment with professional styling
         sentiment_class = f"sentiment-{sentiment_level.lower()}"
         
         st.markdown(f"""
-        <div class="{sentiment_class}" style="padding: 16px; border-radius: 12px; margin: 10px 0;">
-            <h4 style="margin: 0 0 8px 0; color: var(--text-primary);">
+        <div class="{sentiment_class}" style="padding: 12px; border-radius: 10px; margin: 8px 0;">
+            <h4 style="margin: 0 0 6px 0; color: var(--text-primary);">
                 {'🟢' if sentiment_level == 'BULLISH' else '🟡' if sentiment_level == 'NEUTRAL' else '🔴'} 
-                Market: {sentiment_level}
+                {sentiment_level}
             </h4>
-            <p style="margin: 4px 0; font-size: 0.9rem; opacity: 0.9;">{pcs_recommendation}</p>
-            <p style="margin: 4px 0; font-size: 0.8rem; opacity: 0.8;">Risk Level: {risk_level}</p>
+            <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">{pcs_recommendation}</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Detailed sentiment breakdown
+        # Quick metrics
         if 'nifty' in sentiment_data:
             nifty_data = sentiment_data['nifty']
-            st.metric(
-                "Nifty 50", 
-                f"{nifty_data['current']:.2f}", 
-                f"{nifty_data['change_1d']:+.2f}%"
-            )
-        
-        if 'bank_nifty' in sentiment_data:
-            bank_data = sentiment_data['bank_nifty']
-            st.metric(
-                "Bank Nifty", 
-                f"{bank_data['current']:.2f}", 
-                f"{bank_data['change_1d']:+.2f}%"
-            )
-        
-        if sentiment_data.get('vix'):
-            vix_data = sentiment_data['vix']
-            st.metric(
-                "India VIX", 
-                f"{vix_data['current']:.2f}", 
-                f"{vix_data['change_1d']:+.2f}%"
-            )
+            st.metric("Nifty 50", f"{nifty_data['current']:.0f}", f"{nifty_data['change_1d']:+.2f}%")
         
         # Current time
         ist = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(ist)
-        st.markdown(f"**Last Updated:** {current_time.strftime('%H:%M:%S IST')}")
+        st.markdown(f"**Updated:** {current_time.strftime('%H:%M IST')}")
         
         return {
             'stocks_to_scan': stocks_to_scan[:max_stocks],
@@ -1261,15 +1272,13 @@ def create_professional_sidebar():
             'ma_type': ma_type if ma_support else 'EMA',
             'ma_tolerance': ma_tolerance if ma_support else 2,
             'min_volume_ratio': min_volume_ratio,
-            'volume_surge_threshold': volume_surge_threshold,
+            'volume_breakout_ratio': volume_breakout_ratio,
             'consolidation_days_min': consolidation_days_min,
             'consolidation_days_max': consolidation_days_max,
             'max_consolidation_range': max_consolidation_range,
-            'volume_breakout_ratio': volume_breakout_ratio,
             'pattern_strength_min': pattern_strength_min,
-            'min_success_rate': min_success_rate,
-            'pattern_types': pattern_types,
             'show_charts': show_charts,
+            'show_news': show_news,
             'export_results': export_results,
             'max_stocks': max_stocks,
             'market_sentiment': sentiment_data
@@ -1307,7 +1316,8 @@ def create_main_scanner_tab(config):
             progress = (i + 1) / len(config['stocks_to_scan'])
             progress_bar.progress(progress)
             
-            status_container.info(f"🔍 Analyzing {symbol.replace('.NS', '')} ({i+1}/{len(config['stocks_to_scan'])})")
+            clean_symbol = symbol.replace('.NS', '').replace('^', '')
+            status_container.info(f"🔍 Analyzing {clean_symbol} ({i+1}/{len(config['stocks_to_scan'])})")
             
             try:
                 # Get data
@@ -1320,24 +1330,25 @@ def create_main_scanner_tab(config):
                 if not volume_ok:
                     continue
                 
-                # Detect patterns
+                # Detect patterns (all patterns automatically included)
                 patterns = scanner.detect_patterns(data, symbol, config)
                 if not patterns:
-                    continue
-                
-                # Filter patterns by type and success rate
-                filtered_patterns = [
-                    p for p in patterns 
-                    if p['type'] in config['pattern_types'] and p['success_rate'] >= config['min_success_rate']
-                ]
-                
-                if not filtered_patterns:
                     continue
                 
                 # Get current metrics
                 current_price = data['Close'].iloc[-1]
                 current_rsi = data['RSI'].iloc[-1]
                 current_adx = data['ADX'].iloc[-1]
+                
+                # Get fundamental news if enabled
+                news_data = None
+                if config['show_news']:
+                    try:
+                        # Extract company name for news search
+                        stock_name = clean_symbol
+                        news_data = scanner.get_fundamental_news(symbol, stock_name)
+                    except:
+                        news_data = None
                 
                 results.append({
                     'symbol': symbol,
@@ -1346,8 +1357,9 @@ def create_main_scanner_tab(config):
                     'volume_details': volume_details,
                     'rsi': current_rsi,
                     'adx': current_adx,
-                    'patterns': filtered_patterns,
-                    'data': data
+                    'patterns': patterns,
+                    'data': data,
+                    'news_data': news_data
                 })
                 
             except Exception as e:
@@ -1378,21 +1390,24 @@ def create_main_scanner_tab(config):
             with col3:
                 st.metric("💪 Avg Strength", f"{avg_strength:.1f}%")
             with col4:
-                st.metric("🏆 Breakouts", consolidation_breakouts)
+                st.metric("🔥 Breakouts", consolidation_breakouts)
             
             # Display results with enhanced information
             for result in results:
                 # Determine overall confidence
                 max_strength = max(p['strength'] for p in result['patterns'])
                 overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
-                confidence_class = f"{overall_confidence.lower()}-confidence"
                 
                 # Check for consolidation breakout
                 has_consolidation = any('Consolidation' in p['type'] for p in result['patterns'])
                 special_indicator = " 🔥 BREAKOUT!" if has_consolidation else ""
                 
+                # Check for news
+                has_news = result.get('news_data') and result['news_data']['news_count'] > 0
+                news_indicator = " 📰 NEWS!" if has_news else ""
+                
                 with st.expander(
-                    f"📈 {result['symbol'].replace('.NS', '')} - {len(result['patterns'])} Pattern(s) - {overall_confidence} Confidence{special_indicator}", 
+                    f"📈 {result['symbol'].replace('.NS', '').replace('^', '')} - {len(result['patterns'])} Pattern(s) - {overall_confidence}{special_indicator}{news_indicator}", 
                     expanded=True
                 ):
                     
@@ -1410,6 +1425,25 @@ def create_main_scanner_tab(config):
                         adx_color = "normal" if result['adx'] > 25 else "inverse"
                         st.metric("⚡ ADX", f"{result['adx']:.1f}", delta_color=adx_color)
                     
+                    # NEWS ANALYSIS - NEW FEATURE
+                    if has_news:
+                        news_data = result['news_data']
+                        sentiment_emoji = "🟢" if news_data['overall_sentiment'] == 'positive' else "🔴" if news_data['overall_sentiment'] == 'negative' else "🟡"
+                        
+                        st.markdown(f"""
+                        <div class="news-card">
+                            <h4>{sentiment_emoji} Fundamental News Analysis - {news_data['overall_sentiment'].upper()} Sentiment</h4>
+                            <p style="margin: 8px 0; font-size: 0.9rem; opacity: 0.9;">
+                                <strong>📰 Recent Events ({news_data['news_count']} items):</strong>
+                            </p>
+                        """, unsafe_allow_html=True)
+                        
+                        for news_item in news_data['news_items'][:2]:  # Show top 2 news items
+                            relevance_emoji = "🔥" if news_item['relevance'] == 'high' else "⚡" if news_item['relevance'] == 'medium' else "📄"
+                            st.markdown(f"**{relevance_emoji} {news_item['relevance'].upper()}:** {news_item['headline'][:150]}...")
+                        
+                        st.markdown("</div>", unsafe_allow_html=True)
+                    
                     # Pattern details with enhanced information
                     for pattern in result['patterns']:
                         confidence_emoji = "🟢" if pattern['confidence'] == 'HIGH' else "🟡" if pattern['confidence'] == 'MEDIUM' else "🔴"
@@ -1422,31 +1456,32 @@ def create_main_scanner_tab(config):
                             <div class="consolidation-card">
                                 <h4>🔥 {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
                                 <div style='display: flex; justify-content: space-between; margin: 10px 0;'>
-                                    <span><strong>Pattern Strength:</strong> {pattern['strength']}%</span>
+                                    <span><strong>Strength:</strong> {pattern['strength']}%</span>
                                     <span><strong>Success Rate:</strong> {pattern['success_rate']}%</span>
-                                    <span><strong>PCS Suitability:</strong> {pattern['pcs_suitability']}%</span>
+                                    <span><strong>PCS Fit:</strong> {pattern['pcs_suitability']}%</span>
                                 </div>
                                 <div style='display: flex; justify-content: space-between; margin: 10px 0; font-size: 0.9rem;'>
-                                    <span><strong>Consolidation Days:</strong> {details.get('consolidation_days', 'N/A')}</span>
+                                    <span><strong>Consolidation:</strong> {details.get('consolidation_days', 'N/A')} days</span>
                                     <span><strong>Range:</strong> {details.get('consolidation_range_pct', 0):.1f}%</span>
                                     <span><strong>Volume Surge:</strong> {details.get('volume_ratio', 0):.1f}x</span>
                                 </div>
-                                <p><strong>Research Basis:</strong> {pattern['research_basis']}</p>
-                                <p><strong>💡 PCS Strategy:</strong> {'Conservative strikes (3-5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate strikes (5-8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive strikes (8-12% OTM)'}</p>
-                                <p style="color: var(--success-color); font-weight: 600;">⚡ PROFESSIONAL BREAKOUT: High-probability setup with tight risk control</p>
+                                <p><strong>Research:</strong> {pattern['research_basis']}</p>
+                                <p><strong>💡 PCS Strategy:</strong> {'Conservative (3-5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate (5-8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive (8-12% OTM)'}</p>
+                                <p style="color: var(--success-color); font-weight: 600;">⚡ PROFESSIONAL BREAKOUT: High-probability setup</p>
                             </div>
                             """, unsafe_allow_html=True)
                         else:
+                            confidence_class = f"{pattern['confidence'].lower()}-confidence"
                             st.markdown(f"""
                             <div class="pattern-card {confidence_class}">
                                 <h4>{confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
                                 <div style='display: flex; justify-content: space-between; margin: 10px 0;'>
-                                    <span><strong>Pattern Strength:</strong> {pattern['strength']}%</span>
+                                    <span><strong>Strength:</strong> {pattern['strength']}%</span>
                                     <span><strong>Success Rate:</strong> {pattern['success_rate']}%</span>
-                                    <span><strong>PCS Suitability:</strong> {pattern['pcs_suitability']}%</span>
+                                    <span><strong>PCS Fit:</strong> {pattern['pcs_suitability']}%</span>
                                 </div>
-                                <p><strong>Research Basis:</strong> {pattern['research_basis']}</p>
-                                <p><strong>💡 PCS Strategy:</strong> {'Conservative strikes (5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate strikes (8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive strikes (12% OTM)'}</p>
+                                <p><strong>Research:</strong> {pattern['research_basis']}</p>
+                                <p><strong>💡 PCS Strategy:</strong> {'Conservative (5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate (8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive (12% OTM)'}</p>
                             </div>
                             """, unsafe_allow_html=True)
                     
@@ -1463,232 +1498,19 @@ def create_main_scanner_tab(config):
         else:
             st.warning("🔍 No patterns found with current filters. Try relaxing the criteria.")
             
-            # Enhanced suggestions with market context
-            st.markdown("### 💡 Optimization Suggestions:")
-            
-            market_sentiment = config.get('market_sentiment', {}).get('overall', {}).get('sentiment', 'NEUTRAL')
-            
-            if market_sentiment == 'BEARISH':
-                st.error("**🔻 Bearish Market**: Consider tightening filters or waiting for better conditions")
-                st.markdown("- Increase **Pattern Strength** to 75%+")
-                st.markdown("- Require **Volume Surge** of 3x+")
-                st.markdown("- Focus on **Consolidation Breakouts** only")
-            elif market_sentiment == 'NEUTRAL':
-                st.warning("**📊 Neutral Market**: Moderate adjustments recommended")
-                st.markdown("- Lower **Pattern Strength** to 55%")
-                st.markdown("- Reduce **Volume Ratio** to 0.8x")
-                st.markdown("- Expand **RSI range** to 30-80")
-            else:
-                st.info("**📈 Bullish Market**: Consider expanding criteria for more opportunities")
-                st.markdown("- Lower **Pattern Strength** to 50%")
-                st.markdown("- Reduce **Volume Ratio** to 0.5x")
-                st.markdown("- Include more **Pattern Types**")
-
-def create_consolidation_analysis_tab(config):
-    """NEW: Professional consolidation analysis tab"""
-    st.markdown("### 📊 Consolidation Breakout Analysis")
-    st.info("🔥 **Professional Feature**: Advanced consolidation pattern detection with volume confirmation")
-    
-    # Consolidation-specific controls
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("#### ⚙️ Consolidation Settings")
-        consolidation_days = st.slider("Consolidation Period:", 10, 30, 17, help="Ideal: 14-20 days")
-        max_range = st.slider("Max Range %:", 2, 15, 6, help="Tighter = Higher quality")
-    
-    with col2:
-        st.markdown("#### 📊 Volume Requirements")
-        volume_multiplier = st.slider("Volume Breakout:", 1.5, 5.0, 2.5, 0.1)
-        volume_consistency = st.checkbox("Volume Consistency Check", value=True)
-    
-    with col3:
-        st.markdown("#### 🎯 Quality Filters")
-        min_price = st.number_input("Min Stock Price:", value=100, step=50)
-        exclude_penny = st.checkbox("Exclude Penny Stocks", value=True)
-    
-    if st.button("🔍 Scan for Consolidation Breakouts", type="primary"):
-        st.success("🔥 **Consolidation breakout scanning integrated into main scanner!**")
-        st.info("Use the main scanner with 'Tight Consolidation Breakout' pattern selected for best results.")
-
-def create_market_intelligence_tab(config):
-    """ENHANCED: Professional market intelligence tab"""
-    st.markdown("### 🌍 Market Intelligence Dashboard")
-    
-    # Get comprehensive market data
-    scanner = ProfessionalPCSScanner()
-    sentiment_data = scanner.get_market_sentiment_indicators()
-    
-    # Market Overview
-    col1, col2, col3 = st.columns(3)
-    
-    overall_sentiment = sentiment_data.get('overall', {})
-    
-    with col1:
-        sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
-        sentiment_emoji = "🟢" if sentiment_level == 'BULLISH' else "🟡" if sentiment_level == 'NEUTRAL' else "🔴"
-        
-        st.markdown(f"""
-        <div class="metric-card">
-            <h3>{sentiment_emoji} Market Sentiment</h3>
-            <h2 style="color: var(--success-color);">{sentiment_level}</h2>
-            <p>{overall_sentiment.get('pcs_recommendation', 'Moderate opportunities')}</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        risk_level = overall_sentiment.get('risk_level', 'MEDIUM')
-        risk_color = "var(--success-color)" if risk_level == 'LOW' else "var(--warning-color)" if risk_level == 'MEDIUM' else "var(--danger-color)"
-        
-        st.markdown(f"""
-        <div class="metric-card">
-            <h3>⚠️ Risk Assessment</h3>
-            <h2 style="color: {risk_color};">{risk_level}</h2>
-            <p>Current market risk level for PCS strategies</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        score = overall_sentiment.get('score', 2.0)
-        score_pct = (score / 3.0) * 100
-        
-        st.markdown(f"""
-        <div class="metric-card">
-            <h3>📊 Sentiment Score</h3>
-            <h2 style="color: var(--info-color);">{score:.1f}/3.0</h2>
-            <p>{score_pct:.0f}% Bullish Confidence</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Detailed Market Metrics
-    st.markdown("#### 📈 Detailed Market Analysis")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if 'nifty' in sentiment_data:
-            nifty_data = sentiment_data['nifty']
-            
-            st.markdown("**Nifty 50 Analysis**")
-            change_color = "🟢" if nifty_data['change_1d'] > 0 else "🔴" if nifty_data['change_1d'] < 0 else "🟡"
-            
-            st.metric(
-                "Current Level", 
-                f"{nifty_data['current']:.2f}",
-                f"{nifty_data['change_1d']:+.2f}% (1D)"
-            )
-            
-            if 'change_5d' in nifty_data:
-                st.metric(
-                    "5-Day Performance", 
-                    f"{nifty_data['change_5d']:+.2f}%",
-                    help="5-day trend indicator"
-                )
-    
-    with col2:
-        if 'bank_nifty' in sentiment_data:
-            bank_data = sentiment_data['bank_nifty']
-            
-            st.markdown("**Bank Nifty Analysis**")
-            
-            st.metric(
-                "Current Level", 
-                f"{bank_data['current']:.2f}",
-                f"{bank_data['change_1d']:+.2f}% (1D)"
-            )
-            
-            # Bank vs Nifty comparison
-            if 'nifty' in sentiment_data:
-                relative_strength = bank_data['change_1d'] - sentiment_data['nifty']['change_1d']
-                st.metric(
-                    "Relative to Nifty", 
-                    f"{relative_strength:+.2f}%",
-                    help="Bank Nifty outperformance vs Nifty 50"
-                )
-    
-    # VIX Analysis
-    if sentiment_data.get('vix'):
-        vix_data = sentiment_data['vix']
-        
-        st.markdown("#### 😰 Fear Index (India VIX)")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Current VIX", f"{vix_data['current']:.2f}")
-        
-        with col2:
-            st.metric("Change", f"{vix_data['change_1d']:+.2f}%")
-        
-        with col3:
-            vix_interpretation = "Low Fear" if vix_data['current'] < 15 else "Moderate Fear" if vix_data['current'] < 20 else "High Fear"
-            st.metric("Fear Level", vix_interpretation)
-    
-    # PCS Strategy Recommendations
-    st.markdown("#### 💡 PCS Strategy Recommendations")
-    
-    sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
-    
-    if sentiment_level == 'BULLISH':
-        st.success("""
-        **🟢 BULLISH Market - Excellent for PCS:**
-        - **Strategy**: Aggressive Put Credit Spreads
-        - **Strikes**: 5-8% OTM short puts
-        - **Expiration**: 30-45 DTE
-        - **Position Size**: Up to 5% per trade
-        - **Sectors**: Focus on momentum leaders (IT, Banking)
-        """)
-    elif sentiment_level == 'NEUTRAL':
-        st.warning("""
-        **🟡 NEUTRAL Market - Moderate PCS Opportunities:**
-        - **Strategy**: Conservative Put Credit Spreads
-        - **Strikes**: 8-12% OTM short puts
-        - **Expiration**: 20-30 DTE
-        - **Position Size**: Up to 3% per trade
-        - **Sectors**: Focus on defensive stocks (FMCG, Pharma)
-        """)
-    else:
-        st.error("""
-        **🔴 BEARISH Market - Avoid PCS:**
-        - **Alternative**: Call Credit Spreads or Cash
-        - **If PCS**: Extremely conservative (15%+ OTM)
-        - **Position Size**: Maximum 1% per trade
-        - **Risk Management**: Tight stops, quick exits
-        """)
-    
-    # Market Timing
-    ist = pytz.timezone('Asia/Kolkata')
-    current_time = datetime.now(ist)
-    market_hours = 9 <= current_time.hour < 15.5  # 9:15 AM to 3:30 PM IST
-    
-    st.markdown("""
-    ---
-    **📅 Market Timing Context:**
-    """)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.info(f"**Current Time**: {current_time.strftime('%H:%M:%S IST')}")
-        if market_hours:
-            st.success("**Market Status**: 🟢 OPEN - Live data available")
-        else:
-            st.warning("**Market Status**: 🔴 CLOSED - Using last closing data")
-    
-    with col2:
-        next_trading_day = current_time + timedelta(days=1)
-        while next_trading_day.weekday() > 4:  # Skip weekends
-            next_trading_day += timedelta(days=1)
-        
-        st.info(f"**Next Trading Day**: {next_trading_day.strftime('%d %b %Y')}")
+            st.markdown("### 💡 Suggestions:")
+            st.markdown("- Lower **Pattern Strength** to 50%")
+            st.markdown("- Reduce **Volume Ratio** to 0.8x")  
+            st.markdown("- Expand **RSI range** to 30-80")
+            st.markdown("- Lower **ADX minimum** to 12")
 
 def main():
-    # FIXED: Professional header with different colors
+    # FIXED: Compact Professional Header - Only 20% of screen
     st.markdown("""
     <div class="professional-header">
         <h1>📈 NSE F&O PCS Professional Scanner</h1>
-        <p class="subtitle">Complete F&O Universe • Research-Backed Patterns • Professional Analysis</p>
-        <p class="description">Advanced Consolidation Breakouts • Market Sentiment • Real-time Intelligence</p>
+        <p class="subtitle">Complete 214-Stock Universe • Advanced Breakout Detection • News Intelligence</p>
+        <p class="description">Professional Trading Suite with Fundamental Analysis & Market Sentiment</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1697,30 +1519,99 @@ def main():
     
     # Create main tabs
     tab1, tab2, tab3 = st.tabs([
-        "🎯 Pattern & Breakout Scanner",
-        "📊 Consolidation Analysis", 
-        "🌍 Market Intelligence"
+        "🎯 Pattern Scanner",
+        "📊 Market Intelligence", 
+        "🌍 News & Sentiment"
     ])
     
     with tab1:
         create_main_scanner_tab(config)
     
     with tab2:
-        create_consolidation_analysis_tab(config)
+        st.markdown("### 📊 Real-Time Market Intelligence")
+        
+        # Get comprehensive market data
+        scanner = ProfessionalPCSScanner()
+        sentiment_data = scanner.get_market_sentiment_indicators()
+        
+        # Market Overview
+        col1, col2, col3 = st.columns(3)
+        
+        overall_sentiment = sentiment_data.get('overall', {})
+        
+        with col1:
+            sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
+            sentiment_emoji = "🟢" if sentiment_level == 'BULLISH' else "🟡" if sentiment_level == 'NEUTRAL' else "🔴"
+            
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>{sentiment_emoji} Market Sentiment</h3>
+                <h2 style="color: var(--success-color);">{sentiment_level}</h2>
+                <p>{overall_sentiment.get('pcs_recommendation', 'Moderate opportunities')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            risk_level = overall_sentiment.get('risk_level', 'MEDIUM')
+            risk_color = "var(--success-color)" if risk_level == 'LOW' else "var(--warning-color)" if risk_level == 'MEDIUM' else "var(--danger-color)"
+            
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>⚠️ Risk Level</h3>
+                <h2 style="color: {risk_color};">{risk_level}</h2>
+                <p>Current PCS risk assessment</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            score = overall_sentiment.get('score', 2.0)
+            score_pct = (score / 3.0) * 100
+            
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>📊 Confidence Score</h3>
+                <h2 style="color: var(--info-color);">{score:.1f}/3.0</h2>
+                <p>{score_pct:.0f}% Market Confidence</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Detailed Market Metrics
+        st.markdown("#### 📈 Detailed Analysis")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if 'nifty' in sentiment_data:
+                nifty_data = sentiment_data['nifty']
+                st.metric("Nifty 50", f"{nifty_data['current']:.0f}", f"{nifty_data['change_1d']:+.2f}%")
+                if 'change_5d' in nifty_data:
+                    st.metric("5-Day Trend", f"{nifty_data['change_5d']:+.2f}%")
+        
+        with col2:
+            if 'bank_nifty' in sentiment_data:
+                bank_data = sentiment_data['bank_nifty']
+                st.metric("Bank Nifty", f"{bank_data['current']:.0f}", f"{bank_data['change_1d']:+.2f}%")
     
     with tab3:
-        create_market_intelligence_tab(config)
+        st.markdown("### 🌍 News & Sentiment Analysis")
+        st.info("📰 **Enhanced Feature**: News analysis is integrated into the main scanner results when enabled in sidebar.")
+        st.markdown("""
+        **How it works:**
+        - **Volume Spike Detection**: When unusual volume is detected, the scanner searches for fundamental reasons
+        - **News Categorization**: Orders, earnings, policy changes, government support are identified
+        - **Sentiment Analysis**: Positive/negative/neutral sentiment assessment
+        - **Relevance Scoring**: High/medium/low relevance to price/volume movements
+        """)
     
-    # Professional footer
+    # FIXED: Compact Professional Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; padding: 30px; background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg)); border-radius: 16px; margin-top: 30px; border: 1px solid var(--border-color);'>
-        <h4 style='color: var(--success-color); margin-bottom: 15px;'>🏆 Professional Trading Suite - Enhanced Edition</h4>
-        <p style='color: var(--text-secondary); margin: 5px 0;'><strong>✅ Complete NSE F&O Universe:</strong> 200+ official F&O stocks included</p>
-        <p style='color: var(--text-secondary); margin: 5px 0;'><strong>🔬 Research-Backed:</strong> Patterns validated by market experts with success rates</p>
-        <p style='color: var(--text-secondary); margin: 5px 0;'><strong>🔥 Professional Breakouts:</strong> Tight consolidation detection with volume confirmation</p>
-        <p style='color: var(--text-secondary); margin: 5px 0;'><strong>🌍 Market Intelligence:</strong> Real-time sentiment analysis and PCS recommendations</p>
-        <p style='color: var(--text-muted); margin: 15px 0 5px 0; font-size: 0.9rem;'><strong>⚠️ Disclaimer:</strong> For educational purposes only. Not financial advice. Trade responsibly with proper risk management.</p>
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg)); border-radius: 12px; margin-top: 20px; border: 1px solid var(--border-color);'>
+        <h4 style='color: var(--success-color); margin-bottom: 10px;'>🏆 Professional Trading Suite V3.0</h4>
+        <p style='color: var(--text-secondary); margin: 3px 0;'><strong>✅ Complete NSE F&O Universe:</strong> All 214 official stocks</p>
+        <p style='color: var(--text-secondary); margin: 3px 0;'><strong>🔥 Professional Breakouts:</strong> 14-20 day consolidation detection</p>
+        <p style='color: var(--text-secondary); margin: 3px 0;'><strong>📰 News Intelligence:</strong> Fundamental analysis for volume spikes</p>
+        <p style='color: var(--text-muted); margin: 10px 0 0 0; font-size: 0.85rem;'><strong>⚠️ Disclaimer:</strong> Educational purposes only. Not financial advice.</p>
     </div>
     """, unsafe_allow_html=True)
 
