@@ -2445,6 +2445,8 @@ class ProfessionalPCSScanner:
         try:
             import requests
             import re
+            import pandas as pd
+            import numpy as np
             from datetime import datetime, timedelta
             
             # Try to get delivery data from NSE (fallback method)
@@ -2481,32 +2483,51 @@ class ProfessionalPCSScanner:
             
             # Price stability analysis (delivery usually associated with less volatility)
             price_volatility = recent_data['Close'].pct_change().std() * 100
+            if pd.isna(price_volatility):
+                price_volatility = 5.0  # Default to moderate volatility
             
-            # Volume-price correlation
+            # Volume-price correlation (handle NaN)
             volume_price_corr = recent_data['Volume'].corr(recent_data['Close'])
+            if pd.isna(volume_price_corr):
+                volume_price_corr = 0
             
             # Estimate delivery percentage based on technical factors
             delivery_estimate = 0
             confidence = 'Low'
             signals = []
             
+            # Volume analysis signals
+            volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1
+            
             # Higher volume with lower volatility suggests delivery
-            if current_volume > avg_volume * 1.2 and price_volatility < 2.0:
+            if volume_ratio > 1.2 and price_volatility < 2.0:
                 delivery_estimate += 25
-                signals.append("High volume with low volatility (delivery indication)")
+                signals.append(f"High volume ({volume_ratio:.1f}x) with low volatility ({price_volatility:.1f}%)")
+                confidence = 'Medium'
+            elif volume_ratio > 1.5:
+                delivery_estimate += 15
+                signals.append(f"Significant volume increase ({volume_ratio:.1f}x average)")
                 confidence = 'Medium'
             
             # Negative volume-price correlation suggests delivery accumulation
             if volume_price_corr < -0.3:
                 delivery_estimate += 20
-                signals.append("Negative volume-price correlation (delivery accumulation)")
+                signals.append(f"Negative volume-price correlation ({volume_price_corr:.2f})")
                 confidence = 'Medium'
+            elif volume_price_corr < -0.1:
+                delivery_estimate += 10
+                signals.append(f"Weak negative volume-price correlation ({volume_price_corr:.2f})")
             
             # Check for accumulation patterns
             if self._detect_accumulation_pattern(recent_data):
                 delivery_estimate += 15
                 signals.append("Accumulation pattern detected")
                 confidence = 'Medium'
+            
+            # Price stability bonus
+            if price_volatility < 1.5:
+                delivery_estimate += 10
+                signals.append(f"Very stable price action ({price_volatility:.1f}% volatility)")
             
             # Cap the estimate
             delivery_estimate = min(delivery_estimate, 85)
@@ -4480,6 +4501,114 @@ def create_main_scanner_tab(config):
 
                             </div>
                             """, unsafe_allow_html=True)
+                    
+                    # =================== DISPLAY ENHANCEMENTS ===================
+                    enhancements = result.get('enhancements', {})
+                    
+                    if enhancements:
+                        st.markdown("### 🚀 **Enhancement Analysis**")
+                        
+                        # Create columns for enhancements
+                        enh_cols = st.columns(2)
+                        
+                        # Enhancement 1: Delivery Volume Analysis
+                        if 'delivery_volume' in enhancements:
+                            with enh_cols[0]:
+                                delivery = enhancements['delivery_volume']
+                                if delivery.get('delivery_percentage') is not None:
+                                    confidence_color = "var(--primary-green)" if delivery.get('confidence') == 'High' else "var(--primary-orange)" if delivery.get('confidence') == 'Medium' else "var(--primary-red)"
+                                    st.markdown(f"""
+                                    <div class="pattern-card" style="border-left-color: {confidence_color};">
+                                        <h4>📊 Delivery Volume Analysis</h4>
+                                        <p><strong>Estimated Delivery:</strong> {delivery.get('delivery_percentage', 0):.1f}%</p>
+                                        <p><strong>Analysis:</strong> {delivery.get('delivery_analysis', 'N/A')}</p>
+                                        <p><strong>Confidence:</strong> <span style="color: {confidence_color};">{delivery.get('confidence', 'Low')}</span></p>
+                                        <div style="font-size: 0.9rem; margin-top: 8px;">
+                                            {''.join(f'<div>• {signal}</div>' for signal in delivery.get('delivery_signals', []))}
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f"""
+                                    <div class="pattern-card" style="border-left-color: var(--primary-red);">
+                                        <h4>📊 Delivery Volume Analysis</h4>
+                                        <p style="color: var(--primary-red);">⚠️ {delivery.get('delivery_analysis', 'Analysis unavailable')}</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                        
+                        # Enhancement 2: F&O Consolidation
+                        if 'fno_consolidation' in enhancements:
+                            with enh_cols[1]:
+                                consolidation = enhancements['fno_consolidation']
+                                status = "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected"
+                                status_color = "var(--primary-green)" if consolidation.get('consolidation_detected') else "var(--primary-orange)"
+                                strength = consolidation.get('consolidation_strength', 0)
+                                st.markdown(f"""
+                                <div class="consolidation-card">
+                                    <h4>🔄 F&O Consolidation</h4>
+                                    <p><strong>Status:</strong> <span style="color: {status_color};">{status}</span></p>
+                                    <p><strong>Strength:</strong> {strength}/100</p>
+                                    <p><strong>Analysis:</strong> {consolidation.get('analysis', 'N/A')}</p>
+                                    <div style="font-size: 0.9rem; margin-top: 8px;">
+                                        {''.join(f'<div>• {signal}</div>' for signal in consolidation.get('signals', []))}
+                                    </div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                        
+                        # Create second row for remaining enhancements
+                        enh_cols2 = st.columns(2)
+                        
+                        # Enhancement 3: Breakout-Pullback
+                        if 'breakout_pullback' in enhancements:
+                            with enh_cols2[0]:
+                                breakout = enhancements['breakout_pullback']
+                                status = "✅ Detected" if breakout.get('pattern_detected') else "❌ Not Detected"
+                                status_color = "var(--primary-green)" if breakout.get('pattern_detected') else "var(--primary-orange)"
+                                strength = breakout.get('pattern_strength', 0)
+                                st.markdown(f"""
+                                <div class="high-confidence">
+                                    <h4>📈 Breakout-Pullback Pattern</h4>
+                                    <p><strong>Status:</strong> <span style="color: {status_color};">{status}</span></p>
+                                    <p><strong>Strength:</strong> {strength}/100</p>
+                                    <p><strong>Analysis:</strong> {breakout.get('analysis', 'N/A')}</p>
+                                    <div style="font-size: 0.9rem; margin-top: 8px;">
+                                        {''.join(f'<div>• {signal}</div>' for signal in breakout.get('signals', []))}
+                                    </div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                        
+                        # Enhancement 4: Enhanced S&R
+                        if 'enhanced_sr' in enhancements:
+                            with enh_cols2[1]:
+                                sr = enhancements['enhanced_sr']
+                                if sr.get('analysis_available'):
+                                    key_levels = sr.get('key_levels', {})
+                                    support_count = len(sr.get('support_levels', []))
+                                    resistance_count = len(sr.get('resistance_levels', []))
+                                    position = sr.get('position_analysis', {}).get('position_strength', 'N/A')
+                                    breakout_prob = sr.get('breakout_analysis', {}).get('breakout_probability', 'N/A')
+                                    
+                                    st.markdown(f"""
+                                    <div class="news-card">
+                                        <h4>🎯 Enhanced Support & Resistance</h4>
+                                        <p><strong>Support Levels:</strong> {support_count}</p>
+                                        <p><strong>Resistance Levels:</strong> {resistance_count}</p>
+                                        <p><strong>Position:</strong> {position}</p>
+                                        <p><strong>Breakout Probability:</strong> <span style="color: var(--primary-green);">{breakout_prob}</span></p>
+                                        <div style="font-size: 0.9rem; margin-top: 8px;">
+                                            {''.join(f'<div>• {insight}</div>' for insight in sr.get('analysis_summary', {}).get('key_insights', []))}
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f"""
+                                    <div class="news-card">
+                                        <h4>🎯 Enhanced Support & Resistance</h4>
+                                        <p style="color: var(--primary-orange);">⚠️ {sr.get('message', 'Analysis not available')}</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                        
+                        st.markdown("---")
                     
                     # Chart with current day focus
                     if config['show_charts']:
