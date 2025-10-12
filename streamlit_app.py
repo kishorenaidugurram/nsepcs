@@ -24,63 +24,96 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# FIXED: Angel One Dark Theme with Visible Scrollbar and Professional Colors
+# ENHANCED PROFESSIONAL UI SYSTEM - Tailwind-Inspired CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     
     :root {
-        /* ENHANCED ACCESSIBILITY COLOR SCHEME */
-        /* Based on comprehensive color accessibility audit */
+        /* === PROFESSIONAL TRADING PLATFORM COLOR SYSTEM === */
+        /* Inspired by modern financial interfaces like Bloomberg Terminal */
         
-        /* ENHANCED BACKGROUND COLORS - Improved contrast */
-        --primary-bg: #0A0E1A;          /* Darker for better contrast */
-        --secondary-bg: #1A202C;        /* Unchanged - good contrast */
-        --accent-bg: #2D3748;           /* Unchanged - good contrast */
-        --sidebar-bg: #1F2937;          /* Slightly lighter for better readability */
+        /* Primary Backgrounds - Deep Professional */
+        --tw-bg-primary: #0A0F1C;           /* Deep navy - main background */
+        --tw-bg-secondary: #1E2337;         /* Card backgrounds */
+        --tw-bg-tertiary: #2A3441;          /* Elevated elements */
+        --tw-bg-quaternary: #374151;        /* Interactive elements */
         
-        /* ENHANCED TEXT COLORS - WCAG AAA compliant */
-        --text-primary: #FFFFFF;        /* Pure white - maximum contrast */
-        --text-secondary: #E2E8F0;      /* Lighter secondary text - improved readability */
-        --text-muted: #CBD5E0;          /* Lighter muted text - better visibility */
-        --text-accent: #F7FAFC;         /* Near white for important accents */
+        /* Surface Colors - Modern Depth */
+        --tw-surface-primary: #111827;      /* Primary surfaces */
+        --tw-surface-secondary: #1F2937;    /* Secondary surfaces */
+        --tw-surface-tertiary: #374151;     /* Tertiary surfaces */
         
-        /* ACCESSIBLE ACCENT COLORS - Improved contrast ratios */
-        --primary-blue: #4299E1;        /* Lighter blue - better contrast on dark backgrounds */
-        --primary-green: #48BB78;       /* Slightly lighter green - improved visibility */
-        --primary-orange: #F6AD55;      /* Enhanced orange - better contrast */
-        --stack-overflow-orange: #FF8C00; /* More vibrant orange - improved visibility */
-        --primary-red: #F56565;         /* Lighter red - better readability */
-        --warning-yellow: #F6E05E;      /* Added warning color - accessible */
+        /* Text Colors - High Contrast Hierarchy */
+        --tw-text-primary: #F9FAFB;         /* Primary text - near white */
+        --tw-text-secondary: #E5E7EB;       /* Secondary text */
+        --tw-text-tertiary: #D1D5DB;        /* Tertiary text */
+        --tw-text-quaternary: #9CA3AF;      /* Muted text */
         
-        /* ENHANCED BORDER AND UI COLORS */
-        --border-color: #4A5568;        /* Unchanged - good contrast */
-        --border-light: #718096;        /* Unchanged - good contrast */
-        --border-accent: #60A5FA;       /* Added accent border color */
+        /* Brand Colors - Professional Trading */
+        --tw-brand-primary: #2563EB;        /* Primary blue - professional */
+        --tw-brand-secondary: #1D4ED8;      /* Darker blue */
+        --tw-brand-accent: #3B82F6;         /* Lighter blue */
         
-        /* SUCCESS/ERROR/WARNING STATES - High contrast */
-        --success-bg: rgba(72, 187, 120, 0.1);
-        --success-border: #48BB78;
-        --success-text: #68D391;
+        /* Financial Colors - Industry Standard */
+        --tw-success: #10B981;              /* Profit/Success green */
+        --tw-success-light: #34D399;        /* Light success */
+        --tw-success-dark: #059669;         /* Dark success */
         
-        --error-bg: rgba(245, 101, 101, 0.1);
-        --error-border: #F56565;
-        --error-text: #FC8181;
+        --tw-danger: #EF4444;               /* Loss/Danger red */
+        --tw-danger-light: #F87171;         /* Light danger */
+        --tw-danger-dark: #DC2626;          /* Dark danger */
         
-        --warning-bg: rgba(246, 224, 94, 0.1);
-        --warning-border: #F6E05E;
-        --warning-text: #F6E05E;
+        --tw-warning: #F59E0B;              /* Warning orange */
+        --tw-warning-light: #FBBF24;        /* Light warning */
+        --tw-warning-dark: #D97706;         /* Dark warning */
         
-        --info-bg: rgba(66, 153, 225, 0.1);
-        --info-border: #4299E1;
-        --info-text: #63B3ED;
+        --tw-info: #06B6D4;                 /* Info cyan */
+        --tw-info-light: #22D3EE;           /* Light info */
+        --tw-info-dark: #0891B2;            /* Dark info */
         
-        /* ENHANCED SHADOW COLORS */
-        --shadow-light: rgba(0, 0, 0, 0.15);
-        --shadow-medium: rgba(0, 0, 0, 0.35);
-        --shadow-heavy: rgba(0, 0, 0, 0.5);
-        --shadow-colored: rgba(66, 153, 225, 0.2);
-        --header-gradient: linear-gradient(135deg, #1A202C 0%, #2D3748 50%, #4299E1 100%);
+        /* Border Colors - Subtle Definition */
+        --tw-border-primary: #374151;       /* Primary borders */
+        --tw-border-secondary: #4B5563;     /* Secondary borders */
+        --tw-border-accent: #6B7280;        /* Accent borders */
+        --tw-border-focus: #3B82F6;         /* Focus borders */
+        
+        /* Shadow System - Professional Depth */
+        --tw-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --tw-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --tw-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --tw-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        --tw-shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        --tw-shadow-colored: 0 10px 15px -3px rgb(59 130 246 / 0.1), 0 4px 6px -4px rgb(59 130 246 / 0.1);
+        
+        /* Gradient System - Modern Aesthetics */
+        --tw-gradient-primary: linear-gradient(135deg, var(--tw-brand-primary) 0%, var(--tw-brand-secondary) 100%);
+        --tw-gradient-success: linear-gradient(135deg, var(--tw-success) 0%, var(--tw-success-dark) 100%);
+        --tw-gradient-danger: linear-gradient(135deg, var(--tw-danger) 0%, var(--tw-danger-dark) 100%);
+        --tw-gradient-surface: linear-gradient(135deg, var(--tw-surface-primary) 0%, var(--tw-surface-secondary) 100%);
+        
+        /* Spacing System - Consistent Rhythm */
+        --tw-space-1: 0.25rem;   /* 4px */
+        --tw-space-2: 0.5rem;    /* 8px */
+        --tw-space-3: 0.75rem;   /* 12px */
+        --tw-space-4: 1rem;      /* 16px */
+        --tw-space-5: 1.25rem;   /* 20px */
+        --tw-space-6: 1.5rem;    /* 24px */
+        --tw-space-8: 2rem;      /* 32px */
+        
+        /* Border Radius System */
+        --tw-rounded: 0.25rem;      /* 4px */
+        --tw-rounded-md: 0.375rem;  /* 6px */
+        --tw-rounded-lg: 0.5rem;    /* 8px */
+        --tw-rounded-xl: 0.75rem;   /* 12px */
+        
+        /* Typography Scale */
+        --tw-text-sm: 0.875rem;     /* 14px */
+        --tw-text-base: 1rem;       /* 16px */
+        --tw-text-lg: 1.125rem;     /* 18px */
+        --tw-text-xl: 1.25rem;      /* 20px */
+        --tw-text-2xl: 1.5rem;      /* 24px */
+        --tw-text-3xl: 1.875rem;    /* 30px */
     }
     
     /* Main app styling */
@@ -152,11 +185,11 @@ st.markdown("""
         opacity: 0.85;
     }
     
-    /* ENHANCED SIDEBAR - Improved Accessibility */
+    /* FIXED: Enhanced Sidebar with Visible Scrollbar - STACK OVERFLOW ORANGE THEME */
     .css-1d391kg, .css-1lcbmhc, section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--sidebar-bg) 0%, #111827 100%) !important;
-        border-right: 2px solid var(--stack-overflow-orange);
-        box-shadow: 4px 0 20px rgba(255, 140, 0, 0.3);
+        background: linear-gradient(180deg, #2D2D2D 0%, #1A1A1A 100%);
+        border-right: 2px solid #F48024;
+        box-shadow: 4px 0 20px rgba(244, 128, 36, 0.3);
     }
     
     /* FIXED: Visible Sidebar Scrollbar */
@@ -244,16 +277,14 @@ st.markdown("""
     }
     
     .pattern-card {
-        background: linear-gradient(135deg, var(--accent-bg), #374151) !important;
+        background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
         padding: 16px;
         border-radius: 8px;
         border-left: 4px solid var(--primary-green);
         margin: 10px 0;
-        box-shadow: 0 4px 12px var(--shadow-colored) !important;
+        box-shadow: 0 4px 16px var(--shadow-heavy);
         transition: all 0.3s ease;
         position: relative;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-accent);
     }
     
     .pattern-card:hover {
@@ -263,9 +294,7 @@ st.markdown("""
     
     .consolidation-card {
         border-left-color: var(--primary-orange);
-        background: linear-gradient(135deg, var(--accent-bg), rgba(246, 173, 85, 0.1)) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-accent);
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(221, 107, 32, 0.05));
     }
     
     .news-card {
@@ -309,23 +338,22 @@ st.markdown("""
     
     /* Angel One Style Buttons */
     .stButton > button {
-        background: linear-gradient(135deg, var(--primary-blue), #2563EB) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-accent) !important;
+        background: linear-gradient(135deg, var(--primary-blue), #2C5AA0);
+        color: var(--text-primary);
+        border: none;
         border-radius: 6px;
-        font-weight: 600 !important;
+        font-weight: 600;
         font-size: 14px;
         height: 44px;
         width: 100%;
         transition: all 0.3s ease;
-        box-shadow: 0 2px 8px var(--shadow-colored);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, #2563EB, var(--primary-blue)) !important;
+        background: linear-gradient(135deg, #2C5AA0, var(--primary-blue));
         transform: translateY(-1px);
-        box-shadow: 0 6px 16px var(--shadow-colored) !important;
+        box-shadow: 0 4px 12px rgba(49, 130, 206, 0.4);
     }
     
     /* Professional Metrics */
@@ -377,36 +405,23 @@ st.markdown("""
         color: #F48024 !important;
     }
     
-    /* ENHANCED SIDEBAR TEXT - Better Accessibility */
-    section[data-testid="stSidebar"] .stMarkdown h3 {
-        color: var(--stack-overflow-orange) !important;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-        font-weight: 600;
-    }
-    
+    /* Fix checkbox text color in sidebar - make pattern options green */
     section[data-testid="stSidebar"] .stCheckbox label {
         color: var(--primary-green) !important;
-        font-weight: 500;
     }
     
     section[data-testid="stSidebar"] .stCheckbox label:hover {
-        color: var(--stack-overflow-orange) !important;
-        text-shadow: 0 1px 2px rgba(255, 140, 0, 0.3);
+        color: #F48024 !important;
     }
     
-    /* Enhanced focus and accessibility */
-    section[data-testid="stSidebar"] .stSelectbox > div > div:focus,
-    section[data-testid="stSidebar"] .stTextInput > div > div > input:focus,
-    section[data-testid="stSidebar"] .stSlider > div > div > div:focus {
-        outline: 2px solid var(--primary-blue) !important;
-        outline-offset: 2px !important;
-        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.3) !important;
+    /* Fix hover legibility issues - change white text to orange */
+    section[data-testid="stSidebar"] *:hover {
+        color: #F48024 !important;
     }
     
-    /* Improved hover legibility */
     section[data-testid="stSidebar"] .stSelectbox option:hover {
-        background-color: var(--stack-overflow-orange) !important;
-        color: var(--text-primary) !important;
+        background-color: #F48024 !important;
+        color: #FFFFFF !important;
     }
     
     .stSlider > div > div > div {
@@ -485,65 +500,6 @@ st.markdown("""
             font-size: 0.85rem;
         }
     }
-    /* === ACCESSIBILITY ENHANCEMENTS === */
-    
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-        :root {
-            --text-primary: #FFFFFF;
-            --text-secondary: #FFFFFF;
-            --primary-blue: #00BFFF;
-            --primary-green: #00FF00;
-            --primary-red: #FF0000;
-            --stack-overflow-orange: #FFA500;
-            --border-color: #FFFFFF;
-        }
-    }
-    
-    /* Reduced motion support */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-        }
-    }
-    
-    /* Mobile accessibility improvements */
-    @media screen and (max-width: 1366px) {
-        .pattern-card, .consolidation-card {
-            margin-bottom: 0.8rem !important;
-            padding: 0.8rem !important;
-        }
-        
-        .professional-header h1 {
-            font-size: 1.5rem !important;
-        }
-    }
-    
-    /* Touch device optimizations */
-    @media (hover: none) {
-        .pattern-card:hover,
-        .stButton > button:hover {
-            transform: none !important;
-        }
-    }
-    
-    /* Print optimizations */
-    @media print {
-        :root {
-            --text-primary: #000000;
-            --text-secondary: #333333;
-            --primary-bg: #FFFFFF;
-            --secondary-bg: #F7FAFC;
-            --accent-bg: #EDF2F7;
-        }
-        
-        section[data-testid="stSidebar"] {
-            display: none !important;
-        }
-    }
-    
 </style>
 """, unsafe_allow_html=True)
 
