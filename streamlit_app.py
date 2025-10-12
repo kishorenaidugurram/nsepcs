@@ -2438,6 +2438,1475 @@ class ProfessionalPCSScanner:
         
         return fig
 
+    # =================== ENHANCEMENT 1: DELIVERY VOLUME ANALYSIS ===================
+    
+    def analyze_delivery_volume_percentage(self, symbol):
+        """Enhanced delivery volume percentage analysis with professional insights"""
+        try:
+            import requests
+            import re
+            from datetime import datetime, timedelta
+            
+            # Try to get delivery data from NSE (fallback method)
+            delivery_info = self._get_delivery_data_fallback(symbol)
+            
+            if delivery_info:
+                return delivery_info
+            else:
+                # Fallback: Estimate delivery volume from price action and volume patterns
+                return self._estimate_delivery_volume(symbol)
+                
+        except Exception as e:
+            return {
+                'delivery_percentage': None,
+                'delivery_analysis': f'Unable to fetch delivery data: {str(e)}',
+                'delivery_signals': [],
+                'confidence': 'Low'
+            }
+    
+    def _get_delivery_data_fallback(self, symbol):
+        """Fallback method to estimate delivery volume using technical analysis"""
+        try:
+            # Get stock data
+            data = self.get_stock_data(symbol, period="1mo")
+            if data is None or len(data) < 10:
+                return None
+            
+            # Calculate volume-price correlation and other delivery indicators
+            recent_data = data.tail(10)
+            
+            # Volume analysis for delivery estimation
+            avg_volume = recent_data['Volume'].mean()
+            current_volume = recent_data['Volume'].iloc[-1]
+            
+            # Price stability analysis (delivery usually associated with less volatility)
+            price_volatility = recent_data['Close'].pct_change().std() * 100
+            
+            # Volume-price correlation
+            volume_price_corr = recent_data['Volume'].corr(recent_data['Close'])
+            
+            # Estimate delivery percentage based on technical factors
+            delivery_estimate = 0
+            confidence = 'Low'
+            signals = []
+            
+            # Higher volume with lower volatility suggests delivery
+            if current_volume > avg_volume * 1.2 and price_volatility < 2.0:
+                delivery_estimate += 25
+                signals.append("High volume with low volatility (delivery indication)")
+                confidence = 'Medium'
+            
+            # Negative volume-price correlation suggests delivery accumulation
+            if volume_price_corr < -0.3:
+                delivery_estimate += 20
+                signals.append("Negative volume-price correlation (delivery accumulation)")
+                confidence = 'Medium'
+            
+            # Check for accumulation patterns
+            if self._detect_accumulation_pattern(recent_data):
+                delivery_estimate += 15
+                signals.append("Accumulation pattern detected")
+                confidence = 'Medium'
+            
+            # Cap the estimate
+            delivery_estimate = min(delivery_estimate, 85)
+            
+            analysis = "Technical delivery analysis based on volume-price patterns"
+            if delivery_estimate > 40:
+                analysis = "Strong delivery indications - institutional accumulation likely"
+                confidence = 'High'
+            elif delivery_estimate > 20:
+                analysis = "Moderate delivery signals - some institutional interest"
+                confidence = 'Medium'
+            else:
+                analysis = "Low delivery signals - mostly speculative trading"
+                confidence = 'Low'
+            
+            return {
+                'delivery_percentage': delivery_estimate,
+                'delivery_analysis': analysis,
+                'delivery_signals': signals,
+                'confidence': confidence,
+                'volume_analysis': {
+                    'current_volume': int(current_volume),
+                    'avg_volume': int(avg_volume),
+                    'volume_ratio': current_volume / avg_volume,
+                    'price_volatility': price_volatility
+                }
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _estimate_delivery_volume(self, symbol):
+        """Estimate delivery volume using advanced technical analysis"""
+        try:
+            data = self.get_stock_data(symbol, period="2mo")
+            if data is None or len(data) < 20:
+                return None
+            
+            recent_data = data.tail(20)
+            current_day = data.tail(1)
+            
+            # Multiple factors for delivery estimation
+            signals = []
+            delivery_score = 0
+            
+            # 1. Volume surge with price stability
+            volume_surge = current_day['Volume'].iloc[0] / recent_data['Volume'].mean()
+            price_change = abs(current_day['Close'].pct_change().iloc[0] * 100)
+            
+            if volume_surge > 1.5 and price_change < 3:
+                delivery_score += 30
+                signals.append(f"Volume surge ({volume_surge:.1f}x) with price stability ({price_change:.1f}%)")
+            
+            # 2. Institutional buying patterns (large volume at support levels)
+            support_level = recent_data['Low'].min()
+            current_price = current_day['Close'].iloc[0]
+            
+            if current_price <= support_level * 1.05 and volume_surge > 1.3:
+                delivery_score += 25
+                signals.append("Large volume near support - institutional accumulation")
+            
+            # 3. End-of-day strength (delivery usually happens throughout the day)
+            open_price = current_day['Open'].iloc[0]
+            close_price = current_day['Close'].iloc[0]
+            high_price = current_day['High'].iloc[0]
+            
+            if close_price > (open_price + high_price) / 2:
+                delivery_score += 15
+                signals.append("End-of-day strength - sustained buying")
+            
+            # 4. RSI and delivery correlation
+            current_rsi = data['RSI'].iloc[-1]
+            if 30 < current_rsi < 70 and volume_surge > 1.2:
+                delivery_score += 10
+                signals.append(f"Healthy RSI ({current_rsi:.1f}) with volume - quality delivery")
+            
+            # Determine confidence and analysis
+            if delivery_score >= 50:
+                confidence = 'High'
+                analysis = "Strong delivery signals - significant institutional participation"
+            elif delivery_score >= 25:
+                confidence = 'Medium'
+                analysis = "Moderate delivery activity - some institutional interest"
+            else:
+                confidence = 'Low'
+                analysis = "Limited delivery signals - mostly speculative activity"
+            
+            return {
+                'delivery_percentage': min(delivery_score, 80),  # Cap at 80%
+                'delivery_analysis': analysis,
+                'delivery_signals': signals,
+                'confidence': confidence,
+                'technical_factors': {
+                    'volume_surge': volume_surge,
+                    'price_stability': 100 - price_change,
+                    'support_proximity': ((support_level * 1.05 - current_price) / current_price * 100) if current_price <= support_level * 1.05 else 0
+                }
+            }
+            
+        except Exception as e:
+            return {
+                'delivery_percentage': None,
+                'delivery_analysis': f'Delivery analysis error: {str(e)}',
+                'delivery_signals': [],
+                'confidence': 'Low'
+            }
+    
+    def _detect_accumulation_pattern(self, data):
+        """Detect accumulation patterns in recent data"""
+        try:
+            if len(data) < 5:
+                return False
+            
+            volume_trend = data['Volume'].tail(5).mean() > data['Volume'].head(5).mean()
+            price_stability = data['Close'].pct_change().tail(5).std() < 0.02
+            
+            return volume_trend and price_stability
+        except:
+            return False
+    
+    # =================== ENHANCEMENT 2: F&O CONSOLIDATION ANALYSIS ===================
+    
+    def detect_fno_consolidation_near_resistance(self, data, symbol, lookback_days=20):
+        """Detect F&O consolidation patterns near resistance levels"""
+        try:
+            if len(data) < lookback_days + 10:
+                return {
+                    'consolidation_detected': False,
+                    'analysis': 'Insufficient data for consolidation analysis',
+                    'signals': []
+                }
+            
+            recent_data = data.tail(lookback_days)
+            current_price = data['Close'].iloc[-1]
+            
+            # 1. Identify resistance level
+            resistance_analysis = self._identify_resistance_levels(data, lookback_days)
+            
+            # 2. Check consolidation pattern
+            consolidation_analysis = self._analyze_consolidation_pattern(recent_data)
+            
+            # 3. Volume analysis for F&O activity
+            volume_analysis = self._analyze_fno_volume_pattern(recent_data)
+            
+            # 4. Price action near resistance
+            resistance_proximity = self._analyze_resistance_proximity(current_price, resistance_analysis)
+            
+            # Combine all analyses
+            signals = []
+            consolidation_strength = 0
+            
+            # Add signals from each analysis
+            if resistance_analysis['strong_resistance']:
+                signals.extend(resistance_analysis['signals'])
+                consolidation_strength += resistance_analysis['strength']
+            
+            if consolidation_analysis['is_consolidating']:
+                signals.extend(consolidation_analysis['signals'])
+                consolidation_strength += consolidation_analysis['strength']
+            
+            if volume_analysis['fno_activity_high']:
+                signals.extend(volume_analysis['signals'])
+                consolidation_strength += volume_analysis['strength']
+            
+            if resistance_proximity['near_resistance']:
+                signals.extend(resistance_proximity['signals'])
+                consolidation_strength += resistance_proximity['strength']
+            
+            # Determine overall consolidation status
+            consolidation_detected = consolidation_strength >= 60
+            
+            if consolidation_detected:
+                if consolidation_strength >= 80:
+                    analysis = "Strong F&O consolidation near resistance - high breakout probability"
+                    confidence = 'High'
+                else:
+                    analysis = "Moderate F&O consolidation detected - watch for breakout"
+                    confidence = 'Medium'
+            else:
+                analysis = "No significant F&O consolidation pattern detected"
+                confidence = 'Low'
+            
+            return {
+                'consolidation_detected': consolidation_detected,
+                'consolidation_strength': consolidation_strength,
+                'analysis': analysis,
+                'confidence': confidence,
+                'signals': signals,
+                'resistance_level': resistance_analysis.get('resistance_level'),
+                'consolidation_range': consolidation_analysis.get('range_info'),
+                'breakout_target': resistance_analysis.get('resistance_level', current_price) * 1.05 if consolidation_detected else None
+            }
+            
+        except Exception as e:
+            return {
+                'consolidation_detected': False,
+                'analysis': f'Consolidation analysis error: {str(e)}',
+                'signals': []
+            }
+    
+    def _identify_resistance_levels(self, data, lookback_days=20):
+        """Identify key resistance levels"""
+        try:
+            recent_data = data.tail(lookback_days * 2)  # Look back further for resistance
+            current_price = data['Close'].iloc[-1]
+            
+            # Find peaks (resistance levels)
+            highs = recent_data['High']
+            peaks = []
+            
+            for i in range(2, len(highs) - 2):
+                if (highs.iloc[i] > highs.iloc[i-1] and highs.iloc[i] > highs.iloc[i-2] and 
+                    highs.iloc[i] > highs.iloc[i+1] and highs.iloc[i] > highs.iloc[i+2]):
+                    peaks.append(highs.iloc[i])
+            
+            if not peaks:
+                return {'strong_resistance': False, 'signals': [], 'strength': 0}
+            
+            # Find the most significant resistance level
+            resistance_level = max(peaks) if peaks else current_price * 1.05
+            
+            # Check how many times price tested this resistance
+            test_count = 0
+            for high in recent_data['High']:
+                if abs(high - resistance_level) / resistance_level < 0.02:  # Within 2%
+                    test_count += 1
+            
+            # Distance from current price to resistance
+            distance_to_resistance = ((resistance_level - current_price) / current_price) * 100
+            
+            signals = []
+            strength = 0
+            
+            if test_count >= 2:
+                signals.append(f"Resistance level tested {test_count} times at ₹{resistance_level:.2f}")
+                strength += 25
+            
+            if 0 < distance_to_resistance <= 5:
+                signals.append(f"Price near resistance ({distance_to_resistance:.1f}% away)")
+                strength += 30
+                
+            if distance_to_resistance <= 2:
+                signals.append("Very close to resistance - breakout imminent")
+                strength += 15
+            
+            strong_resistance = test_count >= 2 and distance_to_resistance <= 5
+            
+            return {
+                'strong_resistance': strong_resistance,
+                'resistance_level': resistance_level,
+                'test_count': test_count,
+                'distance_to_resistance': distance_to_resistance,
+                'signals': signals,
+                'strength': strength
+            }
+            
+        except Exception as e:
+            return {'strong_resistance': False, 'signals': [], 'strength': 0}
+    
+    def _analyze_consolidation_pattern(self, recent_data):
+        """Analyze if stock is in consolidation"""
+        try:
+            if len(recent_data) < 10:
+                return {'is_consolidating': False, 'signals': [], 'strength': 0}
+            
+            # Calculate consolidation metrics
+            high_price = recent_data['High'].max()
+            low_price = recent_data['Low'].min()
+            consolidation_range = ((high_price - low_price) / low_price) * 100
+            
+            # Price stability
+            price_volatility = recent_data['Close'].pct_change().std() * 100
+            
+            # Volume consistency
+            volume_consistency = 1 - (recent_data['Volume'].std() / recent_data['Volume'].mean())
+            
+            signals = []
+            strength = 0
+            
+            # Tight consolidation range
+            if consolidation_range <= 8:
+                signals.append(f"Tight consolidation range ({consolidation_range:.1f}%)")
+                strength += 25
+                
+            if consolidation_range <= 5:
+                signals.append("Very tight range - coiled spring effect")
+                strength += 15
+            
+            # Low volatility
+            if price_volatility <= 2:
+                signals.append(f"Low price volatility ({price_volatility:.1f}%)")
+                strength += 20
+            
+            # Consistent volume
+            if volume_consistency > 0.3:
+                signals.append("Consistent volume during consolidation")
+                strength += 10
+            
+            is_consolidating = consolidation_range <= 8 and price_volatility <= 3
+            
+            return {
+                'is_consolidating': is_consolidating,
+                'consolidation_range': consolidation_range,
+                'price_volatility': price_volatility,
+                'signals': signals,
+                'strength': strength,
+                'range_info': {
+                    'high': high_price,
+                    'low': low_price,
+                    'range_percent': consolidation_range
+                }
+            }
+            
+        except Exception as e:
+            return {'is_consolidating': False, 'signals': [], 'strength': 0}
+    
+    def _analyze_fno_volume_pattern(self, recent_data):
+        """Analyze volume patterns suggesting F&O activity"""
+        try:
+            if len(recent_data) < 5:
+                return {'fno_activity_high': False, 'signals': [], 'strength': 0}
+            
+            # Volume analysis
+            avg_volume = recent_data['Volume'].mean()
+            recent_volume = recent_data['Volume'].tail(3).mean()
+            volume_increase = (recent_volume / avg_volume) - 1
+            
+            # Volume spike consistency
+            volume_spikes = (recent_data['Volume'] > avg_volume * 1.5).sum()
+            total_days = len(recent_data)
+            spike_ratio = volume_spikes / total_days
+            
+            signals = []
+            strength = 0
+            
+            if volume_increase > 0.2:
+                signals.append(f"Volume increased {volume_increase*100:.1f}% recently")
+                strength += 20
+            
+            if spike_ratio > 0.3:
+                signals.append(f"Volume spikes in {spike_ratio*100:.0f}% of recent sessions")
+                strength += 15
+            
+            if volume_increase > 0.5:
+                signals.append("Significant volume increase - F&O interest")
+                strength += 20
+            
+            fno_activity_high = volume_increase > 0.2 and spike_ratio > 0.2
+            
+            return {
+                'fno_activity_high': fno_activity_high,
+                'volume_increase': volume_increase,
+                'spike_ratio': spike_ratio,
+                'signals': signals,
+                'strength': strength
+            }
+            
+        except Exception as e:
+            return {'fno_activity_high': False, 'signals': [], 'strength': 0}
+    
+    def _analyze_resistance_proximity(self, current_price, resistance_analysis):
+        """Analyze price proximity to resistance"""
+        try:
+            if not resistance_analysis.get('strong_resistance'):
+                return {'near_resistance': False, 'signals': [], 'strength': 0}
+            
+            resistance_level = resistance_analysis.get('resistance_level', current_price * 1.05)
+            distance = ((resistance_level - current_price) / current_price) * 100
+            
+            signals = []
+            strength = 0
+            
+            if distance <= 1:
+                signals.append("At resistance level - breakout imminent")
+                strength += 35
+            elif distance <= 3:
+                signals.append("Very close to resistance")
+                strength += 25
+            elif distance <= 5:
+                signals.append("Approaching resistance level")
+                strength += 15
+            
+            near_resistance = distance <= 5
+            
+            return {
+                'near_resistance': near_resistance,
+                'distance_to_resistance': distance,
+                'signals': signals,
+                'strength': strength
+            }
+            
+        except Exception as e:
+            return {'near_resistance': False, 'signals': [], 'strength': 0}
+    
+    # =================== ENHANCEMENT 3: BREAKOUT-PULLBACK ANALYSIS ===================
+    
+    def detect_breakout_pullback_strong_green(self, data, lookback_days=30):
+        """Detect breakout-pullback patterns with strong green candle confirmation"""
+        try:
+            if len(data) < lookback_days + 10:
+                return {
+                    'pattern_detected': False, 
+                    'analysis': 'Insufficient data for breakout-pullback analysis',
+                    'signals': []
+                }
+            
+            # 1. Identify initial breakout
+            breakout_analysis = self._identify_initial_breakout(data, lookback_days)
+            
+            # 2. Detect pullback phase
+            pullback_analysis = self._detect_pullback_phase(data, breakout_analysis)
+            
+            # 3. Confirm strong green candle
+            green_candle_analysis = self._analyze_strong_green_candle(data)
+            
+            # 4. Volume confirmation
+            volume_confirmation = self._analyze_breakout_volume(data)
+            
+            # Combine analyses
+            signals = []
+            pattern_strength = 0
+            
+            if breakout_analysis['breakout_detected']:
+                signals.extend(breakout_analysis['signals'])
+                pattern_strength += breakout_analysis['strength']
+            
+            if pullback_analysis['pullback_detected']:
+                signals.extend(pullback_analysis['signals'])
+                pattern_strength += pullback_analysis['strength']
+            
+            if green_candle_analysis['strong_green_detected']:
+                signals.extend(green_candle_analysis['signals'])
+                pattern_strength += green_candle_analysis['strength']
+            
+            if volume_confirmation['volume_confirmed']:
+                signals.extend(volume_confirmation['signals'])
+                pattern_strength += volume_confirmation['strength']
+            
+            # Pattern detection criteria
+            pattern_detected = (breakout_analysis['breakout_detected'] and 
+                              pullback_analysis['pullback_detected'] and 
+                              green_candle_analysis['strong_green_detected'] and
+                              pattern_strength >= 70)
+            
+            if pattern_detected:
+                if pattern_strength >= 90:
+                    analysis = "Perfect breakout-pullback-breakout pattern with strong green candle"
+                    confidence = 'High'
+                elif pattern_strength >= 80:
+                    analysis = "Strong breakout-pullback pattern - high probability setup"
+                    confidence = 'High'
+                else:
+                    analysis = "Valid breakout-pullback pattern detected"
+                    confidence = 'Medium'
+            else:
+                analysis = "No valid breakout-pullback pattern found"
+                confidence = 'Low'
+            
+            return {
+                'pattern_detected': pattern_detected,
+                'pattern_strength': pattern_strength,
+                'analysis': analysis,
+                'confidence': confidence,
+                'signals': signals,
+                'breakout_level': breakout_analysis.get('breakout_level'),
+                'pullback_low': pullback_analysis.get('pullback_low'),
+                'target_price': breakout_analysis.get('breakout_level', 0) * 1.08 if pattern_detected else None,
+                'stop_loss': pullback_analysis.get('pullback_low', 0) * 0.98 if pattern_detected else None
+            }
+            
+        except Exception as e:
+            return {
+                'pattern_detected': False,
+                'analysis': f'Breakout-pullback analysis error: {str(e)}',
+                'signals': []
+            }
+    
+    def _identify_initial_breakout(self, data, lookback_days):
+        """Identify the initial breakout from consolidation"""
+        try:
+            # Look for breakout in recent history (5-30 days ago)
+            potential_breakout_period = data.iloc[-lookback_days:-5] if len(data) > lookback_days else data.iloc[:-5]
+            
+            if len(potential_breakout_period) < 10:
+                return {'breakout_detected': False, 'signals': [], 'strength': 0}
+            
+            # Find consolidation before breakout
+            consolidation_data = potential_breakout_period.iloc[:-5]  # Earlier data for consolidation
+            breakout_data = potential_breakout_period.iloc[-10:]      # Recent data for breakout
+            
+            if len(consolidation_data) < 5:
+                return {'breakout_detected': False, 'signals': [], 'strength': 0}
+            
+            # Consolidation metrics
+            consolidation_high = consolidation_data['High'].max()
+            consolidation_range = ((consolidation_high - consolidation_data['Low'].min()) / 
+                                 consolidation_data['Low'].min()) * 100
+            
+            # Breakout detection
+            breakout_candle = None
+            breakout_level = None
+            
+            for i, (idx, row) in enumerate(breakout_data.iterrows()):
+                if row['High'] > consolidation_high * 1.02:  # 2% above consolidation high
+                    breakout_candle = row
+                    breakout_level = consolidation_high
+                    break
+            
+            if breakout_candle is None:
+                return {'breakout_detected': False, 'signals': [], 'strength': 0}
+            
+            # Analyze breakout strength
+            signals = []
+            strength = 0
+            
+            # Volume on breakout day
+            avg_volume = consolidation_data['Volume'].mean()
+            breakout_volume = breakout_candle['Volume']
+            volume_ratio = breakout_volume / avg_volume
+            
+            if volume_ratio > 1.5:
+                signals.append(f"Strong volume on breakout ({volume_ratio:.1f}x average)")
+                strength += 25
+            
+            # Consolidation quality
+            if consolidation_range <= 10:
+                signals.append(f"Good consolidation base ({consolidation_range:.1f}% range)")
+                strength += 20
+            
+            # Breakout candle strength
+            candle_body = abs(breakout_candle['Close'] - breakout_candle['Open'])
+            candle_range = breakout_candle['High'] - breakout_candle['Low']
+            body_ratio = candle_body / candle_range if candle_range > 0 else 0
+            
+            if body_ratio > 0.6 and breakout_candle['Close'] > breakout_candle['Open']:
+                signals.append("Strong green breakout candle")
+                strength += 20
+            
+            return {
+                'breakout_detected': True,
+                'breakout_level': breakout_level,
+                'breakout_candle': breakout_candle,
+                'volume_ratio': volume_ratio,
+                'signals': signals,
+                'strength': strength
+            }
+            
+        except Exception as e:
+            return {'breakout_detected': False, 'signals': [], 'strength': 0}
+    
+    def _detect_pullback_phase(self, data, breakout_analysis):
+        """Detect pullback phase after initial breakout"""
+        try:
+            if not breakout_analysis.get('breakout_detected'):
+                return {'pullback_detected': False, 'signals': [], 'strength': 0}
+            
+            breakout_level = breakout_analysis.get('breakout_level')
+            recent_data = data.tail(10)  # Look at last 10 days
+            
+            # Find the lowest point after breakout (pullback low)
+            pullback_low = recent_data['Low'].min()
+            current_price = data['Close'].iloc[-1]
+            
+            # Pullback criteria
+            pullback_depth = ((breakout_level - pullback_low) / breakout_level) * 100
+            recovery_from_low = ((current_price - pullback_low) / pullback_low) * 100
+            
+            signals = []
+            strength = 0
+            
+            # Healthy pullback (not too deep)
+            if 3 <= pullback_depth <= 15:
+                signals.append(f"Healthy pullback ({pullback_depth:.1f}% from breakout)")
+                strength += 25
+            
+            # Pullback found support above previous consolidation
+            if pullback_low > breakout_level * 0.95:
+                signals.append("Pullback held above breakout level - strength")
+                strength += 20
+            
+            # Recovery from pullback low
+            if recovery_from_low >= 2:
+                signals.append(f"Recovery from pullback low ({recovery_from_low:.1f}%)")
+                strength += 15
+            
+            # Volume during pullback (should be lower)
+            breakout_volume = breakout_analysis.get('breakout_candle', {}).get('Volume', 0)
+            pullback_avg_volume = recent_data['Volume'].mean()
+            
+            if pullback_avg_volume < breakout_volume * 0.8:
+                signals.append("Lower volume during pullback - healthy correction")
+                strength += 10
+            
+            pullback_detected = (3 <= pullback_depth <= 20 and 
+                                pullback_low > breakout_level * 0.90 and
+                                recovery_from_low >= 1)
+            
+            return {
+                'pullback_detected': pullback_detected,
+                'pullback_low': pullback_low,
+                'pullback_depth': pullback_depth,
+                'recovery_from_low': recovery_from_low,
+                'signals': signals,
+                'strength': strength
+            }
+            
+        except Exception as e:
+            return {'pullback_detected': False, 'signals': [], 'strength': 0}
+    
+    def _analyze_strong_green_candle(self, data):
+        """Analyze the current/recent strong green candle"""
+        try:
+            current_candle = data.iloc[-1]
+            
+            # Green candle check
+            is_green = current_candle['Close'] > current_candle['Open']
+            
+            if not is_green:
+                # Check previous candle
+                if len(data) > 1:
+                    current_candle = data.iloc[-2]
+                    is_green = current_candle['Close'] > current_candle['Open']
+                
+                if not is_green:
+                    return {'strong_green_detected': False, 'signals': [], 'strength': 0}
+            
+            # Analyze candle strength
+            candle_body = current_candle['Close'] - current_candle['Open']
+            candle_range = current_candle['High'] - current_candle['Low']
+            body_percentage = (candle_body / candle_range) * 100 if candle_range > 0 else 0
+            
+            # Price change percentage
+            prev_close = data.iloc[-2]['Close'] if len(data) > 1 else current_candle['Open']
+            price_change = ((current_candle['Close'] - prev_close) / prev_close) * 100
+            
+            # Volume analysis
+            recent_avg_volume = data['Volume'].tail(10).mean()
+            current_volume = current_candle['Volume']
+            volume_ratio = current_volume / recent_avg_volume if recent_avg_volume > 0 else 1
+            
+            signals = []
+            strength = 0
+            
+            # Strong green candle criteria
+            if body_percentage >= 60:
+                signals.append(f"Strong green candle ({body_percentage:.0f}% body)")
+                strength += 20
+            
+            if price_change >= 2:
+                signals.append(f"Strong price gain ({price_change:.1f}%)")
+                strength += 15
+            
+            if volume_ratio >= 1.3:
+                signals.append(f"Above average volume ({volume_ratio:.1f}x)")
+                strength += 15
+            
+            # Gap up opening
+            if len(data) > 1:
+                prev_close = data.iloc[-2]['Close']
+                if current_candle['Open'] > prev_close * 1.005:  # 0.5% gap up
+                    signals.append("Gap up opening - strong momentum")
+                    strength += 10
+            
+            strong_green_detected = (body_percentage >= 50 and 
+                                   price_change >= 1.5 and 
+                                   volume_ratio >= 1.1)
+            
+            return {
+                'strong_green_detected': strong_green_detected,
+                'body_percentage': body_percentage,
+                'price_change': price_change,
+                'volume_ratio': volume_ratio,
+                'signals': signals,
+                'strength': strength
+            }
+            
+        except Exception as e:
+            return {'strong_green_detected': False, 'signals': [], 'strength': 0}
+    
+    def _analyze_breakout_volume(self, data):
+        """Analyze volume confirmation for breakout pattern"""
+        try:
+            current_volume = data['Volume'].iloc[-1]
+            avg_volume_20 = data['Volume'].tail(20).mean()
+            avg_volume_5 = data['Volume'].tail(5).mean()
+            
+            volume_surge = current_volume / avg_volume_20
+            recent_volume_trend = avg_volume_5 / avg_volume_20
+            
+            signals = []
+            strength = 0
+            
+            if volume_surge >= 1.5:
+                signals.append(f"Strong volume surge ({volume_surge:.1f}x)")
+                strength += 20
+            
+            if recent_volume_trend >= 1.2:
+                signals.append("Increasing volume trend")
+                strength += 10
+            
+            # Volume distribution analysis
+            high_volume_days = (data['Volume'].tail(5) > avg_volume_20 * 1.2).sum()
+            if high_volume_days >= 2:
+                signals.append(f"Multiple high volume days ({high_volume_days}/5)")
+                strength += 10
+            
+            volume_confirmed = volume_surge >= 1.3 or recent_volume_trend >= 1.2
+            
+            return {
+                'volume_confirmed': volume_confirmed,
+                'volume_surge': volume_surge,
+                'recent_volume_trend': recent_volume_trend,
+                'signals': signals,
+                'strength': strength
+            }
+            
+        except Exception as e:
+            return {'volume_confirmed': False, 'signals': [], 'strength': 0}
+    
+    # =================== ENHANCEMENT 4: ENHANCED SUPPORT & RESISTANCE ===================
+    
+    def enhanced_support_resistance_analysis(self, data, lookback_days=50):
+        """Enhanced support and resistance analysis with multiple timeframe confirmation"""
+        try:
+            if len(data) < lookback_days:
+                return {
+                    'analysis_available': False,
+                    'message': 'Insufficient data for enhanced S&R analysis',
+                    'support_levels': [],
+                    'resistance_levels': []
+                }
+            
+            current_price = data['Close'].iloc[-1]
+            
+            # 1. Identify multiple support and resistance levels
+            sr_levels = self._identify_multiple_sr_levels(data, lookback_days)
+            
+            # 2. Analyze level strength and reliability
+            level_analysis = self._analyze_sr_level_strength(data, sr_levels)
+            
+            # 3. Current price position analysis
+            position_analysis = self._analyze_current_price_position(current_price, level_analysis)
+            
+            # 4. Breakout/breakdown probability
+            breakout_analysis = self._analyze_breakout_probability(data, level_analysis, current_price)
+            
+            # 5. Volume at key levels
+            volume_analysis = self._analyze_volume_at_levels(data, level_analysis)
+            
+            # Combine all analyses
+            support_levels = [level for level in level_analysis if level['type'] == 'support']
+            resistance_levels = [level for level in level_analysis if level['type'] == 'resistance']
+            
+            # Sort by strength
+            support_levels.sort(key=lambda x: x['strength'], reverse=True)
+            resistance_levels.sort(key=lambda x: x['strength'], reverse=True)
+            
+            # Generate comprehensive analysis
+            analysis_summary = self._generate_sr_analysis_summary(
+                current_price, support_levels, resistance_levels, 
+                position_analysis, breakout_analysis, volume_analysis
+            )
+            
+            return {
+                'analysis_available': True,
+                'current_price': current_price,
+                'support_levels': support_levels[:5],  # Top 5 support levels
+                'resistance_levels': resistance_levels[:5],  # Top 5 resistance levels
+                'position_analysis': position_analysis,
+                'breakout_analysis': breakout_analysis,
+                'volume_analysis': volume_analysis,
+                'analysis_summary': analysis_summary,
+                'key_levels': {
+                    'immediate_support': support_levels[0] if support_levels else None,
+                    'immediate_resistance': resistance_levels[0] if resistance_levels else None,
+                    'strong_support': next((s for s in support_levels if s['strength'] >= 80), None),
+                    'strong_resistance': next((r for r in resistance_levels if r['strength'] >= 80), None)
+                }
+            }
+            
+        except Exception as e:
+            return {
+                'analysis_available': False,
+                'message': f'Enhanced S&R analysis error: {str(e)}',
+                'support_levels': [],
+                'resistance_levels': []
+            }
+    
+    def _identify_multiple_sr_levels(self, data, lookback_days):
+        """Identify multiple support and resistance levels using various methods"""
+        try:
+            levels = []
+            
+            # Method 1: Pivot Points (High/Low reversals)
+            pivot_levels = self._find_pivot_levels(data, lookback_days)
+            levels.extend(pivot_levels)
+            
+            # Method 2: Moving Average levels
+            ma_levels = self._find_ma_support_resistance(data)
+            levels.extend(ma_levels)
+            
+            # Method 3: Volume-based levels (high volume price zones)
+            volume_levels = self._find_volume_based_levels(data, lookback_days)
+            levels.extend(volume_levels)
+            
+            # Method 4: Psychological levels (round numbers)
+            psychological_levels = self._find_psychological_levels(data['Close'].iloc[-1])
+            levels.extend(psychological_levels)
+            
+            # Method 5: Fibonacci retracement levels
+            fib_levels = self._find_fibonacci_levels(data, lookback_days)
+            levels.extend(fib_levels)
+            
+            return levels
+            
+        except Exception as e:
+            return []
+    
+    def _find_pivot_levels(self, data, lookback_days):
+        """Find pivot highs and lows as S&R levels"""
+        try:
+            levels = []
+            recent_data = data.tail(lookback_days)
+            
+            # Find pivot highs (resistance)
+            for i in range(2, len(recent_data) - 2):
+                current_high = recent_data['High'].iloc[i]
+                if (current_high > recent_data['High'].iloc[i-1] and 
+                    current_high > recent_data['High'].iloc[i-2] and
+                    current_high > recent_data['High'].iloc[i+1] and 
+                    current_high > recent_data['High'].iloc[i+2]):
+                    
+                    levels.append({
+                        'level': current_high,
+                        'type': 'resistance',
+                        'method': 'pivot_high',
+                        'date': recent_data.index[i],
+                        'base_strength': 30
+                    })
+            
+            # Find pivot lows (support)
+            for i in range(2, len(recent_data) - 2):
+                current_low = recent_data['Low'].iloc[i]
+                if (current_low < recent_data['Low'].iloc[i-1] and 
+                    current_low < recent_data['Low'].iloc[i-2] and
+                    current_low < recent_data['Low'].iloc[i+1] and 
+                    current_low < recent_data['Low'].iloc[i+2]):
+                    
+                    levels.append({
+                        'level': current_low,
+                        'type': 'support',
+                        'method': 'pivot_low',
+                        'date': recent_data.index[i],
+                        'base_strength': 30
+                    })
+            
+            return levels
+            
+        except Exception as e:
+            return []
+    
+    def _find_ma_support_resistance(self, data):
+        """Find moving average based support/resistance"""
+        try:
+            levels = []
+            current_price = data['Close'].iloc[-1]
+            
+            # Key moving averages
+            ma_periods = [20, 50, 100, 200]
+            
+            for period in ma_periods:
+                if len(data) >= period:
+                    ma_value = data['Close'].tail(period).mean()
+                    
+                    # Determine if MA is acting as support or resistance
+                    if current_price > ma_value:
+                        sr_type = 'support'
+                    else:
+                        sr_type = 'resistance'
+                    
+                    # MA strength based on period (longer = stronger)
+                    strength = min(20 + (period / 10), 50)
+                    
+                    levels.append({
+                        'level': ma_value,
+                        'type': sr_type,
+                        'method': f'MA_{period}',
+                        'date': data.index[-1],
+                        'base_strength': strength
+                    })
+            
+            return levels
+            
+        except Exception as e:
+            return []
+    
+    def _find_volume_based_levels(self, data, lookback_days):
+        """Find support/resistance based on high volume zones"""
+        try:
+            levels = []
+            recent_data = data.tail(lookback_days)
+            
+            # Find high volume days
+            volume_threshold = recent_data['Volume'].quantile(0.8)  # Top 20% volume days
+            high_volume_data = recent_data[recent_data['Volume'] >= volume_threshold]
+            
+            if len(high_volume_data) == 0:
+                return levels
+            
+            # Create price zones from high volume days
+            price_zones = []
+            for _, row in high_volume_data.iterrows():
+                zone_center = (row['High'] + row['Low']) / 2
+                price_zones.append(zone_center)
+            
+            # Cluster similar price zones
+            price_zones.sort()
+            clustered_zones = []
+            
+            if price_zones:
+                current_cluster = [price_zones[0]]
+                for price in price_zones[1:]:
+                    if abs(price - current_cluster[-1]) / current_cluster[-1] < 0.02:  # Within 2%
+                        current_cluster.append(price)
+                    else:
+                        if len(current_cluster) >= 2:  # At least 2 occurrences
+                            zone_avg = sum(current_cluster) / len(current_cluster)
+                            clustered_zones.append({
+                                'level': zone_avg,
+                                'occurrences': len(current_cluster)
+                            })
+                        current_cluster = [price]
+                
+                # Add last cluster
+                if len(current_cluster) >= 2:
+                    zone_avg = sum(current_cluster) / len(current_cluster)
+                    clustered_zones.append({
+                        'level': zone_avg,
+                        'occurrences': len(current_cluster)
+                    })
+            
+            # Convert to S&R levels
+            current_price = data['Close'].iloc[-1]
+            for zone in clustered_zones:
+                sr_type = 'support' if zone['level'] < current_price else 'resistance'
+                strength = min(25 + (zone['occurrences'] * 5), 45)
+                
+                levels.append({
+                    'level': zone['level'],
+                    'type': sr_type,
+                    'method': 'volume_zone',
+                    'date': data.index[-1],
+                    'base_strength': strength,
+                    'occurrences': zone['occurrences']
+                })
+            
+            return levels
+            
+        except Exception as e:
+            return []
+    
+    def _find_psychological_levels(self, current_price):
+        """Find psychological round number levels"""
+        try:
+            levels = []
+            
+            # Determine the scale based on current price
+            if current_price >= 1000:
+                round_base = 100  # Round to nearest 100
+            elif current_price >= 100:
+                round_base = 50   # Round to nearest 50
+            else:
+                round_base = 10   # Round to nearest 10
+            
+            # Find nearby round numbers
+            lower_round = (int(current_price // round_base) * round_base)
+            upper_round = lower_round + round_base
+            
+            # Add levels if they're not too far from current price
+            for level_price in [lower_round, upper_round]:
+                distance_pct = abs(level_price - current_price) / current_price * 100
+                
+                if distance_pct <= 10:  # Within 10%
+                    sr_type = 'support' if level_price < current_price else 'resistance'
+                    
+                    levels.append({
+                        'level': float(level_price),
+                        'type': sr_type,
+                        'method': 'psychological',
+                        'date': None,
+                        'base_strength': 20
+                    })
+            
+            return levels
+            
+        except Exception as e:
+            return []
+    
+    def _find_fibonacci_levels(self, data, lookback_days):
+        """Find Fibonacci retracement levels"""
+        try:
+            levels = []
+            recent_data = data.tail(lookback_days)
+            
+            if len(recent_data) < 10:
+                return levels
+            
+            # Find the major swing high and low
+            swing_high = recent_data['High'].max()
+            swing_low = recent_data['Low'].min()
+            
+            # Fibonacci retracement levels
+            fib_ratios = [0.236, 0.382, 0.5, 0.618, 0.786]
+            price_range = swing_high - swing_low
+            current_price = data['Close'].iloc[-1]
+            
+            for ratio in fib_ratios:
+                fib_level = swing_high - (price_range * ratio)
+                
+                # Determine if it's support or resistance
+                sr_type = 'support' if fib_level < current_price else 'resistance'
+                
+                # Only include levels that are reasonably close to current price
+                distance_pct = abs(fib_level - current_price) / current_price * 100
+                if distance_pct <= 15:  # Within 15%
+                    levels.append({
+                        'level': fib_level,
+                        'type': sr_type,
+                        'method': f'fibonacci_{ratio}',
+                        'date': None,
+                        'base_strength': 25
+                    })
+            
+            return levels
+            
+        except Exception as e:
+            return []
+    
+    def _analyze_sr_level_strength(self, data, sr_levels):
+        """Analyze the strength of each support/resistance level"""
+        try:
+            analyzed_levels = []
+            
+            for level_info in sr_levels:
+                level = level_info['level']
+                base_strength = level_info.get('base_strength', 20)
+                
+                # Test count - how many times price tested this level
+                test_count = self._count_level_tests(data, level)
+                
+                # Recency - how recent was the last test
+                recency_bonus = self._calculate_recency_bonus(data, level)
+                
+                # Volume at level - higher volume = stronger level
+                volume_bonus = self._calculate_volume_bonus(data, level)
+                
+                # Price reaction strength
+                reaction_bonus = self._calculate_reaction_bonus(data, level)
+                
+                # Calculate total strength
+                total_strength = min(base_strength + test_count * 15 + recency_bonus + volume_bonus + reaction_bonus, 100)
+                
+                analyzed_level = {
+                    **level_info,
+                    'strength': total_strength,
+                    'test_count': test_count,
+                    'recency_bonus': recency_bonus,
+                    'volume_bonus': volume_bonus,
+                    'reaction_bonus': reaction_bonus,
+                    'distance_from_current': abs(level - data['Close'].iloc[-1]),
+                    'distance_percentage': (abs(level - data['Close'].iloc[-1]) / data['Close'].iloc[-1]) * 100
+                }
+                
+                analyzed_levels.append(analyzed_level)
+            
+            return analyzed_levels
+            
+        except Exception as e:
+            return sr_levels
+    
+    def _count_level_tests(self, data, level, tolerance=0.02):
+        """Count how many times price tested a level"""
+        try:
+            test_count = 0
+            
+            for _, row in data.iterrows():
+                # Check if high or low tested the level
+                high_test = abs(row['High'] - level) / level <= tolerance
+                low_test = abs(row['Low'] - level) / level <= tolerance
+                
+                if high_test or low_test:
+                    test_count += 1
+            
+            return min(test_count, 10)  # Cap at 10
+            
+        except Exception as e:
+            return 0
+    
+    def _calculate_recency_bonus(self, data, level, tolerance=0.02):
+        """Calculate bonus for recent level tests"""
+        try:
+            recent_data = data.tail(10)  # Last 10 days
+            
+            for i, (_, row) in enumerate(recent_data.iterrows()):
+                high_test = abs(row['High'] - level) / level <= tolerance
+                low_test = abs(row['Low'] - level) / level <= tolerance
+                
+                if high_test or low_test:
+                    # More recent = higher bonus
+                    return 15 - i  # 15 for today, 14 for yesterday, etc.
+            
+            return 0
+            
+        except Exception as e:
+            return 0
+    
+    def _calculate_volume_bonus(self, data, level, tolerance=0.02):
+        """Calculate bonus for high volume at level"""
+        try:
+            volume_at_level = []
+            avg_volume = data['Volume'].mean()
+            
+            for _, row in data.iterrows():
+                high_test = abs(row['High'] - level) / level <= tolerance
+                low_test = abs(row['Low'] - level) / level <= tolerance
+                
+                if high_test or low_test:
+                    volume_at_level.append(row['Volume'])
+            
+            if not volume_at_level:
+                return 0
+            
+            max_volume = max(volume_at_level)
+            volume_ratio = max_volume / avg_volume
+            
+            if volume_ratio >= 2:
+                return 15
+            elif volume_ratio >= 1.5:
+                return 10
+            elif volume_ratio >= 1.2:
+                return 5
+            else:
+                return 0
+                
+        except Exception as e:
+            return 0
+    
+    def _calculate_reaction_bonus(self, data, level, tolerance=0.02):
+        """Calculate bonus for strong price reactions at level"""
+        try:
+            reactions = []
+            
+            for i in range(1, len(data)):
+                current_row = data.iloc[i]
+                prev_row = data.iloc[i-1]
+                
+                # Check if price tested level and reacted
+                level_tested = (abs(current_row['Low'] - level) / level <= tolerance or 
+                              abs(current_row['High'] - level) / level <= tolerance)
+                
+                if level_tested and i < len(data) - 1:
+                    next_row = data.iloc[i+1]
+                    
+                    # Calculate reaction strength
+                    if level < current_row['Close']:  # Support level
+                        reaction = (next_row['Close'] - current_row['Low']) / current_row['Low'] * 100
+                    else:  # Resistance level
+                        reaction = (current_row['High'] - next_row['Close']) / next_row['Close'] * 100
+                    
+                    reactions.append(max(reaction, 0))
+            
+            if not reactions:
+                return 0
+            
+            max_reaction = max(reactions)
+            
+            if max_reaction >= 5:
+                return 15
+            elif max_reaction >= 3:
+                return 10
+            elif max_reaction >= 1:
+                return 5
+            else:
+                return 0
+                
+        except Exception as e:
+            return 0
+    
+    def _analyze_current_price_position(self, current_price, analyzed_levels):
+        """Analyze current price position relative to S&R levels"""
+        try:
+            # Find nearest support and resistance
+            supports = [level for level in analyzed_levels if level['type'] == 'support' and level['level'] < current_price]
+            resistances = [level for level in analyzed_levels if level['type'] == 'resistance' and level['level'] > current_price]
+            
+            # Sort by distance
+            supports.sort(key=lambda x: current_price - x['level'])
+            resistances.sort(key=lambda x: x['level'] - current_price)
+            
+            nearest_support = supports[0] if supports else None
+            nearest_resistance = resistances[0] if resistances else None
+            
+            # Calculate position metrics
+            position_strength = 'Neutral'
+            
+            if nearest_support and nearest_resistance:
+                support_distance = ((current_price - nearest_support['level']) / nearest_support['level']) * 100
+                resistance_distance = ((nearest_resistance['level'] - current_price) / current_price) * 100
+                
+                if support_distance < resistance_distance:
+                    if support_distance <= 2:
+                        position_strength = 'At Support'
+                    elif support_distance <= 5:
+                        position_strength = 'Near Support'
+                    else:
+                        position_strength = 'Above Support'
+                else:
+                    if resistance_distance <= 2:
+                        position_strength = 'At Resistance'
+                    elif resistance_distance <= 5:
+                        position_strength = 'Near Resistance'
+                    else:
+                        position_strength = 'Below Resistance'
+            
+            return {
+                'position_strength': position_strength,
+                'nearest_support': nearest_support,
+                'nearest_resistance': nearest_resistance,
+                'support_distance_pct': ((current_price - nearest_support['level']) / nearest_support['level']) * 100 if nearest_support else None,
+                'resistance_distance_pct': ((nearest_resistance['level'] - current_price) / current_price) * 100 if nearest_resistance else None
+            }
+            
+        except Exception as e:
+            return {'position_strength': 'Unknown', 'nearest_support': None, 'nearest_resistance': None}
+    
+    def _analyze_breakout_probability(self, data, analyzed_levels, current_price):
+        """Analyze probability of breakout/breakdown"""
+        try:
+            # Get recent price action
+            recent_data = data.tail(5)
+            price_momentum = ((current_price - data['Close'].iloc[-6]) / data['Close'].iloc[-6]) * 100 if len(data) > 5 else 0
+            
+            # Volume trend
+            recent_volume = recent_data['Volume'].mean()
+            historical_volume = data['Volume'].tail(20).mean()
+            volume_trend = (recent_volume / historical_volume - 1) * 100
+            
+            # Find levels close to current price
+            close_levels = [level for level in analyzed_levels 
+                          if abs(level['level'] - current_price) / current_price <= 0.05]  # Within 5%
+            
+            breakout_probability = 'Low'
+            breakdown_probability = 'Low'
+            
+            # Analyze breakout potential
+            close_resistances = [level for level in close_levels if level['type'] == 'resistance']
+            if close_resistances and price_momentum > 2 and volume_trend > 20:
+                if any(level['strength'] < 60 for level in close_resistances):
+                    breakout_probability = 'High'
+                else:
+                    breakout_probability = 'Medium'
+            
+            # Analyze breakdown potential
+            close_supports = [level for level in close_levels if level['type'] == 'support']
+            if close_supports and price_momentum < -2 and volume_trend > 20:
+                if any(level['strength'] < 60 for level in close_supports):
+                    breakdown_probability = 'High'
+                else:
+                    breakdown_probability = 'Medium'
+            
+            return {
+                'breakout_probability': breakout_probability,
+                'breakdown_probability': breakdown_probability,
+                'price_momentum': price_momentum,
+                'volume_trend': volume_trend,
+                'close_levels_count': len(close_levels)
+            }
+            
+        except Exception as e:
+            return {
+                'breakout_probability': 'Unknown',
+                'breakdown_probability': 'Unknown',
+                'price_momentum': 0,
+                'volume_trend': 0
+            }
+    
+    def _analyze_volume_at_levels(self, data, analyzed_levels):
+        """Analyze volume behavior at key levels"""
+        try:
+            volume_insights = []
+            
+            for level in analyzed_levels[:10]:  # Top 10 levels
+                level_price = level['level']
+                
+                # Find days when price was near this level
+                tolerance = 0.02
+                level_days = []
+                
+                for _, row in data.iterrows():
+                    near_level = (abs(row['High'] - level_price) / level_price <= tolerance or 
+                                abs(row['Low'] - level_price) / level_price <= tolerance)
+                    
+                    if near_level:
+                        level_days.append(row['Volume'])
+                
+                if level_days:
+                    avg_volume_at_level = sum(level_days) / len(level_days)
+                    overall_avg_volume = data['Volume'].mean()
+                    volume_ratio = avg_volume_at_level / overall_avg_volume
+                    
+                    volume_insights.append({
+                        'level': level_price,
+                        'type': level['type'],
+                        'method': level['method'],
+                        'avg_volume_at_level': avg_volume_at_level,
+                        'volume_ratio': volume_ratio,
+                        'test_days': len(level_days)
+                    })
+            
+            # Sort by volume ratio
+            volume_insights.sort(key=lambda x: x['volume_ratio'], reverse=True)
+            
+            return {
+                'high_volume_levels': volume_insights[:5],
+                'average_volume_ratio': sum(vi['volume_ratio'] for vi in volume_insights) / len(volume_insights) if volume_insights else 1,
+                'total_analyzed_levels': len(volume_insights)
+            }
+            
+        except Exception as e:
+            return {'high_volume_levels': [], 'average_volume_ratio': 1, 'total_analyzed_levels': 0}
+    
+    def _generate_sr_analysis_summary(self, current_price, support_levels, resistance_levels, 
+                                    position_analysis, breakout_analysis, volume_analysis):
+        """Generate comprehensive S&R analysis summary"""
+        try:
+            summary = {
+                'key_insights': [],
+                'trading_signals': [],
+                'risk_assessment': 'Medium',
+                'confidence_level': 'Medium'
+            }
+            
+            # Position analysis insights
+            position = position_analysis['position_strength']
+            if position in ['At Support', 'Near Support']:
+                summary['key_insights'].append(f"Price is {position.lower()} - potential bounce opportunity")
+                summary['trading_signals'].append("Watch for reversal signals at support")
+            elif position in ['At Resistance', 'Near Resistance']:
+                summary['key_insights'].append(f"Price is {position.lower()} - potential reversal zone")
+                summary['trading_signals'].append("Watch for rejection or breakout at resistance")
+            
+            # Breakout analysis insights
+            if breakout_analysis['breakout_probability'] == 'High':
+                summary['key_insights'].append("High probability of upside breakout")
+                summary['trading_signals'].append("Prepare for potential breakout trade")
+                summary['risk_assessment'] = 'High Reward Potential'
+            
+            if breakout_analysis['breakdown_probability'] == 'High':
+                summary['key_insights'].append("High probability of breakdown")
+                summary['trading_signals'].append("Consider protective stops or short opportunity")
+                summary['risk_assessment'] = 'High Risk'
+            
+            # Volume insights
+            high_vol_levels = volume_analysis.get('high_volume_levels', [])
+            if high_vol_levels:
+                top_vol_level = high_vol_levels[0]
+                if top_vol_level['volume_ratio'] > 1.5:
+                    summary['key_insights'].append(
+                        f"Strong {top_vol_level['type']} at ₹{top_vol_level['level']:.2f} with high volume"
+                    )
+            
+            # Support/Resistance strength
+            strong_supports = [s for s in support_levels if s['strength'] >= 70]
+            strong_resistances = [r for r in resistance_levels if r['strength'] >= 70]
+            
+            if strong_supports:
+                summary['key_insights'].append(f"{len(strong_supports)} strong support level(s) identified")
+                summary['confidence_level'] = 'High'
+            
+            if strong_resistances:
+                summary['key_insights'].append(f"{len(strong_resistances)} strong resistance level(s) identified")
+                summary['confidence_level'] = 'High'
+            
+            # Overall assessment
+            if len(summary['key_insights']) >= 3:
+                summary['confidence_level'] = 'High'
+            elif len(summary['key_insights']) >= 2:
+                summary['confidence_level'] = 'Medium'
+            else:
+                summary['confidence_level'] = 'Low'
+            
+            return summary
+            
+        except Exception as e:
+            return {
+                'key_insights': ['Analysis summary generation failed'],
+                'trading_signals': [],
+                'risk_assessment': 'Unknown',
+                'confidence_level': 'Low'
+            }
 def create_professional_sidebar():
     """Create professional sidebar with Angel One styling"""
     with st.sidebar:
@@ -2631,7 +4100,25 @@ def create_professional_sidebar():
         current_time = datetime.now(ist)
         st.markdown(f"**Updated:** {current_time.strftime('%H:%M IST')}")
         
-        return {
+        
+    
+    # === ENHANCEMENTS SECTION ===
+    st.markdown("---")
+    st.markdown("### 🚀 **Advanced Enhancements**")
+    
+    # Enhancement toggles
+    enhancement_options = {
+        'delivery_volume': st.checkbox("📊 Delivery Volume Analysis", value=True, 
+                                     help="Analyze delivery percentage and institutional participation"),
+        'fno_consolidation': st.checkbox("🔄 F&O Consolidation Detection", value=True,
+                                       help="Detect consolidation patterns near resistance levels"),
+        'breakout_pullback': st.checkbox("📈 Breakout-Pullback Patterns", value=True,
+                                       help="Identify breakout-pullback-breakout patterns with strong green candles"),
+        'enhanced_sr': st.checkbox("🎯 Enhanced Support & Resistance", value=True,
+                                 help="Advanced multi-timeframe support and resistance analysis")
+    }
+    
+    return {
             'stocks_to_scan': stocks_to_scan[:stocks_limit],
             'rsi_min': rsi_min,
             'rsi_max': rsi_max,
@@ -2653,7 +4140,11 @@ def create_professional_sidebar():
             'export_results': export_results,
             'stocks_limit': stocks_limit,
             'market_sentiment': sentiment_data
-        }
+        ,
+        
+        # Enhancement options
+        'enhancements': enhancement_options
+    }
 
 def create_main_scanner_tab(config):
     """Create main scanner tab with current day focus"""
@@ -2721,7 +4212,63 @@ def create_main_scanner_tab(config):
                     except:
                         news_data = None
                 
-                results.append({
+                # =================== PROCESS ENHANCEMENTS ===================
+                enhancement_results = {}
+                
+                if config.get('enhancements', {}).get('delivery_volume', False):
+                    try:
+                        delivery_analysis = scanner.analyze_delivery_volume_percentage(symbol)
+                        enhancement_results['delivery_volume'] = delivery_analysis
+                    except Exception as e:
+                        enhancement_results['delivery_volume'] = {
+                            'delivery_percentage': None,
+                            'delivery_analysis': f'Error: {str(e)}',
+                            'delivery_signals': [],
+                            'confidence': 'Low'
+                        }
+                
+                if config.get('enhancements', {}).get('fno_consolidation', False):
+                    try:
+                        consolidation_analysis = scanner.detect_fno_consolidation_near_resistance(
+                            data, symbol, lookback_days=20
+                        )
+                        enhancement_results['fno_consolidation'] = consolidation_analysis
+                    except Exception as e:
+                        enhancement_results['fno_consolidation'] = {
+                            'consolidation_detected': False,
+                            'analysis': f'Error: {str(e)}',
+                            'signals': []
+                        }
+                
+                if config.get('enhancements', {}).get('breakout_pullback', False):
+                    try:
+                        breakout_pullback_analysis = scanner.detect_breakout_pullback_strong_green(
+                            data, lookback_days=30
+                        )
+                        enhancement_results['breakout_pullback'] = breakout_pullback_analysis
+                    except Exception as e:
+                        enhancement_results['breakout_pullback'] = {
+                            'pattern_detected': False,
+                            'analysis': f'Error: {str(e)}',
+                            'signals': []
+                        }
+                
+                if config.get('enhancements', {}).get('enhanced_sr', False):
+                    try:
+                        sr_analysis = scanner.enhanced_support_resistance_analysis(
+                            data, lookback_days=50
+                        )
+                        enhancement_results['enhanced_sr'] = sr_analysis
+                    except Exception as e:
+                        enhancement_results['enhanced_sr'] = {
+                            'analysis_available': False,
+                            'message': f'Error: {str(e)}',
+                            'support_levels': [],
+                            'resistance_levels': []
+                        }
+                
+                # Create the stock result with all data including enhancements
+                stock_result = {
                     'symbol': symbol,
                     'current_price': current_price,
                     'volume_ratio': volume_ratio,
@@ -2731,7 +4278,13 @@ def create_main_scanner_tab(config):
                     'patterns': patterns,
                     'data': data,
                     'news_data': news_data
-                })
+                }
+                
+                # Add enhancement results if any
+                if enhancement_results:
+                    stock_result['enhancements'] = enhancement_results
+                
+                results.append(stock_result)
                 
             except Exception as e:
                 continue
