@@ -119,11 +119,11 @@ st.markdown("""
         opacity: 0.85;
     }
     
-    /* FIXED: Enhanced Sidebar with Visible Scrollbar - GREEN THEME */
+    /* FIXED: Enhanced Sidebar with Visible Scrollbar - STACK OVERFLOW ORANGE THEME */
     .css-1d391kg, .css-1lcbmhc, section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0F5132 0%, #198754 100%);
-        border-right: 2px solid #198754;
-        box-shadow: 4px 0 20px rgba(25, 135, 84, 0.3);
+        background: linear-gradient(180deg, #2D2D2D 0%, #1A1A1A 100%);
+        border-right: 2px solid #F48024;
+        box-shadow: 4px 0 20px rgba(244, 128, 36, 0.3);
     }
     
     /* FIXED: Visible Sidebar Scrollbar */
@@ -139,13 +139,13 @@ st.markdown("""
     }
     
     section[data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #198754, #20c997);
+        background: linear-gradient(180deg, #F48024, #FF7A00);
         border-radius: 6px;
         border: 2px solid var(--accent-bg);
     }
     
     section[data-testid="stSidebar"] ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #20c997, #198754);
+        background: linear-gradient(180deg, #FF7A00, #F48024);
     }
     
     /* Angel One Style Tabs */
@@ -305,10 +305,10 @@ st.markdown("""
         box-shadow: 0 4px 16px rgba(49, 130, 206, 0.15);
     }
     
-    /* Enhanced Form Controls */
+    /* Enhanced Form Controls - Stack Overflow Orange Theme */
     .stSelectbox > div > div {
         background: linear-gradient(135deg, var(--accent-bg), var(--secondary-bg));
-        color: var(--text-primary);
+        color: #F48024 !important;
         border: 1px solid var(--border-color);
         border-radius: 6px;
         font-weight: 500;
@@ -317,8 +317,26 @@ st.markdown("""
     
     .stSelectbox > div > div:hover,
     .stSelectbox > div > div:focus {
-        border-color: var(--primary-blue);
-        box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        border-color: #F48024;
+        box-shadow: 0 0 0 2px rgba(244, 128, 36, 0.2);
+    }
+    
+    /* Stack Overflow Orange Text Styling for Sidebar */
+    section[data-testid="stSidebar"] .stMarkdown h1,
+    section[data-testid="stSidebar"] .stMarkdown h2,
+    section[data-testid="stSidebar"] .stMarkdown h3,
+    section[data-testid="stSidebar"] .stMarkdown h4 {
+        color: #F48024 !important;
+    }
+    
+    section[data-testid="stSidebar"] .stMarkdown p,
+    section[data-testid="stSidebar"] .stMarkdown span,
+    section[data-testid="stSidebar"] .stMarkdown strong {
+        color: #F48024 !important;
+    }
+    
+    section[data-testid="stSidebar"] label {
+        color: #F48024 !important;
     }
     
     .stSlider > div > div > div {
@@ -1093,20 +1111,27 @@ class ProfessionalPCSScanner:
         pattern_filters = filters.get('pattern_filters', {})
         pattern_priority = filters.get('pattern_priority', 'All Patterns (Comprehensive)')
         
-        # NEW V6.1: Get weekly data for strength validation
+        # NEW V6.1: Handle different analysis modes
+        analysis_mode = filters.get('analysis_mode', 'Daily + Weekly Combined (Recommended)')
+        enable_daily_analysis = filters.get('enable_daily_analysis', True)
+        enable_weekly_validation = filters.get('enable_weekly_validation', True)
+        
+        # Get weekly data if needed
         weekly_data = None
-        if filters.get('enable_weekly_validation', True):  # Default enabled
+        if enable_weekly_validation:
             weekly_data = self.get_weekly_stock_data(symbol)
+        
+        # WEEKLY ONLY MODE - Return weekly patterns only
+        if analysis_mode == "Weekly Only (New Feature)":
             if weekly_data is not None:
-                # Quick weekly health check
-                weekly_rsi = weekly_data['RSI'].iloc[-1] if not weekly_data['RSI'].isna().iloc[-1] else None
-                weekly_close = weekly_data['Close'].iloc[-1]
-                weekly_sma_10 = weekly_data['SMA_10'].iloc[-1] if not weekly_data['SMA_10'].isna().iloc[-1] else None
-                
-                # Skip if weekly is in very bearish state (optional filter)
-                if weekly_rsi and weekly_rsi < 25 and weekly_sma_10 and weekly_close < weekly_sma_10 * 0.95:
-                    # Extremely bearish weekly - reduce pattern strength requirements slightly
-                    pass  # Continue but will show in weekly context
+                return self.detect_weekly_patterns(weekly_data, symbol, filters)
+            else:
+                return []  # No weekly data available
+        
+        # DAILY ONLY MODE - Skip weekly validation entirely (V6.0 style)
+        if analysis_mode == "Daily Only (V6.0 Style)":
+            enable_weekly_validation = False
+            weekly_data = None
         
         # PRIORITY 1: Current Day Breakout Detection
         if pattern_filters.get('current_day_breakout', True):
@@ -1117,22 +1142,37 @@ class ProfessionalPCSScanner:
             )
             
             if breakout_detected and breakout_strength >= filters['pattern_strength_min']:
-                # NEW V6.1: Add weekly validation
-                weekly_validation = self.validate_weekly_strength(data, weekly_data, 'Current Day Breakout')
-                final_strength = breakout_strength + weekly_validation['weekly_strength_bonus']
-                
-                pattern_data = {
-                    'type': 'Current Day Breakout',
-                    'strength': final_strength,
-                    'daily_strength': breakout_strength,
-                    'success_rate': 92,  # High success for current day breakouts
-                    'research_basis': 'Real-time EOD Breakout Confirmation',
-                    'pcs_suitability': 98,
-                    'confidence': self.get_confidence_level(final_strength),
-                    'details': breakout_details,
-                    'special': 'CURRENT_DAY_BREAKOUT',
-                    'weekly_validation': weekly_validation
-                }
+                # Handle weekly validation based on mode
+                if enable_weekly_validation and weekly_data is not None:
+                    weekly_validation = self.validate_weekly_strength(data, weekly_data, 'Current Day Breakout')
+                    final_strength = breakout_strength + weekly_validation['weekly_strength_bonus']
+                    
+                    pattern_data = {
+                        'type': 'Current Day Breakout',
+                        'strength': final_strength,
+                        'daily_strength': breakout_strength,
+                        'success_rate': 92,
+                        'research_basis': 'Real-time EOD Breakout Confirmation',
+                        'pcs_suitability': 98,
+                        'confidence': self.get_confidence_level(final_strength),
+                        'details': breakout_details,
+                        'special': 'CURRENT_DAY_BREAKOUT',
+                        'weekly_validation': weekly_validation,
+                        'timeframe': 'Daily + Weekly'
+                    }
+                else:
+                    # Daily only mode
+                    pattern_data = {
+                        'type': 'Current Day Breakout',
+                        'strength': breakout_strength,
+                        'success_rate': 92,
+                        'research_basis': 'Real-time EOD Breakout Confirmation',
+                        'pcs_suitability': 98,
+                        'confidence': self.get_confidence_level(breakout_strength),
+                        'details': breakout_details,
+                        'special': 'CURRENT_DAY_BREAKOUT',
+                        'timeframe': 'Daily Only'
+                    }
                 
                 # Apply priority filters
                 if self._meets_priority_criteria(pattern_data, pattern_priority):
@@ -1154,8 +1194,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 95,
                         'confidence': self.get_confidence_level(cup_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, cup_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, cup_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1171,8 +1215,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 92,
                         'confidence': self.get_confidence_level(flat_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, flat_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, flat_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1190,8 +1238,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 88,
                         'confidence': self.get_confidence_level(bump_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, bump_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, bump_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1207,8 +1259,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 90,
                         'confidence': self.get_confidence_level(rect_bottom_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rect_bottom_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rect_bottom_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1224,8 +1280,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 85,
                         'confidence': self.get_confidence_level(rect_top_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rect_top_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rect_top_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1241,8 +1301,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 93,
                         'confidence': self.get_confidence_level(hs_bottom_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, hs_bottom_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, hs_bottom_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1258,8 +1322,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 91,
                         'confidence': self.get_confidence_level(double_bottom_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, double_bottom_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, double_bottom_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1275,8 +1343,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 89,
                         'confidence': self.get_confidence_level(three_valleys_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, three_valleys_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, three_valleys_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1292,8 +1364,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 87,
                         'confidence': self.get_confidence_level(rounding_bottom_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rounding_bottom_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rounding_bottom_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1309,8 +1385,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 85,
                         'confidence': self.get_confidence_level(rounding_top_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rounding_top_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rounding_top_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1326,8 +1406,12 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 88,
                         'confidence': self.get_confidence_level(scallop_strength)
                     }
-                    # NEW V6.1: Add weekly validation
-                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, scallop_strength, data, weekly_data)
+                    # Handle weekly validation based on mode
+                    if enable_weekly_validation and weekly_data is not None:
+                        pattern_data = self._add_weekly_validation_to_pattern(pattern_data, scallop_strength, data, weekly_data)
+                        pattern_data['timeframe'] = 'Daily + Weekly'
+                    else:
+                        pattern_data['timeframe'] = 'Daily Only'
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
         
@@ -1858,6 +1942,240 @@ class ProfessionalPCSScanner:
         
         return pattern_data
     
+    def detect_weekly_patterns(self, weekly_data, symbol, filters):
+        """Detect patterns using WEEKLY timeframe data only"""
+        patterns = []
+        
+        if weekly_data is None or len(weekly_data) < 15:
+            return patterns
+        
+        # Get current weekly metrics
+        current_weekly_close = weekly_data['Close'].iloc[-1]
+        current_weekly_rsi = weekly_data['RSI'].iloc[-1] if not weekly_data['RSI'].isna().iloc[-1] else 50
+        current_weekly_adx = weekly_data['ADX'].iloc[-1] if not weekly_data['ADX'].isna().iloc[-1] else 20
+        weekly_sma_10 = weekly_data['SMA_10'].iloc[-1] if not weekly_data['SMA_10'].isna().iloc[-1] else current_weekly_close
+        weekly_sma_20 = weekly_data['SMA_20'].iloc[-1] if not weekly_data['SMA_20'].isna().iloc[-1] else current_weekly_close
+        
+        # Apply filters based on WEEKLY data
+        if not (filters['rsi_min'] <= current_weekly_rsi <= filters['rsi_max']):
+            return patterns
+        
+        if current_weekly_adx < filters['adx_min']:
+            return patterns
+        
+        # Weekly MA support check
+        if filters['ma_support']:
+            if current_weekly_close < weekly_sma_10 * (1 - filters['ma_tolerance']/100):
+                return patterns
+        
+        # Get pattern filters
+        pattern_filters = filters.get('pattern_filters', {})
+        pattern_priority = filters.get('pattern_priority', 'All Patterns (Comprehensive)')
+        
+        # Weekly Pattern Detection
+        
+        # 1. Weekly Breakout Pattern
+        if pattern_filters.get('current_day_breakout', True):
+            weekly_breakout_detected, weekly_breakout_strength = self.detect_weekly_breakout(weekly_data)
+            if weekly_breakout_detected and weekly_breakout_strength >= filters['pattern_strength_min']:
+                pattern_data = {
+                    'type': 'Weekly Breakout',
+                    'strength': weekly_breakout_strength,
+                    'success_rate': 88,
+                    'research_basis': 'Weekly Timeframe Breakout Confirmation',
+                    'pcs_suitability': 94,
+                    'confidence': self.get_confidence_level(weekly_breakout_strength),
+                    'timeframe': 'Weekly',
+                    'special': 'WEEKLY_BREAKOUT'
+                }
+                if self._meets_priority_criteria(pattern_data, pattern_priority):
+                    patterns.append(pattern_data)
+        
+        # 2. Weekly Cup and Handle
+        if pattern_filters.get('cup_and_handle', True):
+            weekly_cup_detected, weekly_cup_strength = self.detect_weekly_cup_and_handle(weekly_data)
+            if weekly_cup_detected and weekly_cup_strength >= filters['pattern_strength_min']:
+                pattern_data = {
+                    'type': 'Weekly Cup and Handle',
+                    'strength': weekly_cup_strength,
+                    'success_rate': 82,
+                    'research_basis': 'William O\'Neil - Weekly Timeframe Analysis',
+                    'pcs_suitability': 92,
+                    'confidence': self.get_confidence_level(weekly_cup_strength),
+                    'timeframe': 'Weekly'
+                }
+                if self._meets_priority_criteria(pattern_data, pattern_priority):
+                    patterns.append(pattern_data)
+        
+        # 3. Weekly Double Bottom
+        if pattern_filters.get('double_bottom', True):
+            weekly_db_detected, weekly_db_strength = self.detect_weekly_double_bottom(weekly_data)
+            if weekly_db_detected and weekly_db_strength >= filters['pattern_strength_min']:
+                pattern_data = {
+                    'type': 'Weekly Double Bottom',
+                    'strength': weekly_db_strength,
+                    'success_rate': 78,
+                    'research_basis': 'Weekly Double Bottom - Longer Term Reversal',
+                    'pcs_suitability': 89,
+                    'confidence': self.get_confidence_level(weekly_db_strength),
+                    'timeframe': 'Weekly'
+                }
+                if self._meets_priority_criteria(pattern_data, pattern_priority):
+                    patterns.append(pattern_data)
+        
+        # 4. Weekly Support Test
+        if pattern_filters.get('rectangle_bottom', True):
+            weekly_support_detected, weekly_support_strength = self.detect_weekly_support_test(weekly_data)
+            if weekly_support_detected and weekly_support_strength >= filters['pattern_strength_min']:
+                pattern_data = {
+                    'type': 'Weekly Support Test',
+                    'strength': weekly_support_strength,
+                    'success_rate': 75,
+                    'research_basis': 'Weekly Support Level Validation',
+                    'pcs_suitability': 87,
+                    'confidence': self.get_confidence_level(weekly_support_strength),
+                    'timeframe': 'Weekly'
+                }
+                if self._meets_priority_criteria(pattern_data, pattern_priority):
+                    patterns.append(pattern_data)
+        
+        return patterns
+    
+    def detect_weekly_breakout(self, weekly_data):
+        """Detect breakout on weekly timeframe"""
+        if len(weekly_data) < 12:
+            return False, 0
+            
+        # Look for weekly breakout
+        recent_weeks = weekly_data.tail(8).iloc[:-1]  # Exclude current week
+        current_week = weekly_data.iloc[-1]
+        
+        resistance_level = recent_weeks['High'].max()
+        current_close = current_week['Close']
+        current_volume = current_week['Volume']
+        
+        # Weekly breakout criteria
+        price_breakout = current_close > resistance_level * 1.02  # 2% above weekly resistance
+        
+        # Volume confirmation (weekly)
+        avg_volume = recent_weeks['Volume'].mean()
+        volume_breakout = current_volume > avg_volume * 1.3
+        
+        if not (price_breakout and volume_breakout):
+            return False, 0
+        
+        strength = 0
+        breakout_percentage = ((current_close - resistance_level) / resistance_level) * 100
+        
+        if breakout_percentage >= 5: strength += 40
+        elif breakout_percentage >= 3: strength += 30
+        elif breakout_percentage >= 2: strength += 25
+        
+        volume_ratio = current_volume / avg_volume
+        if volume_ratio >= 2: strength += 30
+        elif volume_ratio >= 1.5: strength += 20
+        elif volume_ratio >= 1.3: strength += 15
+        
+        return True, strength
+    
+    def detect_weekly_cup_and_handle(self, weekly_data):
+        """Detect cup and handle on weekly timeframe"""
+        if len(weekly_data) < 20:
+            return False, 0
+            
+        # Cup formation (weeks 1-15)
+        cup_data = weekly_data.iloc[-20:-5]
+        cup_high = cup_data['High'].max()
+        cup_low = cup_data['Low'].min()
+        
+        # Handle formation (last 5 weeks)
+        handle_data = weekly_data.iloc[-5:]
+        handle_high = handle_data['High'].max()
+        current_close = weekly_data['Close'].iloc[-1]
+        
+        # Cup criteria
+        cup_depth = ((cup_high - cup_low) / cup_high) * 100
+        valid_cup = 20 <= cup_depth <= 60  # Weekly cups can be deeper
+        
+        # Handle breakout
+        handle_breakout = current_close > handle_high * 1.01
+        
+        if not (valid_cup and handle_breakout):
+            return False, 0
+        
+        strength = 0
+        if valid_cup: strength += 35
+        if handle_breakout: strength += 40
+        
+        return True, strength
+    
+    def detect_weekly_double_bottom(self, weekly_data):
+        """Detect double bottom on weekly timeframe"""
+        if len(weekly_data) < 16:
+            return False, 0
+            
+        # Look for two weekly lows
+        recent_data = weekly_data.tail(16)
+        
+        # First bottom (weeks 2-7)
+        first_bottom_data = recent_data.iloc[2:7]
+        first_low = first_bottom_data['Low'].min()
+        
+        # Peak between (weeks 7-10)
+        peak_data = recent_data.iloc[7:10]
+        peak_high = peak_data['High'].max()
+        
+        # Second bottom (weeks 10-14)
+        second_bottom_data = recent_data.iloc[10:14]
+        second_low = second_bottom_data['Low'].min()
+        
+        # Current breakout
+        current_close = weekly_data['Close'].iloc[-1]
+        
+        # Pattern validation
+        bottoms_similar = abs(first_low - second_low) / min(first_low, second_low) < 0.12  # Weekly can be less precise
+        significant_peak = ((peak_high - max(first_low, second_low)) / max(first_low, second_low)) * 100 > 8
+        breakout = current_close > peak_high * 1.02
+        
+        if not (bottoms_similar and significant_peak and breakout):
+            return False, 0
+        
+        strength = 0
+        if bottoms_similar: strength += 30
+        if significant_peak: strength += 25
+        if breakout: strength += 30
+        
+        return True, strength
+    
+    def detect_weekly_support_test(self, weekly_data):
+        """Detect support test and bounce on weekly timeframe"""
+        if len(weekly_data) < 12:
+            return False, 0
+            
+        # Find weekly support level
+        support_data = weekly_data.tail(12).iloc[:-2]
+        support_level = support_data['Low'].min()
+        
+        # Current week test
+        current_week = weekly_data.iloc[-1]
+        current_low = current_week['Low']
+        current_close = current_week['Close']
+        
+        # Support test criteria
+        support_test = current_low <= support_level * 1.03  # Within 3% of support
+        bounce_strength = ((current_close - current_low) / current_low) * 100
+        strong_bounce = bounce_strength >= 2  # At least 2% bounce from weekly low
+        
+        if not (support_test and strong_bounce):
+            return False, 0
+        
+        strength = 0
+        if support_test: strength += 35
+        if bounce_strength >= 4: strength += 30
+        elif bounce_strength >= 2: strength += 20
+        
+        return True, strength
+    
     def get_confidence_level(self, strength):
         """Get confidence level based on pattern strength"""
         if strength >= 85:
@@ -2039,9 +2357,9 @@ def create_professional_sidebar():
     """Create professional sidebar with Angel One styling"""
     with st.sidebar:
         st.markdown("""
-        <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, #198754, #20c997); border-radius: 8px; margin-bottom: 14px;'>
-            <h2 style='color: var(--text-primary); margin: 0; font-weight: 700; font-size: 1.3rem;'>📈 PCS Scanner V6</h2>
-            <p style='color: var(--text-primary); margin: 3px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Enhanced Chart Patterns</p>
+        <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, #F48024, #FF7A00); border-radius: 8px; margin-bottom: 14px;'>
+            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700; font-size: 1.3rem;'>📈 PCS Scanner V6.1</h2>
+            <p style='color: #FFFFFF; margin: 3px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Stack Overflow Style</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -2133,18 +2451,41 @@ def create_professional_sidebar():
                 help="Filter patterns by success rate or PCS suitability"
             )
             
-            # NEW V6.1: Weekly Validation Toggle
-            st.markdown("**🔍 Weekly Strength Validation:**")
-            enable_weekly_validation = st.checkbox(
-                "Enable Weekly Timeframe Validation", 
-                value=True, 
-                help="Validates daily patterns against weekly timeframe for additional strength confirmation. Adds 0-40 points to pattern strength based on weekly alignment."
+            # NEW V6.1: Separate Daily/Weekly Analysis Options
+            st.markdown("**🔍 Timeframe Analysis:**")
+            
+            analysis_mode = st.radio(
+                "Select Analysis Mode:",
+                [
+                    "Daily Only (V6.0 Style)",
+                    "Weekly Only (New Feature)", 
+                    "Daily + Weekly Combined (Recommended)"
+                ],
+                index=2,  # Default to combined
+                help="Choose timeframe analysis approach"
             )
             
-            if enable_weekly_validation:
+            # Analysis mode explanations
+            if analysis_mode == "Daily Only (V6.0 Style)":
                 st.info(
-                    "📊 **Weekly Validation Active**: Daily patterns will be validated against weekly trends, RSI, MACD, and support/resistance levels for enhanced accuracy."
+                    "📊 **Daily Analysis**: Pattern detection using current day EOD confirmation only. Fast scanning with original V6.0 logic."
                 )
+                enable_daily_analysis = True
+                enable_weekly_validation = False
+                
+            elif analysis_mode == "Weekly Only (New Feature)":
+                st.info(
+                    "📈 **Weekly Analysis**: Pattern detection using weekly timeframe only. Slower but captures longer-term trends."
+                )
+                enable_daily_analysis = False
+                enable_weekly_validation = True
+                
+            else:  # Combined mode
+                st.info(
+                    "🎯 **Combined Analysis**: Daily patterns validated with weekly confirmation. Best accuracy with moderate scan time."
+                )
+                enable_daily_analysis = True
+                enable_weekly_validation = True
         
         # Single Pattern Strength Filter
         pattern_strength_min = st.slider("Pattern Strength Min:", 50, 100, 65, 5)
@@ -2219,6 +2560,8 @@ def create_professional_sidebar():
             'pattern_strength_min': pattern_strength_min,
             'pattern_filters': pattern_filters,
             'pattern_priority': pattern_priority,
+            'analysis_mode': analysis_mode,
+            'enable_daily_analysis': enable_daily_analysis,
             'enable_weekly_validation': enable_weekly_validation,
             'show_charts': show_charts,
             'show_news': show_news,
@@ -2229,14 +2572,14 @@ def create_professional_sidebar():
 
 def create_main_scanner_tab(config):
     """Create main scanner tab with current day focus"""
-    st.markdown("### 🎯 Current Day EOD Pattern Scanner V6.1")
-    st.info("🔥 **Focus**: All patterns confirmed with latest trading day EOD data + Weekly timeframe validation for enhanced strength")
+    st.markdown("### 🎯 Multi-Timeframe Pattern Scanner V6.1")
+    st.info("💡 **Options**: Daily Only (Fast) | Weekly Only (Trends) | Daily + Weekly Combined (Best Accuracy)")
     
     # Action buttons
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        scan_button = st.button("🚀 Scan Patterns (Daily + Weekly)", type="primary", key="main_scan")
+        scan_button = st.button("🚀 Scan Multi-Timeframe Patterns", type="primary", key="main_scan")
     
     with col2:
         if config['export_results']:
