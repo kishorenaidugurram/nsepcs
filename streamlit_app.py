@@ -128,55 +128,26 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* ENHANCED: Sleek Main Container */
+    /* Main container */
     .main .block-container {
         background-color: transparent;
-        color: var(--tw-text-primary);
-        padding: var(--tw-space-3) var(--tw-space-4);
-        max-width: 1200px;
-        margin: 0 auto;
+        color: var(--text-primary);
+        padding-top: 0.5rem;
+        max-width: 1400px;
     }
     
-    /* ENHANCED: Compact Sidebar Layout */
-    section[data-testid="stSidebar"] > div {
-        padding-top: var(--tw-space-4) !important;
-        padding-left: var(--tw-space-3) !important;
-        padding-right: var(--tw-space-3) !important;
-    }
-    
-    /* ENHANCED: Radio Button Styling */
-    .stRadio > div {
-        background: var(--tw-surface-secondary) !important;
-        border-radius: var(--tw-rounded-md) !important;
-        padding: var(--tw-space-2) !important;
-        border: 1px solid var(--tw-border-primary) !important;
-    }
-    
-    .stRadio label {
-        color: var(--tw-text-secondary) !important;
-        font-size: var(--tw-text-sm) !important;
-        font-weight: 400 !important;
-    }
-    
-    /* ENHANCED: Info Box Styling */
-    .stAlert {
-        background: var(--tw-surface-secondary) !important;
-        border: 1px solid var(--tw-border-primary) !important;
-        border-radius: var(--tw-rounded-md) !important;
-        padding: var(--tw-space-3) !important;
-    }
-    
-    /* ENHANCED: Sleek Professional Header */
+    /* FIXED: Angel One Style Header - Compact and Readable */
     .professional-header {
-        background: var(--tw-gradient-primary);
-        padding: var(--tw-space-4) var(--tw-space-6);
-        border-radius: var(--tw-rounded-lg);
-        margin-bottom: var(--tw-space-5);
-        border: 1px solid var(--tw-border-accent);
-        box-shadow: var(--tw-shadow-xl);
+        background: var(--header-gradient);
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 1px solid var(--primary-blue);
+        box-shadow: 0 4px 20px var(--shadow-heavy);
         text-align: center;
         position: relative;
         overflow: hidden;
+        max-height: 100px;
     }
     
     .professional-header::before {
@@ -185,107 +156,105 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--tw-brand-primary), var(--tw-success), var(--tw-warning));
+        height: 2px;
+        background: linear-gradient(90deg, var(--primary-blue), var(--primary-green), var(--primary-orange));
     }
     
     .professional-header h1 {
-        color: var(--tw-text-primary) !important;
-        margin: 0 0 var(--tw-space-2) 0;
-        font-size: var(--tw-text-3xl);
+        color: var(--primary-blue) !important;
+        margin: 0 0 4px 0;
+        font-size: 1.8rem;
         font-weight: 700;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
         background: none !important;
-        -webkit-text-fill-color: var(--tw-text-primary) !important;
+        -webkit-text-fill-color: var(--primary-blue) !important;
     }
     
     .professional-header .subtitle {
-        color: var(--tw-text-secondary) !important;
-        margin: 0 0 var(--tw-space-1) 0;
-        font-size: var(--tw-text-base);
+        color: var(--primary-green) !important;
+        margin: 0 0 2px 0;
+        font-size: 0.95rem;
         font-weight: 500;
-        opacity: 0.9;
+        opacity: 0.95;
     }
     
     .professional-header .description {
-        color: var(--tw-text-tertiary) !important;
+        color: var(--text-secondary) !important;
         margin: 0;
-        font-size: var(--tw-text-sm);
-        opacity: 0.8;
+        font-size: 0.8rem;
+        opacity: 0.85;
     }
     
-    /* ENHANCED: Sleek Professional Sidebar */
+    /* FIXED: Enhanced Sidebar with Visible Scrollbar - STACK OVERFLOW ORANGE THEME */
     .css-1d391kg, .css-1lcbmhc, section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--tw-surface-primary) 0%, var(--tw-bg-primary) 100%);
-        border-right: 1px solid var(--tw-border-primary);
-        box-shadow: var(--tw-shadow-lg);
-        padding: 0;
+        background: linear-gradient(180deg, #2D2D2D 0%, #1A1A1A 100%);
+        border-right: 2px solid #F48024;
+        box-shadow: 4px 0 20px rgba(244, 128, 36, 0.3);
     }
     
-    /* ENHANCED: Sleek Sidebar Scrollbar */
+    /* FIXED: Visible Sidebar Scrollbar */
     section[data-testid="stSidebar"] ::-webkit-scrollbar {
-        width: 8px;
-        background: transparent;
+        width: 12px;
+        background: var(--accent-bg);
     }
     
     section[data-testid="stSidebar"] ::-webkit-scrollbar-track {
-        background: var(--tw-surface-secondary);
-        border-radius: var(--tw-rounded);
-        margin: var(--tw-space-2);
+        background: var(--accent-bg);
+        border-radius: 6px;
+        margin: 4px;
     }
     
     section[data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
-        background: var(--tw-gradient-primary);
-        border-radius: var(--tw-rounded);
-        border: 1px solid var(--tw-border-primary);
+        background: linear-gradient(180deg, #F48024, #FF7A00);
+        border-radius: 6px;
+        border: 2px solid var(--accent-bg);
     }
     
     section[data-testid="stSidebar"] ::-webkit-scrollbar-thumb:hover {
-        background: var(--tw-brand-accent);
+        background: linear-gradient(180deg, #FF7A00, #F48024);
     }
     
-    /* ENHANCED: Professional Tabs */
+    /* Angel One Style Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        gap: var(--tw-space-1);
-        background: var(--tw-surface-secondary);
-        border-radius: var(--tw-rounded-lg);
-        padding: var(--tw-space-1);
-        border: 1px solid var(--tw-border-primary);
-        box-shadow: var(--tw-shadow-sm);
+        gap: 6px;
+        background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
+        border-radius: 8px;
+        padding: 4px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px var(--shadow-medium);
     }
     
     .stTabs [data-baseweb="tab"] {
-        height: 36px;
+        height: 40px;
         background-color: transparent;
-        border-radius: var(--tw-rounded-md);
-        color: var(--tw-text-secondary);
+        border-radius: 6px;
+        color: var(--text-secondary);
         font-weight: 500;
-        font-size: var(--tw-text-sm);
+        font-size: 14px;
         border: none;
         transition: all 0.3s ease;
-        padding: var(--tw-space-2) var(--tw-space-4);
     }
     
     .stTabs [data-baseweb="tab"]:hover {
-        background: var(--tw-surface-tertiary);
-        color: var(--tw-text-primary);
+        background: linear-gradient(135deg, var(--accent-bg), rgba(49, 130, 206, 0.1));
+        color: var(--text-primary);
     }
     
     .stTabs [aria-selected="true"] {
-        background: var(--tw-gradient-primary) !important;
-        color: var(--tw-text-primary) !important;
+        background: linear-gradient(135deg, var(--primary-blue), #2C5AA0);
+        color: var(--text-primary) !important;
         font-weight: 600;
-        box-shadow: var(--tw-shadow-md);
+        box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
     }
     
-    /* ENHANCED: Professional Cards */
+    /* Professional Cards - Angel One Style */
     .metric-card {
-        background: var(--tw-gradient-surface);
-        padding: var(--tw-space-4);
-        border-radius: var(--tw-rounded-lg);
-        border: 1px solid var(--tw-border-primary);
-        margin: var(--tw-space-3) 0;
-        box-shadow: var(--tw-shadow-md);
+        background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        margin: 8px 0;
+        box-shadow: 0 4px 16px var(--shadow-heavy);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -298,309 +267,208 @@ st.markdown("""
         left: 0;
         width: 100%;
         height: 2px;
-        background: var(--tw-gradient-primary);
+        background: linear-gradient(90deg, var(--primary-blue), var(--primary-green));
     }
     
     .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: var(--tw-shadow-lg);
-        border-color: var(--tw-brand-primary);
+        box-shadow: 0 8px 24px rgba(49, 130, 206, 0.15);
+        border-color: var(--primary-blue);
     }
     
     .pattern-card {
-        background: var(--tw-gradient-surface);
-        padding: var(--tw-space-4);
-        border-radius: var(--tw-rounded-lg);
-        border-left: 4px solid var(--tw-success);
-        margin: var(--tw-space-3) 0;
-        box-shadow: var(--tw-shadow-md);
+        background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-green);
+        margin: 10px 0;
+        box-shadow: 0 4px 16px var(--shadow-heavy);
         transition: all 0.3s ease;
         position: relative;
     }
     
     .pattern-card:hover {
         transform: translateX(2px);
-        box-shadow: var(--tw-shadow-lg);
+        box-shadow: 0 6px 20px var(--shadow-heavy);
     }
     
     .consolidation-card {
-        border-left-color: var(--tw-warning);
-        background: linear-gradient(135deg, var(--tw-surface-primary), rgba(245, 158, 11, 0.05));
+        border-left-color: var(--primary-orange);
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(221, 107, 32, 0.05));
     }
     
     .news-card {
-        border-left-color: var(--tw-brand-primary);
-        background: linear-gradient(135deg, var(--tw-surface-primary), rgba(37, 99, 235, 0.05));
+        border-left-color: var(--primary-blue);
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(49, 130, 206, 0.05));
     }
     
     .high-confidence {
-        border-left-color: var(--tw-success);
-        background: linear-gradient(135deg, var(--tw-surface-primary), rgba(16, 185, 129, 0.05));
+        border-left-color: var(--primary-green);
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(56, 161, 105, 0.05));
     }
     
     .medium-confidence {
-        border-left-color: var(--tw-warning);
-        background: linear-gradient(135deg, var(--tw-surface-primary), rgba(245, 158, 11, 0.05));
+        border-left-color: var(--primary-orange);
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(221, 107, 32, 0.05));
     }
     
     .low-confidence {
-        border-left-color: var(--tw-danger);
-        background: linear-gradient(135deg, var(--tw-surface-primary), rgba(239, 68, 68, 0.05));
+        border-left-color: var(--primary-red);
+        background: linear-gradient(135deg, var(--secondary-bg), rgba(229, 62, 62, 0.05));
     }
     
-    /* ENHANCED: Market Sentiment */
+    /* Market Sentiment - Angel One Colors */
     .sentiment-bullish {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(34, 197, 94, 0.1));
-        border: 1px solid var(--tw-success);
-        border-left: 4px solid var(--tw-success);
+        background: linear-gradient(135deg, rgba(56, 161, 105, 0.15), rgba(72, 187, 120, 0.15));
+        border: 1px solid var(--primary-green);
+        border-left: 4px solid var(--primary-green);
     }
     
     .sentiment-neutral {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
-        border: 1px solid var(--tw-warning);
-        border-left: 4px solid var(--tw-warning);
+        background: linear-gradient(135deg, rgba(221, 107, 32, 0.15), rgba(237, 137, 54, 0.15));
+        border: 1px solid var(--primary-orange);
+        border-left: 4px solid var(--primary-orange);
     }
     
     .sentiment-bearish {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(248, 113, 113, 0.1));
-        border: 1px solid var(--tw-danger);
-        border-left: 4px solid var(--tw-danger);
+        background: linear-gradient(135deg, rgba(229, 62, 62, 0.15), rgba(245, 101, 101, 0.15));
+        border: 1px solid var(--primary-red);
+        border-left: 4px solid var(--primary-red);
     }
     
-    /* ENHANCED: Professional Button Styling */
+    /* Angel One Style Buttons */
     .stButton > button {
-        background: var(--tw-gradient-primary) !important;
-        color: var(--tw-text-primary) !important;
-        border: none !important;
-        border-radius: var(--tw-rounded-md) !important;
-        font-weight: 600 !important;
-        font-size: var(--tw-text-sm) !important;
-        height: 40px !important;
-        width: 100% !important;
-        transition: all 0.3s ease !important;
-        box-shadow: var(--tw-shadow-md) !important;
-        padding: var(--tw-space-2) var(--tw-space-4) !important;
+        background: linear-gradient(135deg, var(--primary-blue), #2C5AA0);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        height: 44px;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
     }
     
     .stButton > button:hover {
-        background: var(--tw-brand-accent) !important;
-        transform: translateY(-1px) !important;
-        box-shadow: var(--tw-shadow-lg) !important;
+        background: linear-gradient(135deg, #2C5AA0, var(--primary-blue));
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(49, 130, 206, 0.4);
     }
     
-    .stButton > button:active {
-        transform: translateY(0) !important;
-        box-shadow: var(--tw-shadow-sm) !important;
-    }
-    
-    /* ENHANCED: Professional Metrics */
+    /* Professional Metrics */
     [data-testid="metric-container"] {
-        background: var(--tw-gradient-surface) !important;
-        border: 1px solid var(--tw-border-primary) !important;
-        padding: var(--tw-space-4) !important;
-        border-radius: var(--tw-rounded-lg) !important;
-        box-shadow: var(--tw-shadow-md) !important;
-        transition: all 0.3s ease !important;
+        background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
+        border: 1px solid var(--border-color);
+        padding: 14px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--shadow-medium);
+        transition: all 0.3s ease;
     }
     
     [data-testid="metric-container"]:hover {
-        border-color: var(--tw-brand-primary) !important;
-        box-shadow: var(--tw-shadow-colored) !important;
-        transform: translateY(-1px) !important;
+        border-color: var(--primary-blue);
+        box-shadow: 0 4px 16px rgba(49, 130, 206, 0.15);
     }
     
-    /* ENHANCED: Professional Form Controls */
+    /* Enhanced Form Controls - Stack Overflow Orange Theme */
     .stSelectbox > div > div {
-        background: var(--tw-surface-secondary);
-        color: var(--tw-text-primary) !important;
-        border: 1px solid var(--tw-border-primary);
-        border-radius: var(--tw-rounded-md);
+        background: linear-gradient(135deg, var(--accent-bg), var(--secondary-bg));
+        color: #F48024 !important;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
         font-weight: 500;
-        font-size: var(--tw-text-sm);
         transition: all 0.3s ease;
-        padding: var(--tw-space-2) var(--tw-space-3);
-        min-height: 40px;
     }
     
     .stSelectbox > div > div:hover,
     .stSelectbox > div > div:focus {
-        border-color: var(--tw-brand-primary);
-        box-shadow: var(--tw-shadow-colored);
-        background: var(--tw-surface-tertiary);
+        border-color: #F48024;
+        box-shadow: 0 0 0 2px rgba(244, 128, 36, 0.2);
     }
     
-    /* ENHANCED: Professional Sidebar Text Styling */
+    /* Stack Overflow Orange Text Styling for Sidebar */
     section[data-testid="stSidebar"] .stMarkdown h1,
     section[data-testid="stSidebar"] .stMarkdown h2,
     section[data-testid="stSidebar"] .stMarkdown h3,
     section[data-testid="stSidebar"] .stMarkdown h4 {
-        color: var(--tw-text-primary) !important;
-        font-weight: 600;
-        margin-bottom: var(--tw-space-2);
+        color: #F48024 !important;
     }
     
     section[data-testid="stSidebar"] .stMarkdown p,
     section[data-testid="stSidebar"] .stMarkdown span,
     section[data-testid="stSidebar"] .stMarkdown strong {
-        color: var(--tw-text-secondary) !important;
-        font-size: var(--tw-text-sm);
+        color: #F48024 !important;
     }
     
     section[data-testid="stSidebar"] label {
-        color: var(--tw-text-primary) !important;
-        font-weight: 500;
-        font-size: var(--tw-text-sm);
+        color: #F48024 !important;
     }
     
-    /* ENHANCED: Professional Checkbox Styling */
+    /* Fix checkbox text color in sidebar - make pattern options green */
     section[data-testid="stSidebar"] .stCheckbox label {
-        color: var(--tw-text-secondary) !important;
-        font-size: var(--tw-text-sm);
-        font-weight: 400;
+        color: var(--primary-green) !important;
     }
     
     section[data-testid="stSidebar"] .stCheckbox label:hover {
-        color: var(--tw-text-primary) !important;
+        color: #F48024 !important;
     }
     
-    /* ENHANCED: Professional Slider Styling with Visible Controls */
+    /* Fix hover legibility issues - change white text to orange */
+    section[data-testid="stSidebar"] *:hover {
+        color: #F48024 !important;
+    }
+    
+    section[data-testid="stSidebar"] .stSelectbox option:hover {
+        background-color: #F48024 !important;
+        color: #FFFFFF !important;
+    }
+    
     .stSlider > div > div > div {
-        background: var(--tw-surface-secondary) !important;
-        border-radius: var(--tw-rounded-lg) !important;
-        border: 1px solid var(--tw-border-primary) !important;
-        height: 6px !important;
-        margin: var(--tw-space-4) 0 !important;
+        background: linear-gradient(135deg, var(--accent-bg), var(--secondary-bg));
+        border-radius: 6px;
     }
     
     .stSlider [data-testid="stSlider"] > div > div > div > div {
-        background: var(--tw-gradient-primary) !important;
-        border-radius: var(--tw-rounded-lg) !important;
+        background: var(--primary-blue);
     }
     
-    /* ENHANCED: Slider Thumb Styling */
-    .stSlider [data-testid="stSlider"] > div > div > div > div > div {
-        background: var(--tw-brand-primary) !important;
-        border: 2px solid var(--tw-text-primary) !important;
-        width: 20px !important;
-        height: 20px !important;
-        border-radius: 50% !important;
-        box-shadow: var(--tw-shadow-md) !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .stSlider [data-testid="stSlider"] > div > div > div > div > div:hover {
-        transform: scale(1.1) !important;
-        box-shadow: var(--tw-shadow-lg) !important;
-    }
-    
-    /* ENHANCED: Slider Labels */
-    .stSlider > div > div > div > div {
-        color: var(--tw-text-secondary) !important;
-        font-size: var(--tw-text-sm) !important;
-        font-weight: 500 !important;
-    }
-    
-    /* ENHANCED: Professional Number Input */
     .stNumberInput > div > div > input {
-        background: var(--tw-surface-secondary) !important;
-        color: var(--tw-text-primary) !important;
-        border: 1px solid var(--tw-border-primary) !important;
-        border-radius: var(--tw-rounded-md) !important;
-        font-weight: 500 !important;
-        font-size: var(--tw-text-sm) !important;
-        padding: var(--tw-space-2) var(--tw-space-3) !important;
-        transition: all 0.3s ease !important;
+        background: linear-gradient(135deg, var(--accent-bg), var(--secondary-bg));
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-weight: 500;
     }
     
     .stNumberInput > div > div > input:focus {
-        border-color: var(--tw-brand-primary) !important;
-        box-shadow: var(--tw-shadow-colored) !important;
-        background: var(--tw-surface-tertiary) !important;
-        outline: none !important;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
     }
     
-    /* ENHANCED: Professional Headers */
+    /* Professional Headers */
     h1, h2, h3, h4, h5, h6 {
-        color: var(--tw-text-primary) !important;
-        font-weight: 600 !important;
-        line-height: 1.4 !important;
-        margin-bottom: var(--tw-space-2) !important;
+        color: var(--text-primary);
+        font-weight: 600;
     }
     
-    /* ENHANCED: Professional Expanders */
-    .streamlit-expanderHeader {
-        background: var(--tw-surface-secondary) !important;
-        border: 1px solid var(--tw-border-primary) !important;
-        border-radius: var(--tw-rounded-md) !important;
-        padding: var(--tw-space-3) !important;
-        font-weight: 600 !important;
-        color: var(--tw-text-primary) !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .streamlit-expanderHeader:hover {
-        background: var(--tw-surface-tertiary) !important;
-        border-color: var(--tw-brand-primary) !important;
-    }
-    
-    .streamlit-expanderContent {
-        background: var(--tw-surface-primary) !important;
-        border: 1px solid var(--tw-border-primary) !important;
-        border-top: none !important;
-        border-radius: 0 0 var(--tw-rounded-md) var(--tw-rounded-md) !important;
-        padding: var(--tw-space-4) !important;
-    }
-    
-    /* ENHANCED: Main Content Scrollbar */
+    /* Enhanced Main Content Scrollbar */
     .main ::-webkit-scrollbar {
-        width: 8px;
+        width: 10px;
     }
     
     .main ::-webkit-scrollbar-track {
-        background: var(--tw-bg-primary);
-        border-radius: var(--tw-rounded);
+        background: var(--primary-bg);
+        border-radius: 5px;
     }
     
     .main ::-webkit-scrollbar-thumb {
-        background: var(--tw-gradient-primary);
-        border-radius: var(--tw-rounded);
+        background: linear-gradient(180deg, var(--primary-blue), var(--primary-green));
+        border-radius: 5px;
     }
     
     .main ::-webkit-scrollbar-thumb:hover {
-        background: var(--tw-brand-accent);
-    }
-    
-    /* ENHANCED: Global Typography */
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-    }
-    
-    /* ENHANCED: Input Focus States */
-    input:focus, textarea:focus, select:focus {
-        outline: none !important;
-        border-color: var(--tw-brand-primary) !important;
-        box-shadow: var(--tw-shadow-colored) !important;
-    }
-    
-    /* ENHANCED: Compact Spacing */
-    .stMarkdown {
-        margin-bottom: var(--tw-space-2) !important;
-    }
-    
-    .stSelectbox {
-        margin-bottom: var(--tw-space-3) !important;
-    }
-    
-    .stSlider {
-        margin-bottom: var(--tw-space-4) !important;
-    }
-    
-    .stCheckbox {
-        margin-bottom: var(--tw-space-2) !important;
-    }
-    
-    .stRadio {
-        margin-bottom: var(--tw-space-3) !important;
+        background: linear-gradient(180deg, var(--primary-green), var(--primary-blue));
     }
     
     /* Animation for loading states */
@@ -613,36 +481,23 @@ st.markdown("""
         animation: pulse 2s infinite;
     }
     
-    /* ENHANCED: Responsive Design */
+    /* Responsive Design */
     @media (max-width: 768px) {
         .main .block-container {
-            padding: var(--tw-space-2) var(--tw-space-3);
+            padding-top: 0.3rem;
         }
         
         .professional-header {
-            padding: var(--tw-space-3) var(--tw-space-4);
+            padding: 8px 12px;
+            max-height: 80px;
         }
         
         .professional-header h1 {
-            font-size: var(--tw-text-2xl);
+            font-size: 1.4rem;
         }
         
         .professional-header .subtitle {
-            font-size: var(--tw-text-sm);
-        }
-        
-        section[data-testid="stSidebar"] > div {
-            padding: var(--tw-space-2) !important;
-        }
-        
-        .metric-card {
-            padding: var(--tw-space-3);
-            margin: var(--tw-space-2) 0;
-        }
-        
-        .pattern-card {
-            padding: var(--tw-space-3);
-            margin: var(--tw-space-2) 0;
+            font-size: 0.85rem;
         }
     }
 </style>
@@ -2584,23 +2439,17 @@ class ProfessionalPCSScanner:
         return fig
 
 def create_professional_sidebar():
-    """Create sleek professional sidebar with enhanced visibility"""
+    """Create professional sidebar with Angel One styling"""
     with st.sidebar:
         st.markdown("""
-        <div style='text-align: center; padding: 16px; background: var(--tw-gradient-primary); border-radius: var(--tw-rounded-lg); margin-bottom: 20px; box-shadow: var(--tw-shadow-lg); border: 1px solid var(--tw-border-accent);'>
-            <h2 style='color: var(--tw-text-primary); margin: 0; font-weight: 700; font-size: 1.2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3);'>📈 PCS Scanner V6.1</h2>
-            <p style='color: var(--tw-text-secondary); margin: 4px 0 0 0; opacity: 0.95; font-size: 0.8rem; font-weight: 500;'>Professional Trading Platform</p>
+        <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, #F48024, #FF7A00); border-radius: 8px; margin-bottom: 14px;'>
+            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700; font-size: 1.3rem;'>📈 PCS Scanner V6.1</h2>
+            <p style='color: #FFFFFF; margin: 3px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Stack Overflow Style</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Stock Universe Selection
-        st.markdown("""
-        <div style='margin-bottom: 16px;'>
-            <h3 style='color: var(--tw-text-primary); font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;'>
-                📊 Stock Universe
-            </h3>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("### 📊 Stock Universe")
         
         universe_option = st.selectbox(
             "Select Universe:",
@@ -2622,34 +2471,19 @@ def create_professional_sidebar():
             category_key = universe_option
             stocks_to_scan = STOCK_CATEGORIES.get(category_key, [])
         
-        st.markdown(f"""
-        <div style='background: var(--tw-surface-secondary); padding: 12px; border-radius: var(--tw-rounded-md); margin: 12px 0; border-left: 4px solid var(--tw-brand-primary);'>
-            <p style='margin: 0; color: var(--tw-text-primary); font-weight: 500; font-size: 0.9rem;'>
-                📈 <strong>{len(stocks_to_scan)} stocks</strong> selected for analysis
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.info(f"📈 **{len(stocks_to_scan)} stocks** selected for analysis")
         
         # Core Technical Filters
-        st.markdown("""
-        <div style='margin: 20px 0 16px 0;'>
-            <h3 style='color: var(--tw-text-primary); font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;'>
-                ⚙️ Core Filters
-            </h3>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("### ⚙️ Core Filters")
         
         with st.expander("🎯 Technical Settings", expanded=True):
-            # RSI Range with enhanced styling
-            st.markdown("**RSI Range:**")
             col1, col2 = st.columns(2)
             with col1:
-                rsi_min = st.slider("Min:", 20, 80, 30, key="rsi_min", help="Minimum RSI value")
+                rsi_min = st.slider("RSI Min:", 20, 80, 30)
             with col2:
-                rsi_max = st.slider("Max:", 20, 80, 80, key="rsi_max", help="Maximum RSI value")
+                rsi_max = st.slider("RSI Max:", 20, 80, 80)
             
-            st.markdown("**ADX Strength:**")
-            adx_min = st.slider("Minimum:", 10, 50, 20, help="Minimum ADX for trend strength")
+            adx_min = st.slider("ADX Minimum:", 10, 50, 20)
             
             ma_support = st.checkbox("Moving Average Support", value=True)
             if ma_support:
@@ -2661,21 +2495,12 @@ def create_professional_sidebar():
         
         # Volume & Breakout Settings
         with st.expander("📊 Volume & Breakout", expanded=True):
-            st.markdown("**Volume Analysis:**")
-            min_volume_ratio = st.slider("Min Volume Ratio:", 0.8, 5.0, 1.2, 0.1, help="Minimum volume compared to average")
-            volume_breakout_ratio = st.slider("Breakout Volume:", 1.5, 5.0, 2.0, 0.1, help="Volume surge for breakout confirmation")
-            
-            st.markdown("**Pattern Analysis:**")
-            lookback_days = st.slider("Lookback Period:", 15, 30, 20, help="Days to analyze for pattern formation")
+            min_volume_ratio = st.slider("Min Volume Ratio:", 0.8, 5.0, 1.2, 0.1)
+            volume_breakout_ratio = st.slider("Breakout Volume:", 1.5, 5.0, 2.0, 0.1)
+            lookback_days = st.slider("Lookback Period:", 15, 30, 20)
         
-        # Chart Pattern Filters
-        st.markdown("""
-        <div style='margin: 20px 0 16px 0;'>
-            <h3 style='color: var(--tw-text-primary); font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;'>
-                📈 Chart Pattern Filters
-            </h3>
-        </div>
-        """, unsafe_allow_html=True)
+        # NEW V6: Chart Pattern Filters
+        st.markdown("### 📈 Chart Pattern Filters")
         with st.expander("🎯 Pattern Selection", expanded=False):
             st.markdown("**Select patterns to detect:**")
             
@@ -2747,15 +2572,8 @@ def create_professional_sidebar():
                 enable_daily_analysis = True
                 enable_weekly_validation = True
         
-        # Pattern Strength Filter
-        st.markdown("""
-        <div style='margin: 16px 0 8px 0;'>
-            <h4 style='color: var(--tw-text-primary); font-size: 1rem; font-weight: 600; margin-bottom: 8px;'>
-                🎯 Pattern Strength Filter
-            </h4>
-        </div>
-        """, unsafe_allow_html=True)
-        pattern_strength_min = st.slider("Minimum Strength (%):", 50, 100, 65, 5, help="Minimum pattern strength percentage")
+        # Single Pattern Strength Filter
+        pattern_strength_min = st.slider("Pattern Strength Min:", 50, 100, 65, 5)
         
         # Scanning Options  
         with st.expander("🚀 Scan Settings", expanded=True):
@@ -2782,13 +2600,7 @@ def create_professional_sidebar():
             export_results = st.checkbox("Export Results", value=False)
         
         # Market Sentiment
-        st.markdown("""
-        <div style='margin: 20px 0 16px 0;'>
-            <h3 style='color: var(--tw-text-primary); font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center;'>
-                🌍 Market Sentiment
-            </h3>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("### 🌍 Market Sentiment")
         
         scanner = ProfessionalPCSScanner()
         sentiment_data = scanner.get_market_sentiment_indicators()
@@ -2800,12 +2612,12 @@ def create_professional_sidebar():
         sentiment_class = f"sentiment-{sentiment_level.lower()}"
         
         st.markdown(f"""
-        <div style="background: var(--tw-surface-secondary); padding: 12px; border-radius: var(--tw-rounded-md); margin: 8px 0; border-left: 4px solid {'var(--tw-success)' if sentiment_level == 'BULLISH' else 'var(--tw-warning)' if sentiment_level == 'NEUTRAL' else 'var(--tw-danger)'}; box-shadow: var(--tw-shadow-sm);">
-            <h4 style="margin: 0 0 6px 0; color: var(--tw-text-primary); font-size: 0.95rem; font-weight: 600;">
+        <div class="{sentiment_class}" style="padding: 10px; border-radius: 6px; margin: 6px 0;">
+            <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1rem;">
                 {'🟢' if sentiment_level == 'BULLISH' else '🟡' if sentiment_level == 'NEUTRAL' else '🔴'} 
                 {sentiment_level}
             </h4>
-            <p style="margin: 0; font-size: 0.8rem; color: var(--tw-text-secondary); font-weight: 400;">{pcs_recommendation}</p>
+            <p style="margin: 0; font-size: 0.8rem; opacity: 0.9;">{pcs_recommendation}</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -2814,16 +2626,10 @@ def create_professional_sidebar():
             nifty_data = sentiment_data['nifty']
             st.metric("Nifty 50", f"{nifty_data['current']:.0f}", f"{nifty_data['change_1d']:+.2f}%")
         
-        # Current time with enhanced styling
+        # Current time
         ist = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(ist)
-        st.markdown(f"""
-        <div style='text-align: center; margin-top: 16px; padding: 8px; background: var(--tw-surface-tertiary); border-radius: var(--tw-rounded); border: 1px solid var(--tw-border-primary);'>
-            <p style='margin: 0; color: var(--tw-text-secondary); font-size: 0.8rem; font-weight: 500;'>
-                🕐 Updated: {current_time.strftime('%H:%M IST')}
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"**Updated:** {current_time.strftime('%H:%M IST')}")
         
         return {
             'stocks_to_scan': stocks_to_scan[:stocks_limit],
