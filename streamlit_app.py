@@ -339,6 +339,25 @@ st.markdown("""
         color: #F48024 !important;
     }
     
+    /* Fix checkbox text color in sidebar - make pattern options green */
+    section[data-testid="stSidebar"] .stCheckbox label {
+        color: var(--primary-green) !important;
+    }
+    
+    section[data-testid="stSidebar"] .stCheckbox label:hover {
+        color: #F48024 !important;
+    }
+    
+    /* Fix hover legibility issues - change white text to orange */
+    section[data-testid="stSidebar"] *:hover {
+        color: #F48024 !important;
+    }
+    
+    section[data-testid="stSidebar"] .stSelectbox option:hover {
+        background-color: #F48024 !important;
+        color: #FFFFFF !important;
+    }
+    
     .stSlider > div > div > div {
         background: linear-gradient(135deg, var(--accent-bg), var(--secondary-bg));
         border-radius: 6px;
@@ -2780,8 +2799,7 @@ def create_main_scanner_tab(config):
                                     <span><strong>Close Strength:</strong> {details.get('close_strength', 0):.0f}%</span>
                                 </div>
                                 {weekly_info}
-                                <p><strong>Research:</strong> {pattern['research_basis']}</p>
-                                <p><strong>💡 PCS Strategy:</strong> {'Conservative (3-5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate (5-8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive (8-12% OTM)'}</p>
+
                                 <p style="color: var(--primary-green); font-weight: 600;">⚡ CONFIRMED TODAY: Pattern validated with current trading day EOD data</p>
                             </div>
                             """, unsafe_allow_html=True)
@@ -2824,8 +2842,7 @@ def create_main_scanner_tab(config):
                                     <span><strong>PCS Fit:</strong> {pattern['pcs_suitability']}%</span>
                                 </div>
                                 {weekly_info}
-                                <p><strong>Research:</strong> {pattern['research_basis']}</p>
-                                <p><strong>💡 PCS Strategy:</strong> {'Conservative (5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate (8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive (12% OTM)'}</p>
+
                             </div>
                             """, unsafe_allow_html=True)
                     
@@ -2936,15 +2953,7 @@ def main():
     
     # FIXED: Compact Footer
     st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center; padding: 16px; background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg)); border-radius: 8px; margin-top: 16px; border: 1px solid var(--border-color);'>
-        <h4 style='color: var(--primary-blue); margin-bottom: 8px; font-size: 1.1rem;'>🏆 Professional Scanner - Angel One Style</h4>
-        <p style='color: var(--text-secondary); margin: 2px 0; font-size: 0.85rem;'><strong>✅ Complete Universe:</strong> All 219 NSE F&O stocks</p>
-        <p style='color: var(--text-secondary); margin: 2px 0; font-size: 0.85rem;'><strong>🔥 Current Day Focus:</strong> Latest EOD pattern confirmation</p>
-        <p style='color: var(--text-secondary); margin: 2px 0; font-size: 0.85rem;'><strong>📰 News Intelligence:</strong> Real-time fundamental analysis</p>
-        <p style='color: var(--text-muted); margin: 8px 0 0 0; font-size: 0.75rem;'><strong>⚠️ Disclaimer:</strong> Educational use only. Not financial advice.</p>
-    </div>
-    """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
