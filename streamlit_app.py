@@ -4068,6 +4068,22 @@ def create_professional_sidebar():
             show_news = st.checkbox("Show News", value=True)
             export_results = st.checkbox("Export Results", value=False)
         
+        # === ENHANCEMENTS SECTION ===
+        st.markdown("---")
+        st.markdown("### 🚀 **Advanced Enhancements**")
+        
+        # Enhancement toggles
+        enhancement_options = {
+            'delivery_volume': st.checkbox("📊 Delivery Volume Analysis", value=True, 
+                                         help="Analyze delivery percentage and institutional participation"),
+            'fno_consolidation': st.checkbox("🔄 F&O Consolidation Detection", value=True,
+                                           help="Detect consolidation patterns near resistance levels"),
+            'breakout_pullback': st.checkbox("📈 Breakout-Pullback Patterns", value=True,
+                                           help="Identify breakout-pullback-breakout patterns with strong green candles"),
+            'enhanced_sr': st.checkbox("🎯 Enhanced Support & Resistance", value=True,
+                                     help="Advanced multi-timeframe support and resistance analysis")
+        }
+        
         # Market Sentiment
         st.markdown("### 🌍 Market Sentiment")
         
