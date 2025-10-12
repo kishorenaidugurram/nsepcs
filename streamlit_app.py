@@ -30,24 +30,57 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
     :root {
-        /* Angel One Dark Color Scheme */
-        --primary-bg: #0D1421;
-        --secondary-bg: #1A202C;
-        --accent-bg: #2D3748;
-        --sidebar-bg: #1A202C;
-        --primary-blue: #3182CE;
-        --primary-green: #38A169;
-        --primary-orange: #DD6B20;
-        --primary-red: #E53E3E;
-        --text-primary: #FFFFFF;
-        --text-secondary: #CBD5E0;
-        --text-muted: #A0AEC0;
-        --border-color: #4A5568;
-        --border-light: #718096;
-        --shadow-light: rgba(0, 0, 0, 0.1);
-        --shadow-medium: rgba(0, 0, 0, 0.25);
-        --shadow-heavy: rgba(0, 0, 0, 0.4);
-        --header-gradient: linear-gradient(135deg, #1A202C 0%, #2D3748 50%, #3182CE 100%);
+        /* ENHANCED ACCESSIBILITY COLOR SCHEME */
+        /* Based on comprehensive color accessibility audit */
+        
+        /* ENHANCED BACKGROUND COLORS - Improved contrast */
+        --primary-bg: #0A0E1A;          /* Darker for better contrast */
+        --secondary-bg: #1A202C;        /* Unchanged - good contrast */
+        --accent-bg: #2D3748;           /* Unchanged - good contrast */
+        --sidebar-bg: #1F2937;          /* Slightly lighter for better readability */
+        
+        /* ENHANCED TEXT COLORS - WCAG AAA compliant */
+        --text-primary: #FFFFFF;        /* Pure white - maximum contrast */
+        --text-secondary: #E2E8F0;      /* Lighter secondary text - improved readability */
+        --text-muted: #CBD5E0;          /* Lighter muted text - better visibility */
+        --text-accent: #F7FAFC;         /* Near white for important accents */
+        
+        /* ACCESSIBLE ACCENT COLORS - Improved contrast ratios */
+        --primary-blue: #4299E1;        /* Lighter blue - better contrast on dark backgrounds */
+        --primary-green: #48BB78;       /* Slightly lighter green - improved visibility */
+        --primary-orange: #F6AD55;      /* Enhanced orange - better contrast */
+        --stack-overflow-orange: #FF8C00; /* More vibrant orange - improved visibility */
+        --primary-red: #F56565;         /* Lighter red - better readability */
+        --warning-yellow: #F6E05E;      /* Added warning color - accessible */
+        
+        /* ENHANCED BORDER AND UI COLORS */
+        --border-color: #4A5568;        /* Unchanged - good contrast */
+        --border-light: #718096;        /* Unchanged - good contrast */
+        --border-accent: #60A5FA;       /* Added accent border color */
+        
+        /* SUCCESS/ERROR/WARNING STATES - High contrast */
+        --success-bg: rgba(72, 187, 120, 0.1);
+        --success-border: #48BB78;
+        --success-text: #68D391;
+        
+        --error-bg: rgba(245, 101, 101, 0.1);
+        --error-border: #F56565;
+        --error-text: #FC8181;
+        
+        --warning-bg: rgba(246, 224, 94, 0.1);
+        --warning-border: #F6E05E;
+        --warning-text: #F6E05E;
+        
+        --info-bg: rgba(66, 153, 225, 0.1);
+        --info-border: #4299E1;
+        --info-text: #63B3ED;
+        
+        /* ENHANCED SHADOW COLORS */
+        --shadow-light: rgba(0, 0, 0, 0.15);
+        --shadow-medium: rgba(0, 0, 0, 0.35);
+        --shadow-heavy: rgba(0, 0, 0, 0.5);
+        --shadow-colored: rgba(66, 153, 225, 0.2);
+        --header-gradient: linear-gradient(135deg, #1A202C 0%, #2D3748 50%, #4299E1 100%);
     }
     
     /* Main app styling */
@@ -119,11 +152,11 @@ st.markdown("""
         opacity: 0.85;
     }
     
-    /* FIXED: Enhanced Sidebar with Visible Scrollbar - STACK OVERFLOW ORANGE THEME */
+    /* ENHANCED SIDEBAR - Improved Accessibility */
     .css-1d391kg, .css-1lcbmhc, section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #2D2D2D 0%, #1A1A1A 100%);
-        border-right: 2px solid #F48024;
-        box-shadow: 4px 0 20px rgba(244, 128, 36, 0.3);
+        background: linear-gradient(180deg, var(--sidebar-bg) 0%, #111827 100%) !important;
+        border-right: 2px solid var(--stack-overflow-orange);
+        box-shadow: 4px 0 20px rgba(255, 140, 0, 0.3);
     }
     
     /* FIXED: Visible Sidebar Scrollbar */
@@ -211,14 +244,16 @@ st.markdown("""
     }
     
     .pattern-card {
-        background: linear-gradient(135deg, var(--secondary-bg), var(--accent-bg));
+        background: linear-gradient(135deg, var(--accent-bg), #374151) !important;
         padding: 16px;
         border-radius: 8px;
         border-left: 4px solid var(--primary-green);
         margin: 10px 0;
-        box-shadow: 0 4px 16px var(--shadow-heavy);
+        box-shadow: 0 4px 12px var(--shadow-colored) !important;
         transition: all 0.3s ease;
         position: relative;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-accent);
     }
     
     .pattern-card:hover {
@@ -228,7 +263,9 @@ st.markdown("""
     
     .consolidation-card {
         border-left-color: var(--primary-orange);
-        background: linear-gradient(135deg, var(--secondary-bg), rgba(221, 107, 32, 0.05));
+        background: linear-gradient(135deg, var(--accent-bg), rgba(246, 173, 85, 0.1)) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-accent);
     }
     
     .news-card {
@@ -272,22 +309,23 @@ st.markdown("""
     
     /* Angel One Style Buttons */
     .stButton > button {
-        background: linear-gradient(135deg, var(--primary-blue), #2C5AA0);
-        color: var(--text-primary);
-        border: none;
+        background: linear-gradient(135deg, var(--primary-blue), #2563EB) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-accent) !important;
         border-radius: 6px;
-        font-weight: 600;
+        font-weight: 600 !important;
         font-size: 14px;
         height: 44px;
         width: 100%;
         transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
+        box-shadow: 0 2px 8px var(--shadow-colored);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, #2C5AA0, var(--primary-blue));
+        background: linear-gradient(135deg, #2563EB, var(--primary-blue)) !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(49, 130, 206, 0.4);
+        box-shadow: 0 6px 16px var(--shadow-colored) !important;
     }
     
     /* Professional Metrics */
@@ -339,23 +377,36 @@ st.markdown("""
         color: #F48024 !important;
     }
     
-    /* Fix checkbox text color in sidebar - make pattern options green */
+    /* ENHANCED SIDEBAR TEXT - Better Accessibility */
+    section[data-testid="stSidebar"] .stMarkdown h3 {
+        color: var(--stack-overflow-orange) !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        font-weight: 600;
+    }
+    
     section[data-testid="stSidebar"] .stCheckbox label {
         color: var(--primary-green) !important;
+        font-weight: 500;
     }
     
     section[data-testid="stSidebar"] .stCheckbox label:hover {
-        color: #F48024 !important;
+        color: var(--stack-overflow-orange) !important;
+        text-shadow: 0 1px 2px rgba(255, 140, 0, 0.3);
     }
     
-    /* Fix hover legibility issues - change white text to orange */
-    section[data-testid="stSidebar"] *:hover {
-        color: #F48024 !important;
+    /* Enhanced focus and accessibility */
+    section[data-testid="stSidebar"] .stSelectbox > div > div:focus,
+    section[data-testid="stSidebar"] .stTextInput > div > div > input:focus,
+    section[data-testid="stSidebar"] .stSlider > div > div > div:focus {
+        outline: 2px solid var(--primary-blue) !important;
+        outline-offset: 2px !important;
+        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.3) !important;
     }
     
+    /* Improved hover legibility */
     section[data-testid="stSidebar"] .stSelectbox option:hover {
-        background-color: #F48024 !important;
-        color: #FFFFFF !important;
+        background-color: var(--stack-overflow-orange) !important;
+        color: var(--text-primary) !important;
     }
     
     .stSlider > div > div > div {
@@ -434,6 +485,65 @@ st.markdown("""
             font-size: 0.85rem;
         }
     }
+    /* === ACCESSIBILITY ENHANCEMENTS === */
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+        :root {
+            --text-primary: #FFFFFF;
+            --text-secondary: #FFFFFF;
+            --primary-blue: #00BFFF;
+            --primary-green: #00FF00;
+            --primary-red: #FF0000;
+            --stack-overflow-orange: #FFA500;
+            --border-color: #FFFFFF;
+        }
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+    
+    /* Mobile accessibility improvements */
+    @media screen and (max-width: 1366px) {
+        .pattern-card, .consolidation-card {
+            margin-bottom: 0.8rem !important;
+            padding: 0.8rem !important;
+        }
+        
+        .professional-header h1 {
+            font-size: 1.5rem !important;
+        }
+    }
+    
+    /* Touch device optimizations */
+    @media (hover: none) {
+        .pattern-card:hover,
+        .stButton > button:hover {
+            transform: none !important;
+        }
+    }
+    
+    /* Print optimizations */
+    @media print {
+        :root {
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --primary-bg: #FFFFFF;
+            --secondary-bg: #F7FAFC;
+            --accent-bg: #EDF2F7;
+        }
+        
+        section[data-testid="stSidebar"] {
+            display: none !important;
+        }
+    }
+    
 </style>
 """, unsafe_allow_html=True)
 
