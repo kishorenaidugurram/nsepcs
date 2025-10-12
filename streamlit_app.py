@@ -526,6 +526,242 @@ class ProfessionalPCSScanner:
         except Exception as e:
             return None
     
+    def get_weekly_stock_data(self, symbol, period="6mo"):
+        """Get weekly stock data for pattern validation"""
+        try:
+            stock = yf.Ticker(symbol)
+            # Get more data for weekly analysis, then resample to weekly
+            daily_data = stock.history(period=period, interval="1d")
+            
+            if len(daily_data) < 50:  # Need sufficient data for weekly analysis
+                return None
+            
+            # Resample daily data to weekly (Friday close)
+            weekly_data = daily_data.resample('W-FRI').agg({
+                'Open': 'first',
+                'High': 'max',
+                'Low': 'min',
+                'Close': 'last',
+                'Volume': 'sum'
+            }).dropna()
+            
+            if len(weekly_data) < 15:  # Need at least 15 weeks
+                return None
+            
+            # Calculate weekly technical indicators
+            weekly_data['RSI'] = ta.momentum.RSIIndicator(weekly_data['Close']).rsi()
+            weekly_data['SMA_10'] = ta.trend.SMAIndicator(weekly_data['Close'], window=10).sma_indicator()
+            weekly_data['SMA_20'] = ta.trend.SMAIndicator(weekly_data['Close'], window=20).sma_indicator()
+            weekly_data['EMA_10'] = ta.trend.EMAIndicator(weekly_data['Close'], window=10).ema_indicator()
+            weekly_data['MACD'] = ta.trend.MACD(weekly_data['Close']).macd()
+            weekly_data['MACD_signal'] = ta.trend.MACD(weekly_data['Close']).macd_signal()
+            weekly_data['MACD_hist'] = ta.trend.MACD(weekly_data['Close']).macd_diff()
+            weekly_data['ADX'] = ta.trend.ADXIndicator(weekly_data['High'], weekly_data['Low'], weekly_data['Close']).adx()
+            
+            return weekly_data
+        except Exception as e:
+            return None
+    
+    def validate_weekly_strength(self, daily_data, weekly_data, pattern_type):
+        """Validate daily pattern strength using weekly timeframe analysis"""
+        if weekly_data is None or len(weekly_data) < 10:
+            return {
+                'weekly_validation': False,
+                'weekly_strength_bonus': 0,
+                'weekly_signals': [],
+                'weekly_context': 'Insufficient weekly data'
+            }
+        
+        try:
+            # Get current weekly metrics
+            current_weekly_close = weekly_data['Close'].iloc[-1]
+            current_weekly_rsi = weekly_data['RSI'].iloc[-1]
+            current_weekly_macd = weekly_data['MACD'].iloc[-1]
+            current_weekly_macd_signal = weekly_data['MACD_signal'].iloc[-1]
+            weekly_sma_10 = weekly_data['SMA_10'].iloc[-1]
+            weekly_sma_20 = weekly_data['SMA_20'].iloc[-1]
+            current_weekly_adx = weekly_data['ADX'].iloc[-1]
+            
+            weekly_signals = []
+            strength_bonus = 0
+            
+            # 1. Weekly Trend Alignment
+            if current_weekly_close > weekly_sma_10 > weekly_sma_20:
+                weekly_signals.append("Strong weekly uptrend (Close > SMA10 > SMA20)")
+                strength_bonus += 15
+            elif current_weekly_close > weekly_sma_10:
+                weekly_signals.append("Bullish weekly trend (Close > SMA10)")
+                strength_bonus += 10
+            elif current_weekly_close > weekly_sma_20:
+                weekly_signals.append("Weekly above long-term MA")
+                strength_bonus += 5
+            
+            # 2. Weekly RSI Support
+            if 40 <= current_weekly_rsi <= 70:
+                weekly_signals.append(f"Healthy weekly RSI ({current_weekly_rsi:.1f})")
+                strength_bonus += 10
+            elif current_weekly_rsi > 30:
+                weekly_signals.append(f"Weekly RSI above oversold ({current_weekly_rsi:.1f})")
+                strength_bonus += 5
+            
+            # 3. Weekly MACD Confirmation
+            if current_weekly_macd > current_weekly_macd_signal and current_weekly_macd > 0:
+                weekly_signals.append("Weekly MACD bullish above signal line")
+                strength_bonus += 12
+            elif current_weekly_macd > current_weekly_macd_signal:
+                weekly_signals.append("Weekly MACD above signal line")
+                strength_bonus += 8
+            
+            # 4. Weekly ADX Trend Strength
+            if current_weekly_adx >= 25:
+                weekly_signals.append(f"Strong weekly trend (ADX: {current_weekly_adx:.1f})")
+                strength_bonus += 8
+            elif current_weekly_adx >= 20:
+                weekly_signals.append(f"Moderate weekly trend (ADX: {current_weekly_adx:.1f})")
+                strength_bonus += 5
+            
+            # 5. Weekly Support/Resistance Context
+            weekly_support_resistance = self._analyze_weekly_support_resistance(weekly_data)
+            if weekly_support_resistance['near_breakout']:
+                weekly_signals.append(weekly_support_resistance['context'])
+                strength_bonus += weekly_support_resistance['bonus']
+            
+            # 6. Weekly Volume Trend
+            weekly_volume_trend = self._analyze_weekly_volume_trend(weekly_data)
+            if weekly_volume_trend['positive']:
+                weekly_signals.append(weekly_volume_trend['context'])
+                strength_bonus += weekly_volume_trend['bonus']
+            
+            # 7. Pattern-Specific Weekly Validation
+            pattern_bonus = self._get_pattern_specific_weekly_bonus(pattern_type, weekly_data)
+            if pattern_bonus['bonus'] > 0:
+                weekly_signals.append(pattern_bonus['context'])
+                strength_bonus += pattern_bonus['bonus']
+            
+            # Determine overall weekly validation
+            weekly_validation = len(weekly_signals) >= 2 and strength_bonus >= 15
+            
+            # Context summary
+            if strength_bonus >= 35:
+                weekly_context = "Exceptionally strong weekly confirmation"
+            elif strength_bonus >= 25:
+                weekly_context = "Strong weekly alignment"
+            elif strength_bonus >= 15:
+                weekly_context = "Moderate weekly support"
+            else:
+                weekly_context = "Weak weekly confirmation"
+            
+            return {
+                'weekly_validation': weekly_validation,
+                'weekly_strength_bonus': strength_bonus,
+                'weekly_signals': weekly_signals,
+                'weekly_context': weekly_context,
+                'weekly_rsi': current_weekly_rsi,
+                'weekly_trend': 'Bullish' if current_weekly_close > weekly_sma_10 else 'Neutral/Bearish'
+            }
+            
+        except Exception as e:
+            return {
+                'weekly_validation': False,
+                'weekly_strength_bonus': 0,
+                'weekly_signals': [],
+                'weekly_context': f'Weekly analysis error: {str(e)}'
+            }
+    
+    def _analyze_weekly_support_resistance(self, weekly_data):
+        """Analyze weekly support/resistance levels"""
+        try:
+            recent_weeks = weekly_data.tail(12)  # Last 12 weeks
+            current_price = weekly_data['Close'].iloc[-1]
+            
+            # Find key levels
+            resistance_level = recent_weeks['High'].max()
+            support_level = recent_weeks['Low'].min()
+            
+            # Check proximity to breakout
+            distance_to_resistance = ((resistance_level - current_price) / current_price) * 100
+            distance_from_support = ((current_price - support_level) / support_level) * 100
+            
+            if distance_to_resistance <= 3:  # Within 3% of resistance
+                return {
+                    'near_breakout': True,
+                    'context': f"Near weekly resistance breakout (~{distance_to_resistance:.1f}% away)",
+                    'bonus': 12
+                }
+            elif distance_from_support >= 15:  # Well above support
+                return {
+                    'near_breakout': True,
+                    'context': f"Strong weekly support base ({distance_from_support:.1f}% above support)",
+                    'bonus': 8
+                }
+            
+            return {'near_breakout': False, 'context': '', 'bonus': 0}
+            
+        except Exception:
+            return {'near_breakout': False, 'context': '', 'bonus': 0}
+    
+    def _analyze_weekly_volume_trend(self, weekly_data):
+        """Analyze weekly volume trends"""
+        try:
+            recent_volume = weekly_data['Volume'].tail(4).mean()  # Last 4 weeks
+            previous_volume = weekly_data['Volume'].tail(8).iloc[:4].mean()  # Previous 4 weeks
+            
+            volume_increase = ((recent_volume - previous_volume) / previous_volume) * 100
+            
+            if volume_increase >= 20:
+                return {
+                    'positive': True,
+                    'context': f"Strong weekly volume increase ({volume_increase:.1f}%)",
+                    'bonus': 10
+                }
+            elif volume_increase >= 10:
+                return {
+                    'positive': True,
+                    'context': f"Moderate weekly volume increase ({volume_increase:.1f}%)",
+                    'bonus': 6
+                }
+            
+            return {'positive': False, 'context': '', 'bonus': 0}
+            
+        except Exception:
+            return {'positive': False, 'context': '', 'bonus': 0}
+    
+    def _get_pattern_specific_weekly_bonus(self, pattern_type, weekly_data):
+        """Get pattern-specific weekly validation bonus"""
+        try:
+            if pattern_type in ['Cup and Handle', 'Double Bottom (Eve & Eve)', 'Head-and-Shoulders Bottom']:
+                # These patterns benefit from weekly base building
+                recent_weeks = weekly_data.tail(8)
+                weekly_consolidation_range = ((recent_weeks['High'].max() - recent_weeks['Low'].min()) / recent_weeks['Low'].min()) * 100
+                
+                if weekly_consolidation_range < 20:  # Tight weekly consolidation
+                    return {
+                        'bonus': 10,
+                        'context': f"Tight weekly consolidation ({weekly_consolidation_range:.1f}% range)"
+                    }
+            
+            elif pattern_type in ['Current Day Breakout', 'Rectangle Bottom', 'Flat Base Breakout']:
+                # These patterns benefit from weekly momentum
+                current_week = weekly_data['Close'].iloc[-1]
+                four_weeks_ago = weekly_data['Close'].iloc[-5]
+                weekly_momentum = ((current_week - four_weeks_ago) / four_weeks_ago) * 100
+                
+                if weekly_momentum > 5:
+                    return {
+                        'bonus': 12,
+                        'context': f"Strong weekly momentum ({weekly_momentum:.1f}% over 4 weeks)"
+                    }
+                elif weekly_momentum > 0:
+                    return {
+                        'bonus': 6,
+                        'context': f"Positive weekly momentum ({weekly_momentum:.1f}% over 4 weeks)"
+                    }
+            
+            return {'bonus': 0, 'context': ''}
+            
+        except Exception:
+            return {'bonus': 0, 'context': ''}
+    
     def check_volume_criteria(self, data, min_ratio=1.0):
         """Check volume criteria with focus on latest trading day"""
         if len(data) < 21:
@@ -857,6 +1093,21 @@ class ProfessionalPCSScanner:
         pattern_filters = filters.get('pattern_filters', {})
         pattern_priority = filters.get('pattern_priority', 'All Patterns (Comprehensive)')
         
+        # NEW V6.1: Get weekly data for strength validation
+        weekly_data = None
+        if filters.get('enable_weekly_validation', True):  # Default enabled
+            weekly_data = self.get_weekly_stock_data(symbol)
+            if weekly_data is not None:
+                # Quick weekly health check
+                weekly_rsi = weekly_data['RSI'].iloc[-1] if not weekly_data['RSI'].isna().iloc[-1] else None
+                weekly_close = weekly_data['Close'].iloc[-1]
+                weekly_sma_10 = weekly_data['SMA_10'].iloc[-1] if not weekly_data['SMA_10'].isna().iloc[-1] else None
+                
+                # Skip if weekly is in very bearish state (optional filter)
+                if weekly_rsi and weekly_rsi < 25 and weekly_sma_10 and weekly_close < weekly_sma_10 * 0.95:
+                    # Extremely bearish weekly - reduce pattern strength requirements slightly
+                    pass  # Continue but will show in weekly context
+        
         # PRIORITY 1: Current Day Breakout Detection
         if pattern_filters.get('current_day_breakout', True):
             breakout_detected, breakout_strength, breakout_details = self.detect_current_day_breakout(
@@ -866,15 +1117,21 @@ class ProfessionalPCSScanner:
             )
             
             if breakout_detected and breakout_strength >= filters['pattern_strength_min']:
+                # NEW V6.1: Add weekly validation
+                weekly_validation = self.validate_weekly_strength(data, weekly_data, 'Current Day Breakout')
+                final_strength = breakout_strength + weekly_validation['weekly_strength_bonus']
+                
                 pattern_data = {
                     'type': 'Current Day Breakout',
-                    'strength': breakout_strength,
+                    'strength': final_strength,
+                    'daily_strength': breakout_strength,
                     'success_rate': 92,  # High success for current day breakouts
                     'research_basis': 'Real-time EOD Breakout Confirmation',
                     'pcs_suitability': 98,
-                    'confidence': self.get_confidence_level(breakout_strength),
+                    'confidence': self.get_confidence_level(final_strength),
                     'details': breakout_details,
-                    'special': 'CURRENT_DAY_BREAKOUT'
+                    'special': 'CURRENT_DAY_BREAKOUT',
+                    'weekly_validation': weekly_validation
                 }
                 
                 # Apply priority filters
@@ -897,6 +1154,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 95,
                         'confidence': self.get_confidence_level(cup_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, cup_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -912,6 +1171,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 92,
                         'confidence': self.get_confidence_level(flat_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, flat_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -929,6 +1190,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 88,
                         'confidence': self.get_confidence_level(bump_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, bump_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -944,6 +1207,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 90,
                         'confidence': self.get_confidence_level(rect_bottom_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rect_bottom_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -959,6 +1224,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 85,
                         'confidence': self.get_confidence_level(rect_top_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rect_top_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -974,6 +1241,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 93,
                         'confidence': self.get_confidence_level(hs_bottom_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, hs_bottom_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -989,6 +1258,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 91,
                         'confidence': self.get_confidence_level(double_bottom_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, double_bottom_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1004,6 +1275,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 89,
                         'confidence': self.get_confidence_level(three_valleys_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, three_valleys_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1019,6 +1292,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 87,
                         'confidence': self.get_confidence_level(rounding_bottom_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rounding_bottom_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1034,6 +1309,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 85,
                         'confidence': self.get_confidence_level(rounding_top_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, rounding_top_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
             
@@ -1049,6 +1326,8 @@ class ProfessionalPCSScanner:
                         'pcs_suitability': 88,
                         'confidence': self.get_confidence_level(scallop_strength)
                     }
+                    # NEW V6.1: Add weekly validation
+                    pattern_data = self._add_weekly_validation_to_pattern(pattern_data, scallop_strength, data, weekly_data)
                     if self._meets_priority_criteria(pattern_data, pattern_priority):
                         patterns.append(pattern_data)
         
@@ -1564,6 +1843,21 @@ class ProfessionalPCSScanner:
             return pattern_data['pcs_suitability'] > 90
         return True
     
+    def _add_weekly_validation_to_pattern(self, pattern_data, daily_strength, data, weekly_data):
+        """Helper function to add weekly validation to any pattern"""
+        weekly_validation = self.validate_weekly_strength(data, weekly_data, pattern_data['type'])
+        final_strength = daily_strength + weekly_validation['weekly_strength_bonus']
+        
+        # Update pattern data with weekly information
+        pattern_data.update({
+            'strength': final_strength,
+            'daily_strength': daily_strength,
+            'confidence': self.get_confidence_level(final_strength),
+            'weekly_validation': weekly_validation
+        })
+        
+        return pattern_data
+    
     def get_confidence_level(self, strength):
         """Get confidence level based on pattern strength"""
         if strength >= 85:
@@ -1838,6 +2132,19 @@ def create_professional_sidebar():
                 index=0,
                 help="Filter patterns by success rate or PCS suitability"
             )
+            
+            # NEW V6.1: Weekly Validation Toggle
+            st.markdown("**🔍 Weekly Strength Validation:**")
+            enable_weekly_validation = st.checkbox(
+                "Enable Weekly Timeframe Validation", 
+                value=True, 
+                help="Validates daily patterns against weekly timeframe for additional strength confirmation. Adds 0-40 points to pattern strength based on weekly alignment."
+            )
+            
+            if enable_weekly_validation:
+                st.info(
+                    "📊 **Weekly Validation Active**: Daily patterns will be validated against weekly trends, RSI, MACD, and support/resistance levels for enhanced accuracy."
+                )
         
         # Single Pattern Strength Filter
         pattern_strength_min = st.slider("Pattern Strength Min:", 50, 100, 65, 5)
@@ -1912,6 +2219,7 @@ def create_professional_sidebar():
             'pattern_strength_min': pattern_strength_min,
             'pattern_filters': pattern_filters,
             'pattern_priority': pattern_priority,
+            'enable_weekly_validation': enable_weekly_validation,
             'show_charts': show_charts,
             'show_news': show_news,
             'export_results': export_results,
@@ -1921,14 +2229,14 @@ def create_professional_sidebar():
 
 def create_main_scanner_tab(config):
     """Create main scanner tab with current day focus"""
-    st.markdown("### 🎯 Current Day EOD Pattern Scanner")
-    st.info("🔥 **Focus**: All patterns confirmed with latest trading day EOD data only")
+    st.markdown("### 🎯 Current Day EOD Pattern Scanner V6.1")
+    st.info("🔥 **Focus**: All patterns confirmed with latest trading day EOD data + Weekly timeframe validation for enhanced strength")
     
     # Action buttons
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        scan_button = st.button("🚀 Scan Current Day Patterns", type="primary", key="main_scan")
+        scan_button = st.button("🚀 Scan Patterns (Daily + Weekly)", type="primary", key="main_scan")
     
     with col2:
         if config['export_results']:
@@ -2089,12 +2397,37 @@ def create_main_scanner_tab(config):
                         
                         if pattern.get('special') == 'CURRENT_DAY_BREAKOUT':
                             details = pattern.get('details', {})
+                            weekly_val = pattern.get('weekly_validation', {})
+                            
+                            # NEW V6.1: Weekly validation display
+                            weekly_info = ""
+                            if weekly_val.get('weekly_validation', False):
+                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
+                                weekly_context = weekly_val.get('weekly_context', '')
+                                weekly_info = f"""
+                                <div style='background: rgba(25, 135, 84, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #198754;'>
+                                    <strong>📈 Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
+                                    <small>Weekly Trend: {weekly_val.get('weekly_trend', 'N/A')} | Weekly RSI: {weekly_val.get('weekly_rsi', 0):.1f}</small>
+                                </div>
+                                """
+                            elif weekly_val.get('weekly_strength_bonus', 0) > 0:
+                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
+                                weekly_context = weekly_val.get('weekly_context', '')
+                                weekly_info = f"""
+                                <div style='background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #ffc107;'>
+                                    <strong>📊 Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
+                                </div>
+                                """
                             
                             st.markdown(f"""
                             <div class="consolidation-card">
                                 <h4>🔥 {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
                                 <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
-                                    <span><strong>Strength:</strong> {pattern['strength']}%</span>
+                                    <span><strong>Total Strength:</strong> {pattern['strength']}%</span>
+                                    <span><strong>Daily:</strong> {pattern.get('daily_strength', pattern['strength'])}%</span>
+                                    <span><strong>Weekly Bonus:</strong> +{weekly_val.get('weekly_strength_bonus', 0)}</span>
+                                </div>
+                                <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
                                     <span><strong>Success Rate:</strong> {pattern['success_rate']}%</span>
                                     <span><strong>PCS Fit:</strong> {pattern['pcs_suitability']}%</span>
                                 </div>
@@ -2103,6 +2436,7 @@ def create_main_scanner_tab(config):
                                     <span><strong>Volume:</strong> {details.get('volume_ratio', 0):.1f}x</span>
                                     <span><strong>Close Strength:</strong> {details.get('close_strength', 0):.0f}%</span>
                                 </div>
+                                {weekly_info}
                                 <p><strong>Research:</strong> {pattern['research_basis']}</p>
                                 <p><strong>💡 PCS Strategy:</strong> {'Conservative (3-5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate (5-8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive (8-12% OTM)'}</p>
                                 <p style="color: var(--primary-green); font-weight: 600;">⚡ CONFIRMED TODAY: Pattern validated with current trading day EOD data</p>
@@ -2110,14 +2444,43 @@ def create_main_scanner_tab(config):
                             """, unsafe_allow_html=True)
                         else:
                             confidence_class = f"{pattern['confidence'].lower()}-confidence"
+                            weekly_val = pattern.get('weekly_validation', {})
+                            
+                            # NEW V6.1: Weekly validation display for regular patterns
+                            weekly_info = ""
+                            if weekly_val.get('weekly_validation', False):
+                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
+                                weekly_context = weekly_val.get('weekly_context', '')
+                                weekly_signals = weekly_val.get('weekly_signals', [])
+                                signal_text = " | ".join(weekly_signals[:2])  # Show first 2 signals
+                                weekly_info = f"""
+                                <div style='background: rgba(25, 135, 84, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #198754;'>
+                                    <strong>📈 Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
+                                    <small>{signal_text}</small>
+                                </div>
+                                """
+                            elif weekly_val.get('weekly_strength_bonus', 0) > 0:
+                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
+                                weekly_context = weekly_val.get('weekly_context', '')
+                                weekly_info = f"""
+                                <div style='background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #ffc107;'>
+                                    <strong>📊 Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
+                                </div>
+                                """
+                            
                             st.markdown(f"""
                             <div class="pattern-card {confidence_class}">
                                 <h4>{confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
                                 <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
-                                    <span><strong>Strength:</strong> {pattern['strength']}%</span>
+                                    <span><strong>Total Strength:</strong> {pattern['strength']}%</span>
+                                    <span><strong>Daily:</strong> {pattern.get('daily_strength', pattern['strength'])}%</span>
+                                    <span><strong>Weekly Bonus:</strong> +{weekly_val.get('weekly_strength_bonus', 0)}</span>
+                                </div>
+                                <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
                                     <span><strong>Success Rate:</strong> {pattern['success_rate']}%</span>
                                     <span><strong>PCS Fit:</strong> {pattern['pcs_suitability']}%</span>
                                 </div>
+                                {weekly_info}
                                 <p><strong>Research:</strong> {pattern['research_basis']}</p>
                                 <p><strong>💡 PCS Strategy:</strong> {'Conservative (5% OTM)' if pattern['confidence'] == 'HIGH' else 'Moderate (8% OTM)' if pattern['confidence'] == 'MEDIUM' else 'Aggressive (12% OTM)'}</p>
                             </div>
