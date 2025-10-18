@@ -1145,7 +1145,15 @@ class SignalStrength:
         """Calculate comprehensive signal strength from analysis result"""
         
         # PCS Score (0-5) - Most important
-        pcs_score = result.get('pcs_score', 0)
+        # Calculate from patterns if not directly available
+        if 'pcs_score' in result:
+            pcs_score = result['pcs_score']
+        elif 'patterns' in result and result['patterns']:
+            # Calculate from pattern strengths (0-100 scale to 0-5 scale)
+            max_pattern_strength = max(p['strength'] for p in result['patterns'])
+            pcs_score = max_pattern_strength / 20  # Convert 0-100 to 0-5
+        else:
+            pcs_score = 0
         
         # Pattern Strength (0-10)
         pattern = result.get('pattern', {})
@@ -5253,8 +5261,15 @@ def render_collapsible_result_card(result: Dict, signal: SignalStrength, index: 
     
     symbol = result.get('symbol', 'N/A')
     current_price = result.get('current_price', 0)
-    pattern = result.get('pattern', {})
-    pattern_type = pattern.get('type', 'Unknown')
+    
+    # Get pattern info from patterns list
+    patterns = result.get('patterns', [])
+    if patterns:
+        pattern = max(patterns, key=lambda p: p['strength'])  # Best pattern
+        pattern_type = pattern.get('type', 'Unknown')
+    else:
+        pattern = {}
+        pattern_type = 'Unknown'
     
     # Determine if should be expanded - HIGH confidence or meeting criteria
     should_expand = signal.total_score >= 65  # HIGH or VERY HIGH confidence
@@ -5277,7 +5292,11 @@ def render_collapsible_result_card(result: Dict, signal: SignalStrength, index: 
             st.metric("📊 PCS Score", f"{signal.pcs_score:.1f}/5")
         
         with col3:
-            change_pct = result.get('change_percent', 0)
+            data = result.get('data')
+            if data is not None and len(data) > 1:
+                change_pct = ((data['Close'].iloc[-1] - data['Close'].iloc[-2]) / data['Close'].iloc[-2] * 100)
+            else:
+                change_pct = 0
             st.metric("📈 Change", f"{change_pct:+.2f}%")
         
         with col4:
@@ -5292,37 +5311,48 @@ def render_collapsible_result_card(result: Dict, signal: SignalStrength, index: 
             col_a, col_b = st.columns(2)
             with col_a:
                 st.markdown("**📉 Indicators**")
-                indicators = result.get('indicators', {})
-                st.write(f"• RSI: {indicators.get('rsi', 0):.2f}")
-                st.write(f"• MACD: {indicators.get('macd', 0):.2f}")
-                st.write(f"• ADX: {indicators.get('adx', 0):.2f}")
+                rsi = result.get('rsi', 0)
+                adx = result.get('adx', 0)
+                data = result.get('data')
+                macd = data['MACD'].iloc[-1] if data is not None and 'MACD' in data.columns else 0
+                st.write(f"• RSI: {rsi:.2f}")
+                st.write(f"• MACD: {macd:.2f}")
+                st.write(f"• ADX: {adx:.2f}")
             
             with col_b:
                 st.markdown("**📊 Support/Resistance**")
-                sr = result.get('support_resistance', {})
-                st.write(f"• Support: ₹{sr.get('support', 0):.2f}")
-                st.write(f"• Resistance: ₹{sr.get('resistance', 0):.2f}")
+                if data is not None:
+                    support = data['Low'].tail(20).min()
+                    resistance = data['High'].tail(20).max()
+                    st.write(f"• Support: ₹{support:.2f}")
+                    st.write(f"• Resistance: ₹{resistance:.2f}")
+                else:
+                    st.write("• Support: N/A")
+                    st.write("• Resistance: N/A")
         
         with dtab2:
             st.markdown(f"**🎯 Pattern: {pattern_type}**")
-            st.write(pattern.get('description', 'No description'))
+            st.write(pattern.get('details', pattern.get('description', 'Pattern detected')))
+            st.write(f"**Strength:** {pattern.get('strength', 0):.0f}/100")
+            st.write(f"**Success Rate:** {pattern.get('success_rate', 0)}%")
             
-            st.markdown("**📈 Key Signals:**")
-            for sig in result.get('signals', [])[:5]:
-                st.write(f"• {sig}")
+            st.markdown("**📈 All Patterns:**")
+            for p in patterns[:5]:
+                st.write(f"• {p['type']} ({p['strength']:.0f}%)")
         
         with dtab3:
             if signal.total_score >= 65:
                 st.success(f"✅ **STRONG OPPORTUNITY** - Consider {symbol} for PCS")
-                st.write(f"**Strike:** {result.get('strike_recommendation', 'N/A')}")
+                st.write(f"**PCS Score:** {signal.pcs_score:.1f}/5")
+                st.write(f"**Signal Strength:** {signal.total_score:.0f}/100")
+                if patterns:
+                    st.write(f"**Best Pattern:** {pattern_type}")
             elif signal.total_score >= 50:
                 st.info(f"🟡 **MODERATE** - {symbol} shows potential")
+                st.write(f"**PCS Score:** {signal.pcs_score:.1f}/5")
             else:
                 st.warning(f"⚪ **WATCH LIST** - Monitor {symbol}")
-        
-        # Chart
-        if 'chart' in result and result['chart'] is not None:
-            st.plotly_chart(result['chart'], use_container_width=True)
+                st.write(f"**PCS Score:** {signal.pcs_score:.1f}/5")
 
 
 
@@ -5362,7 +5392,7 @@ def create_nse1000_scanner_tab(config):
                 if data is not None and len(data) >= 50:
                     patterns = scanner.detect_patterns(data, symbol, config)
                     if patterns:  # patterns is a list
-                        # Build proper result structure like F&O tab
+                        # Build result structure EXACTLY like working F&O tab
                         current_price = data['Close'].iloc[-1]
                         current_rsi = data['RSI'].iloc[-1]
                         current_adx = data['ADX'].iloc[-1]
@@ -5370,35 +5400,14 @@ def create_nse1000_scanner_tab(config):
                         avg_volume = data['Volume'].tail(21).mean()
                         volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1.0
                         
-                        # Calculate PCS score from patterns
-                        pcs_score = max(p['strength'] / 20 for p in patterns)  # Convert 0-100 to 0-5
-                        
-                        # Get best pattern
-                        best_pattern = max(patterns, key=lambda p: p['strength'])
-                        
                         stock_result = {
                             'symbol': symbol,
                             'current_price': current_price,
+                            'volume_ratio': volume_ratio,
                             'rsi': current_rsi,
                             'adx': current_adx,
-                            'volume_ratio': volume_ratio,
                             'patterns': patterns,
-                            'pattern': best_pattern,  # Single best pattern for display
-                            'pcs_score': pcs_score,
-                            'data': data,
-                            'indicators': {
-                                'rsi': current_rsi,
-                                'macd': data.get('MACD', pd.Series([0])).iloc[-1] if 'MACD' in data else 0,
-                                'adx': current_adx
-                            },
-                            'support_resistance': {
-                                'support': data['Low'].tail(20).min(),
-                                'resistance': data['High'].tail(20).max()
-                            },
-                            'signals': [p['type'] for p in patterns],
-                            'change_percent': ((current_price - data['Close'].iloc[-2]) / data['Close'].iloc[-2] * 100) if len(data) > 1 else 0,
-                            'volume_surge': volume_ratio >= 1.5,
-                            'weekly_validation': patterns[0].get('weekly_validation', {'is_strong': False}) if patterns else {'is_strong': False}
+                            'data': data
                         }
                         results.append(stock_result)
             except Exception as e:
@@ -5446,17 +5455,25 @@ def create_nse1000_scanner_tab(config):
         
         # Export
         if st.button("📥 Export to CSV"):
-            import pandas as pd
-            df = pd.DataFrame([{
-                'Symbol': r.get('symbol'),
-                'PCS_Score': s.pcs_score,
-                'Signal_Strength': s.total_score,
-                'Confidence': s.confidence_level,
-                'Pattern': r.get('pattern', {}).get('type'),
-                'Price': r.get('current_price')
-            } for r, s in scored_results])
+            df_data = []
+            for r, s in scored_results:
+                patterns = r.get('patterns', [])
+                best_pattern = max(patterns, key=lambda p: p['strength']) if patterns else {}
+                df_data.append({
+                    'Symbol': r.get('symbol'),
+                    'PCS_Score': s.pcs_score,
+                    'Signal_Strength': s.total_score,
+                    'Confidence': s.confidence_level,
+                    'Pattern': best_pattern.get('type', 'N/A'),
+                    'Pattern_Strength': best_pattern.get('strength', 0),
+                    'Price': r.get('current_price'),
+                    'RSI': r.get('rsi', 0),
+                    'ADX': r.get('adx', 0),
+                    'Volume_Ratio': r.get('volume_ratio', 0)
+                })
+            df = pd.DataFrame(df_data)
             csv = df.to_csv(index=False)
-            st.download_button("Download", csv, "nse1000_results.csv", "text/csv")
+            st.download_button("Download CSV", csv, "nse1000_results.csv", "text/csv")
 
 
 def main():
