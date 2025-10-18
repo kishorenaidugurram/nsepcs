@@ -5256,10 +5256,16 @@ def render_collapsible_result_card(result: Dict, signal: SignalStrength, index: 
     pattern = result.get('pattern', {})
     pattern_type = pattern.get('type', 'Unknown')
     
+    # Determine if should be expanded - HIGH confidence or meeting criteria
+    should_expand = signal.total_score >= 65  # HIGH or VERY HIGH confidence
+    
+    # Add indicator for today's opportunities
+    today_indicator = " 🔥 TODAY!" if should_expand else ""
+    
     # Professional expander with summary
     with st.expander(
-        f"**{index+1}. {symbol}** • PCS: {signal.pcs_score:.1f}/5 • {signal.confidence_level} • {pattern_type}",
-        expanded=False
+        f"**{index+1}. {symbol}** • PCS: {signal.pcs_score:.1f}/5 • {signal.confidence_level} • {pattern_type}{today_indicator}",
+        expanded=should_expand  # Expand high-confidence stocks by default
     ):
         # Quick metrics row
         col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
@@ -5354,10 +5360,48 @@ def create_nse1000_scanner_tab(config):
             try:
                 data = scanner.get_stock_data(symbol)
                 if data is not None and len(data) >= 50:
-                    analysis = scanner.detect_patterns(data, symbol, config)
-                    if analysis:
-                        results.append(analysis)
-            except:
+                    patterns = scanner.detect_patterns(data, symbol, config)
+                    if patterns:  # patterns is a list
+                        # Build proper result structure like F&O tab
+                        current_price = data['Close'].iloc[-1]
+                        current_rsi = data['RSI'].iloc[-1]
+                        current_adx = data['ADX'].iloc[-1]
+                        current_volume = data['Volume'].iloc[-1]
+                        avg_volume = data['Volume'].tail(21).mean()
+                        volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1.0
+                        
+                        # Calculate PCS score from patterns
+                        pcs_score = max(p['strength'] / 20 for p in patterns)  # Convert 0-100 to 0-5
+                        
+                        # Get best pattern
+                        best_pattern = max(patterns, key=lambda p: p['strength'])
+                        
+                        stock_result = {
+                            'symbol': symbol,
+                            'current_price': current_price,
+                            'rsi': current_rsi,
+                            'adx': current_adx,
+                            'volume_ratio': volume_ratio,
+                            'patterns': patterns,
+                            'pattern': best_pattern,  # Single best pattern for display
+                            'pcs_score': pcs_score,
+                            'data': data,
+                            'indicators': {
+                                'rsi': current_rsi,
+                                'macd': data.get('MACD', pd.Series([0])).iloc[-1] if 'MACD' in data else 0,
+                                'adx': current_adx
+                            },
+                            'support_resistance': {
+                                'support': data['Low'].tail(20).min(),
+                                'resistance': data['High'].tail(20).max()
+                            },
+                            'signals': [p['type'] for p in patterns],
+                            'change_percent': ((current_price - data['Close'].iloc[-2]) / data['Close'].iloc[-2] * 100) if len(data) > 1 else 0,
+                            'volume_surge': volume_ratio >= 1.5,
+                            'weekly_validation': patterns[0].get('weekly_validation', {'is_strong': False}) if patterns else {'is_strong': False}
+                        }
+                        results.append(stock_result)
+            except Exception as e:
                 continue
         
         progress.empty()
@@ -5380,11 +5424,25 @@ def create_nse1000_scanner_tab(config):
         col4.metric("📈 Avg Score", f"{avg:.0f}/100")
         
         st.markdown("---")
-        st.markdown("### 🎯 Top Opportunities (Sorted by Strength)")
         
-        # Render cards
-        for idx, (result, signal) in enumerate(scored_results):
-            render_collapsible_result_card(result, signal, idx)
+        # Separate high confidence and others
+        high_conf_results = [(r, s) for r, s in scored_results if s.total_score >= 65]
+        other_results = [(r, s) for r, s in scored_results if s.total_score < 65]
+        
+        # Show high confidence stocks first (EXPANDED by default)
+        if high_conf_results:
+            st.markdown("### 🔥 High Confidence Opportunities (Meeting Criteria Today)")
+            st.info(f"✅ {len(high_conf_results)} stocks meeting criteria - **Expanded by default for quick review**")
+            for idx, (result, signal) in enumerate(high_conf_results):
+                render_collapsible_result_card(result, signal, idx)
+        
+        # Show other results (COLLAPSED by default)
+        if other_results:
+            st.markdown("---")
+            st.markdown(f"### 📈 Other Opportunities ({len(other_results)} stocks)")
+            st.info("🗓️ Collapsed by default - Click to expand for details")
+            for idx, (result, signal) in enumerate(other_results, start=len(high_conf_results)):
+                render_collapsible_result_card(result, signal, idx)
         
         # Export
         if st.button("📥 Export to CSV"):
