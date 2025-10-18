@@ -5132,7 +5132,7 @@ def main():
     # Create main tabs
     tab1, tab2, tab3 = st.tabs([
         "🎯 Current Day Scanner",
-        "📊 Market Intelligence"
+        "📊 Market Intelligence",
         "🌐 NSE 1000 Universe"
     ])
     
