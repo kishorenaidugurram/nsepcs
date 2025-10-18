@@ -39,10 +39,6 @@ st.markdown("""
         --card: 222.2 84% 4.9%;
         --card-foreground: 210 40% 98%;
         
-        /* Popover */
-        --popover: 222.2 84% 4.9%;
-        --popover-foreground: 210 40% 98%;
-        
         /* Primary */
         --primary: 217.2 91.2% 59.8%;
         --primary-foreground: 222.2 47.4% 11.2%;
@@ -337,38 +333,6 @@ st.markdown("""
         border: 1px solid hsl(var(--destructive) / 0.3);
     }
     
-    .badge-primary {
-        background: hsl(var(--primary) / 0.15);
-        color: hsl(var(--primary));
-        border: 1px solid hsl(var(--primary) / 0.3);
-    }
-    
-    /* Alert Component */
-    .alert {
-        border-radius: var(--radius);
-        padding: 1rem;
-        margin: 1rem 0;
-        border: 1px solid;
-    }
-    
-    .alert-success {
-        background: hsl(var(--success) / 0.1);
-        border-color: hsl(var(--success) / 0.3);
-        color: hsl(var(--success));
-    }
-    
-    .alert-warning {
-        background: hsl(var(--warning) / 0.1);
-        border-color: hsl(var(--warning) / 0.3);
-        color: hsl(var(--warning));
-    }
-    
-    .alert-destructive {
-        background: hsl(var(--destructive) / 0.1);
-        border-color: hsl(var(--destructive) / 0.3);
-        color: hsl(0, 62.8%, 50%);
-    }
-    
     /* Dataframe Styling */
     .dataframe {
         background: hsl(var(--card));
@@ -423,13 +387,6 @@ st.markdown("""
         background: hsl(var(--primary));
     }
     
-    /* Success/Error Messages */
-    .element-container .stAlert {
-        background: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        border-radius: var(--radius);
-    }
-    
     /* Responsive Design */
     @media (max-width: 768px) {
         .header-card h1 {
@@ -444,12 +401,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# COMPLETE NSE F&O UNIVERSE - ALL 219 STOCKS (Full Official List)
+# COMPLETE NSE F&O UNIVERSE - ALL 219 STOCKS
 COMPLETE_NSE_FO_UNIVERSE = [
-    # Indices (4)
     '^NSEI', '^NSEBANK', '^CNXFINANCE', '^CNXMIDCAP',
-    
-    # ALL NSE F&O Individual stocks (215 stocks) - COMPLETE OFFICIAL LIST
     '360ONE.NS', 'ABB.NS', 'ABCAPITAL.NS', 'ABFRL.NS', 'ACC.NS', 'ADANIENSOL.NS', 'ADANIENT.NS', 
     'ADANIGREEN.NS', 'ADANIPORTS.NS', 'ADANITRANS.NS', 'AJANTPHARM.NS', 'ALKEM.NS', 'AMBUJACEM.NS', 
     'ANGELONE.NS', 'APLAPOLLO.NS', 'APOLLOHOSP.NS', 'APOLLOTYRE.NS', 'ASHOKLEY.NS', 'ASIANPAINT.NS', 
@@ -492,7 +446,7 @@ COMPLETE_NSE_FO_UNIVERSE = [
     'WIPRO.NS', 'YESBANK.NS', 'ZEEL.NS', 'ZYDUSLIFE.NS'
 ]
 
-# Stock categories with verified symbols
+# Stock categories
 STOCK_CATEGORIES = {
     'Nifty 50': [
         'RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'INFY.NS', 'ICICIBANK.NS',
@@ -622,28 +576,27 @@ class ProfessionalPCSScanner:
     def get_confidence_level(self, score):
         """Determine confidence level based on score"""
         if score >= 75:
-            return "HIGH", "#10B981"
+            return "HIGH"
         elif score >= 60:
-            return "MEDIUM", "#F59E0B"
+            return "MEDIUM"
         else:
-            return "LOW", "#EF4444"
+            return "LOW"
     
     def get_strike_recommendations(self, current_price, confidence):
         """Get strike recommendations based on confidence"""
         if confidence == "HIGH":
-            short_otm = 0.05  # 5% OTM
-            long_otm = 0.10   # 10% OTM
+            short_otm = 0.05
+            long_otm = 0.10
         elif confidence == "MEDIUM":
-            short_otm = 0.08  # 8% OTM
-            long_otm = 0.13   # 13% OTM
+            short_otm = 0.08
+            long_otm = 0.13
         else:
-            short_otm = 0.12  # 12% OTM
-            long_otm = 0.17   # 17% OTM
+            short_otm = 0.12
+            long_otm = 0.17
         
         short_strike = current_price * (1 - short_otm)
         long_strike = current_price * (1 - long_otm)
         
-        # Round to nearest strike (typically 50 or 100)
         strike_interval = 50 if current_price < 1000 else 100
         short_strike = round(short_strike / strike_interval) * strike_interval
         long_strike = round(long_strike / strike_interval) * strike_interval
@@ -657,15 +610,14 @@ scanner = ProfessionalPCSScanner()
 st.markdown("""
 <div class="header-card">
     <h1>📈 NSE F&O PCS Professional Scanner</h1>
-    <p class="subtitle">Advanced Put Credit Spread Intelligence for NSE F&O Trading</p>
+    <p class="subtitle">Advanced Put Credit Spread Intelligence</p>
 </div>
 """, unsafe_allow_html=True)
 
 # Sidebar Configuration
 with st.sidebar:
-    st.markdown("## ⚙️ Scanner Configuration")
+    st.markdown("## ⚙️ Configuration")
     
-    # Stock Selection
     st.markdown("### 📊 Stock Selection")
     stock_source = st.selectbox(
         "Select Stock Source",
@@ -673,30 +625,23 @@ with st.sidebar:
          "Auto Stocks", "Metal Stocks", "Energy Stocks"]
     )
     
-    max_stocks = st.slider("Maximum Stocks to Analyze", 5, 50, 25, 5)
+    max_stocks = st.slider("Maximum Stocks", 5, 50, 25, 5)
     
-    # Score Filters
-    st.markdown("### 🎯 Score Filters")
+    st.markdown("### 🎯 Filters")
     min_pcs_score = st.slider("Minimum PCS Score", 0, 100, 55, 5)
-    
-    # Technical Filters
-    st.markdown("### 🔧 Technical Filters")
     min_rsi = st.slider("Minimum RSI", 0, 100, 30, 5)
     max_rsi = st.slider("Maximum RSI", 0, 100, 70, 5)
     
-    # Analysis Button
     st.markdown("---")
-    analyze_button = st.button("🚀 Run PCS Analysis", use_container_width=True)
+    analyze_button = st.button("🚀 Run Analysis", use_container_width=True)
 
 # Main Content
 if analyze_button:
-    # Get stock list
     if stock_source == "All F&O Stocks":
         stock_list = COMPLETE_NSE_FO_UNIVERSE[:max_stocks]
     else:
         stock_list = STOCK_CATEGORIES.get(stock_source, [])[:max_stocks]
     
-    # Progress tracking
     progress_bar = st.progress(0)
     status_text = st.empty()
     
@@ -706,7 +651,6 @@ if analyze_button:
         status_text.text(f"Analyzing {symbol}... ({idx+1}/{len(stock_list)})")
         progress_bar.progress((idx + 1) / len(stock_list))
         
-        # Get data and calculate score
         data = scanner.get_stock_data(symbol)
         if data is not None:
             score = scanner.calculate_pcs_score(data)
@@ -716,7 +660,7 @@ if analyze_button:
                 rsi = current['RSI']
                 
                 if min_rsi <= rsi <= max_rsi:
-                    confidence, color = scanner.get_confidence_level(score)
+                    confidence = scanner.get_confidence_level(score)
                     short_strike, long_strike = scanner.get_strike_recommendations(
                         current['Close'], confidence
                     )
@@ -736,34 +680,24 @@ if analyze_button:
     progress_bar.empty()
     status_text.empty()
     
-    # Display Results
     if results:
         df = pd.DataFrame(results)
         df = df.sort_values('PCS_Score', ascending=False)
         
-        st.markdown("## 📊 Analysis Results")
+        st.markdown("## 📊 Results")
         
-        # Summary Metrics
         col1, col2, col3, col4 = st.columns(4)
-        
         with col1:
-            st.metric("Total Opportunities", len(df))
+            st.metric("Total", len(df))
         with col2:
-            high_conf = len(df[df['Confidence'] == 'HIGH'])
-            st.metric("High Confidence", high_conf)
+            st.metric("High Confidence", len(df[df['Confidence'] == 'HIGH']))
         with col3:
-            avg_score = df['PCS_Score'].mean()
-            st.metric("Average Score", f"{avg_score:.1f}")
+            st.metric("Avg Score", f"{df['PCS_Score'].mean():.1f}")
         with col4:
-            top_score = df['PCS_Score'].max()
-            st.metric("Top Score", f"{top_score:.1f}")
+            st.metric("Top Score", f"{df['PCS_Score'].max():.1f}")
         
         st.markdown("---")
         
-        # Results Table
-        st.markdown("### 📋 Detailed Results")
-        
-        # Format dataframe for display
         display_df = df.copy()
         display_df['Price'] = display_df['Price'].apply(lambda x: f"₹{x:.2f}")
         display_df['PCS_Score'] = display_df['PCS_Score'].apply(lambda x: f"{x:.1f}")
@@ -771,98 +705,67 @@ if analyze_button:
         display_df['Short_Strike'] = display_df['Short_Strike'].apply(lambda x: f"₹{x:.0f}")
         display_df['Long_Strike'] = display_df['Long_Strike'].apply(lambda x: f"₹{x:.0f}")
         
-        st.dataframe(
-            display_df,
-            use_container_width=True,
-            hide_index=True
-        )
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
         
-        # Download button
         csv = df.to_csv(index=False)
         st.download_button(
-            label="⬇️ Download Results as CSV",
+            label="⬇️ Download CSV",
             data=csv,
-            file_name=f"pcs_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            file_name=f"pcs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
             use_container_width=True
         )
         
-        # Detailed Cards for Top 5
         st.markdown("---")
-        st.markdown("### 🌟 Top 5 Opportunities")
+        st.markdown("### 🌟 Top Opportunities")
         
         for idx, row in df.head(5).iterrows():
-            confidence, color = scanner.get_confidence_level(row['PCS_Score'])
-            
-            with st.expander(f"**{row['Symbol']}** - Score: {row['PCS_Score']:.1f} ({confidence})"):
+            with st.expander(f"**{row['Symbol']}** - Score: {row['PCS_Score']:.1f} ({row['Confidence']})"):
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    st.markdown("**Price Information**")
-                    st.write(f"Current Price: ₹{row['Price']:.2f}")
-                    st.write(f"Short Strike: ₹{row['Short_Strike']:.0f}")
-                    st.write(f"Long Strike: ₹{row['Long_Strike']:.0f}")
+                    st.markdown("**Price**")
+                    st.write(f"Current: ₹{row['Price']:.2f}")
+                    st.write(f"Short: ₹{row['Short_Strike']:.0f}")
+                    st.write(f"Long: ₹{row['Long_Strike']:.0f}")
                 
                 with col2:
-                    st.markdown("**Technical Indicators**")
+                    st.markdown("**Indicators**")
                     st.write(f"RSI: {row['RSI']:.1f}")
                     st.write(f"MACD: {row['MACD']:.2f}")
                     st.write(f"ADX: {row['ADX']:.1f}")
                 
                 with col3:
-                    st.markdown("**Score Details**")
-                    st.write(f"PCS Score: {row['PCS_Score']:.1f}/100")
-                    st.write(f"Confidence: {confidence}")
+                    st.markdown("**Score**")
+                    st.write(f"PCS: {row['PCS_Score']:.1f}/100")
+                    st.write(f"Level: {row['Confidence']}")
                     
-                    # Badge
-                    if confidence == "HIGH":
+                    if row['Confidence'] == "HIGH":
                         badge_class = "badge-success"
-                    elif confidence == "MEDIUM":
+                    elif row['Confidence'] == "MEDIUM":
                         badge_class = "badge-warning"
                     else:
                         badge_class = "badge-destructive"
                     
-                    st.markdown(f'<span class="badge {badge_class}">{confidence} CONFIDENCE</span>', 
+                    st.markdown(f'<span class="badge {badge_class}">{row["Confidence"]}</span>', 
                               unsafe_allow_html=True)
-    
     else:
-        st.markdown("""
-        <div class="alert alert-warning">
-            ⚠️ No stocks found matching the criteria. Try adjusting your filters.
-        </div>
-        """, unsafe_allow_html=True)
+        st.info("No stocks found matching criteria. Adjust filters and try again.")
 
 else:
-    # Welcome Screen
-    st.markdown("## 👋 Welcome to NSE F&O PCS Scanner")
-    
-    st.markdown("""
-    <div class="card">
-        <h3>🎯 How to Use</h3>
-        <ol>
-            <li>Configure your filters in the sidebar</li>
-            <li>Select stock source and maximum stocks to analyze</li>
-            <li>Set minimum PCS score and RSI range</li>
-            <li>Click "Run PCS Analysis" to start scanning</li>
-            <li>Review results and download CSV for further analysis</li>
-        </ol>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("## 👋 Get Started")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
         <div class="card">
-            <h3>📊 Key Features</h3>
+            <h3>📊 Features</h3>
             <ul>
-                <li>5-Component PCS Scoring System</li>
-                <li>40+ Liquid F&O Stocks Coverage</li>
-                <li>Confidence-Based Strike Recommendations</li>
-                <li>Real-time Technical Analysis</li>
-                <li>Risk Management Framework</li>
+                <li>5-Component PCS Scoring</li>
+                <li>40+ F&O Stocks Coverage</li>
+                <li>Strike Recommendations</li>
+                <li>Technical Analysis</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -870,31 +773,12 @@ else:
     with col2:
         st.markdown("""
         <div class="card">
-            <h3>⚠️ Important Disclaimers</h3>
+            <h3>🎯 How to Use</h3>
             <ul>
-                <li>This is NOT financial advice</li>
-                <li>Options trading involves substantial risk</li>
-                <li>Always verify data before trading</li>
-                <li>Consult with financial advisors</li>
-                <li>Start with paper trading</li>
+                <li>Configure filters in sidebar</li>
+                <li>Select stock category</li>
+                <li>Set score thresholds</li>
+                <li>Run analysis</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div class="alert alert-destructive">
-        <strong>⚠️ Risk Warning:</strong> Options trading involves substantial risk. 
-        You can lose your entire investment. This tool is for educational purposes only.
-    </div>
-    """, unsafe_allow_html=True)
-
-# Footer
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: hsl(var(--muted-foreground)); font-size: 0.875rem;">
-    <p>Built with Streamlit • Powered by yfinance & TA-Lib</p>
-    <p>⚠️ For educational purposes only • Not financial advice</p>
-</div>
-""", unsafe_allow_html=True)
