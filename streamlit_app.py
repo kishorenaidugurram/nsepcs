@@ -39,17 +39,17 @@ st.markdown("""
         /* === PROFESSIONAL FINANCE DESIGN SYSTEM === */
         /* Modern Blue Theme - Inspired by shadcn/ui + Financial Platforms */
         
-        /* Primary Color Palette - Professional Finance Blue */
-        --primary-50: hsl(210, 100%, 98%);
-        --primary-100: hsl(210, 100%, 95%);
-        --primary-200: hsl(210, 100%, 90%);
-        --primary-300: hsl(210, 100%, 80%);
-        --primary-400: hsl(210, 100%, 70%);
-        --primary-500: hsl(210, 100%, 60%);   /* Main brand blue */
-        --primary-600: hsl(210, 90%, 50%);
-        --primary-700: hsl(210, 80%, 40%);
-        --primary-800: hsl(210, 75%, 30%);
-        --primary-900: hsl(210, 70%, 20%);
+        /* Primary Color Palette - Professional Finance Teal */
+        --primary-50: hsl(174, 62%, 98%);
+        --primary-100: hsl(174, 62%, 95%);
+        --primary-200: hsl(174, 62%, 88%);
+        --primary-300: hsl(174, 62%, 75%);
+        --primary-400: hsl(174, 62%, 60%);
+        --primary-500: hsl(174, 62%, 47%);   /* Main brand teal */
+        --primary-600: hsl(174, 72%, 40%);
+        --primary-700: hsl(174, 82%, 32%);
+        --primary-800: hsl(174, 85%, 25%);
+        --primary-900: hsl(174, 90%, 18%);
         
         /* Neutral Palette - Professional Grays */
         --neutral-50: hsl(210, 20%, 98%);
@@ -552,7 +552,94 @@ st.markdown("""
         animation: fadeIn 0.5s ease-out;
     }
     
-    /* Responsive Typography */
+    /* === RESPONSIVE DESIGN - Tailwind Breakpoints === */
+    
+    /* Mobile First - Base styles above are for mobile */
+    
+    /* SM: Small devices (landscape phones, 640px and up) */
+    @media (min-width: 640px) {
+        .card {
+            padding: var(--spacing-5);
+        }
+    }
+    
+    /* MD: Medium devices (tablets, 768px and up) */
+    @media (min-width: 768px) {
+        h1 {
+            font-size: var(--font-size-4xl);
+        }
+        
+        .main {
+            padding: var(--spacing-6) var(--spacing-8);
+        }
+        
+        .card {
+            padding: var(--spacing-6);
+        }
+    }
+    
+    /* LG: Large devices (desktops, 1024px and up) */
+    @media (min-width: 1024px) {
+        h1 {
+            font-size: var(--font-size-4xl);
+        }
+        
+        .main {
+            padding: var(--spacing-8);
+        }
+    }
+    
+    /* XL: Extra large devices (large desktops, 1280px and up) */
+    @media (min-width: 1280px) {
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+    }
+    
+    /* 2XL: 2X large devices (larger desktops, 1536px and up) */
+    @media (min-width: 1536px) {
+        .main {
+            max-width: 1600px;
+        }
+    }
+    
+    /* Mobile Portrait - Max width breakpoints for smaller screens */
+    @media (max-width: 640px) {
+        h1 {
+            font-size: var(--font-size-2xl);
+        }
+        
+        h2 {
+            font-size: var(--font-size-lg);
+        }
+        
+        h3 {
+            font-size: var(--font-size-base);
+        }
+        
+        .main {
+            padding: var(--spacing-3);
+        }
+        
+        .card {
+            padding: var(--spacing-3);
+            margin-bottom: var(--spacing-3);
+        }
+        
+        /* Stack columns on mobile */
+        [data-testid="stHorizontalBlock"] {
+            flex-direction: column;
+        }
+        
+        /* Full width buttons on mobile */
+        .stButton > button,
+        .stDownloadButton > button {
+            width: 100%;
+        }
+    }
+    
+    /* Tablet Portrait */
     @media (max-width: 768px) {
         h1 {
             font-size: var(--font-size-3xl);
@@ -562,12 +649,82 @@ st.markdown("""
             font-size: var(--font-size-xl);
         }
         
-        .main {
-            padding: var(--spacing-4);
+        [data-testid="stSidebar"] {
+            width: 280px;
+        }
+    }
+    
+    /* === RESPONSIVE COMPONENTS === */
+    
+    /* Responsive DataFrames & Tables */
+    @media (max-width: 768px) {
+        .dataframe {
+            font-size: var(--font-size-xs);
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
-        .card {
-            padding: var(--spacing-4);
+        .dataframe thead th {
+            padding: var(--spacing-2) var(--spacing-3);
+            font-size: var(--font-size-xs);
+        }
+        
+        .dataframe tbody td {
+            padding: var(--spacing-2) var(--spacing-3);
+            font-size: var(--font-size-xs);
+        }
+    }
+    
+    /* Responsive Metrics */
+    @media (max-width: 640px) {
+        [data-testid="stMetricValue"] {
+            font-size: var(--font-size-xl);
+        }
+        
+        [data-testid="stMetricDelta"] {
+            font-size: var(--font-size-xs);
+        }
+        
+        /* Stack metric columns */
+        [data-testid="stMetric"] {
+            margin-bottom: var(--spacing-3);
+        }
+    }
+    
+    /* Responsive Tabs */
+    @media (max-width: 640px) {
+        .stTabs [data-baseweb="tab"] {
+            padding: var(--spacing-2) var(--spacing-4);
+            font-size: var(--font-size-xs);
+        }
+        
+        .stTabs [data-baseweb="tab-list"] {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: nowrap;
+        }
+    }
+    
+    /* Responsive Inputs */
+    @media (max-width: 640px) {
+        .stTextInput > div > div > input,
+        .stNumberInput > div > div > input,
+        .stSelectbox > div > div > select {
+            padding: var(--spacing-2) var(--spacing-3);
+            font-size: var(--font-size-sm);
+        }
+    }
+    
+    /* Responsive Sidebar */
+    @media (max-width: 640px) {
+        [data-testid="stSidebar"] {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        [data-testid="stSidebar"] .stSlider {
+            padding: var(--spacing-2) 0;
         }
     }
     
@@ -5023,10 +5180,10 @@ def render_collapsible_result_card(result: Dict, signal: SignalStrength, index: 
 
 
 def create_nse1000_scanner_tab(config):
-    """NSE 1000 Universe Scanner - Same analysis as F&O"""
+    """NSE 1000 Universe Scanner - Analyzes ALL available NSE 1000 stocks"""
     
     st.markdown("### 🌐 NSE 1000 Universe Scanner")
-    st.info("📊 Broader market analysis beyond F&O stocks with identical PCS methodology")
+    st.info("📊 Complete NSE 1000 market analysis - ALL available stocks analyzed with identical PCS methodology")
     
     # Initialize
     fetcher = NSE1000Fetcher()
@@ -5036,24 +5193,11 @@ def create_nse1000_scanner_tab(config):
     with st.spinner("🔄 Loading NSE 1000 universe..."):
         nse_stocks = fetcher.fetch_nse_stocks(exclude_fo_stocks=COMPLETE_NSE_FO_UNIVERSE)
     
-    st.success(f"✅ {len(nse_stocks)} non-F&O stocks available")
+    st.success(f"✅ {len(nse_stocks)} non-F&O stocks ready for analysis")
+    st.warning(f"⏱️ This will analyze ALL {len(nse_stocks)} stocks. Expect longer processing time.")
     
-    # Selection
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        selected = st.multiselect(
-            "🎯 Select stocks (or leave empty for auto-selection)",
-            options=nse_stocks,
-            default=[],
-            help="Choose specific stocks or let the system find top opportunities"
-        )
-    
-    with col2:
-        max_stocks = st.slider("Max stocks", 10, 50, 20)
-    
-    if st.button("🚀 Analyze NSE 1000", type="primary", use_container_width=True):
-        stocks_to_analyze = selected if selected else nse_stocks[:max_stocks]
+    if st.button("🚀 Analyze ALL NSE 1000 Stocks", type="primary", use_container_width=True):
+        stocks_to_analyze = nse_stocks  # ANALYZE ALL STOCKS
         
         st.markdown("---")
         st.markdown("### 📊 Analysis Progress")
