@@ -872,11 +872,11 @@ class SignalStrength:
         
         # Total Score (weighted, normalized to 0-100)
         total_score = (
-            (pcs_score * 2) +       # PCS weighted heavily
-            pattern_strength +      
-            weekly_validation +
-            volume_score
-        ) / 30 * 100
+            (pcs_score * 2) +       # PCS weighted heavily (max 10)
+            pattern_strength +      # max 10
+            weekly_validation +     # max 10
+            volume_score            # max 5
+        ) / 35 * 100  # Total max is 35
         
         # Confidence Level
         if total_score >= 80:
