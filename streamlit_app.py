@@ -16,11 +16,6 @@ from bs4 import BeautifulSoup
 import re
 warnings.filterwarnings('ignore')
 
-# Enhanced sorting and data structures
-from typing import Dict, List, Tuple, Optional
-from dataclasses import dataclass, field
-
-
 # Set page config
 st.set_page_config(
     page_title="NSE F&O PCS Professional Scanner", 
@@ -39,17 +34,17 @@ st.markdown("""
         /* === PROFESSIONAL FINANCE DESIGN SYSTEM === */
         /* Modern Blue Theme - Inspired by shadcn/ui + Financial Platforms */
         
-        /* Primary Color Palette - Professional Finance Teal */
-        --primary-50: hsl(174, 62%, 98%);
-        --primary-100: hsl(174, 62%, 95%);
-        --primary-200: hsl(174, 62%, 88%);
-        --primary-300: hsl(174, 62%, 75%);
-        --primary-400: hsl(174, 62%, 60%);
-        --primary-500: hsl(174, 62%, 47%);   /* Main brand teal */
-        --primary-600: hsl(174, 72%, 40%);
-        --primary-700: hsl(174, 82%, 32%);
-        --primary-800: hsl(174, 85%, 25%);
-        --primary-900: hsl(174, 90%, 18%);
+        /* Primary Color Palette - Professional Finance Blue */
+        --primary-50: hsl(210, 100%, 98%);
+        --primary-100: hsl(210, 100%, 95%);
+        --primary-200: hsl(210, 100%, 90%);
+        --primary-300: hsl(210, 100%, 80%);
+        --primary-400: hsl(210, 100%, 70%);
+        --primary-500: hsl(210, 100%, 60%);   /* Main brand blue */
+        --primary-600: hsl(210, 90%, 50%);
+        --primary-700: hsl(210, 80%, 40%);
+        --primary-800: hsl(210, 75%, 30%);
+        --primary-900: hsl(210, 70%, 20%);
         
         /* Neutral Palette - Professional Grays */
         --neutral-50: hsl(210, 20%, 98%);
@@ -179,15 +174,15 @@ st.markdown("""
         color: var(--primary-700);
     }
     
-    /* Sidebar Styling - TEAL THEME */
+    /* Sidebar Styling */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--primary-50) 0%, var(--primary-100) 100%);
-        border-right: 2px solid var(--primary-300);
-        box-shadow: var(--shadow-xl);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
     }
     
     [data-testid="stSidebar"] > div:first-child {
-        background: linear-gradient(180deg, var(--primary-50) 0%, var(--primary-100) 100%);
+        background: var(--surface);
     }
     
     /* Sidebar Headers */
@@ -552,94 +547,7 @@ st.markdown("""
         animation: fadeIn 0.5s ease-out;
     }
     
-    /* === RESPONSIVE DESIGN - Tailwind Breakpoints === */
-    
-    /* Mobile First - Base styles above are for mobile */
-    
-    /* SM: Small devices (landscape phones, 640px and up) */
-    @media (min-width: 640px) {
-        .card {
-            padding: var(--spacing-5);
-        }
-    }
-    
-    /* MD: Medium devices (tablets, 768px and up) */
-    @media (min-width: 768px) {
-        h1 {
-            font-size: var(--font-size-4xl);
-        }
-        
-        .main {
-            padding: var(--spacing-6) var(--spacing-8);
-        }
-        
-        .card {
-            padding: var(--spacing-6);
-        }
-    }
-    
-    /* LG: Large devices (desktops, 1024px and up) */
-    @media (min-width: 1024px) {
-        h1 {
-            font-size: var(--font-size-4xl);
-        }
-        
-        .main {
-            padding: var(--spacing-8);
-        }
-    }
-    
-    /* XL: Extra large devices (large desktops, 1280px and up) */
-    @media (min-width: 1280px) {
-        .main {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-    }
-    
-    /* 2XL: 2X large devices (larger desktops, 1536px and up) */
-    @media (min-width: 1536px) {
-        .main {
-            max-width: 1600px;
-        }
-    }
-    
-    /* Mobile Portrait - Max width breakpoints for smaller screens */
-    @media (max-width: 640px) {
-        h1 {
-            font-size: var(--font-size-2xl);
-        }
-        
-        h2 {
-            font-size: var(--font-size-lg);
-        }
-        
-        h3 {
-            font-size: var(--font-size-base);
-        }
-        
-        .main {
-            padding: var(--spacing-3);
-        }
-        
-        .card {
-            padding: var(--spacing-3);
-            margin-bottom: var(--spacing-3);
-        }
-        
-        /* Stack columns on mobile */
-        [data-testid="stHorizontalBlock"] {
-            flex-direction: column;
-        }
-        
-        /* Full width buttons on mobile */
-        .stButton > button,
-        .stDownloadButton > button {
-            width: 100%;
-        }
-    }
-    
-    /* Tablet Portrait */
+    /* Responsive Typography */
     @media (max-width: 768px) {
         h1 {
             font-size: var(--font-size-3xl);
@@ -649,82 +557,12 @@ st.markdown("""
             font-size: var(--font-size-xl);
         }
         
-        [data-testid="stSidebar"] {
-            width: 280px;
-        }
-    }
-    
-    /* === RESPONSIVE COMPONENTS === */
-    
-    /* Responsive DataFrames & Tables */
-    @media (max-width: 768px) {
-        .dataframe {
-            font-size: var(--font-size-xs);
-            display: block;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+        .main {
+            padding: var(--spacing-4);
         }
         
-        .dataframe thead th {
-            padding: var(--spacing-2) var(--spacing-3);
-            font-size: var(--font-size-xs);
-        }
-        
-        .dataframe tbody td {
-            padding: var(--spacing-2) var(--spacing-3);
-            font-size: var(--font-size-xs);
-        }
-    }
-    
-    /* Responsive Metrics */
-    @media (max-width: 640px) {
-        [data-testid="stMetricValue"] {
-            font-size: var(--font-size-xl);
-        }
-        
-        [data-testid="stMetricDelta"] {
-            font-size: var(--font-size-xs);
-        }
-        
-        /* Stack metric columns */
-        [data-testid="stMetric"] {
-            margin-bottom: var(--spacing-3);
-        }
-    }
-    
-    /* Responsive Tabs */
-    @media (max-width: 640px) {
-        .stTabs [data-baseweb="tab"] {
-            padding: var(--spacing-2) var(--spacing-4);
-            font-size: var(--font-size-xs);
-        }
-        
-        .stTabs [data-baseweb="tab-list"] {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            flex-wrap: nowrap;
-        }
-    }
-    
-    /* Responsive Inputs */
-    @media (max-width: 640px) {
-        .stTextInput > div > div > input,
-        .stNumberInput > div > div > input,
-        .stSelectbox > div > div > select {
-            padding: var(--spacing-2) var(--spacing-3);
-            font-size: var(--font-size-sm);
-        }
-    }
-    
-    /* Responsive Sidebar */
-    @media (max-width: 640px) {
-        [data-testid="stSidebar"] {
-            width: 100%;
-            max-width: 300px;
-        }
-        
-        [data-testid="stSidebar"] .stSlider {
-            padding: var(--spacing-2) 0;
+        .card {
+            padding: var(--spacing-4);
         }
     }
     
@@ -906,317 +744,6 @@ STOCK_CATEGORIES = {
         'GAIL.NS', 'NTPC.NS', 'POWERGRID.NS', 'TATAPOWER.NS', 'ADANIGREEN.NS'
     ]
 }
-
-
-class NSE1000Fetcher:
-    """Dynamic NSE 1000+ stock list fetcher from NSE website"""
-    
-    @st.cache_data(ttl=86400)  # Cache for 24 hours
-    def fetch_nse_stocks(_self, exclude_fo_stocks=None):
-        """Fetch ALL NSE listed stocks dynamically from NSE website"""
-        if exclude_fo_stocks is None:
-            exclude_fo_stocks = []
-        
-        all_stocks = []
-        
-        try:
-            # Try to fetch from NSE API
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
-            }
-            
-            # NSE Equity list URL
-            url = 'https://archives.nseindia.com/content/equities/EQUITY_L.csv'
-            response = requests.get(url, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                lines = response.text.strip().split('\n')
-                for line in lines[1:]:  # Skip header
-                    parts = line.split(',')
-                    if len(parts) >= 1:
-                        symbol = parts[0].strip()
-                        if symbol and not symbol.startswith('SYMBOL'):
-                            all_stocks.append(symbol)
-            
-        except Exception as e:
-            st.warning(f"Could not fetch from NSE directly: {e}. Using comprehensive backup list.")
-        
-        # If dynamic fetch fails, use comprehensive backup
-        if not all_stocks:
-            all_stocks = _self._get_comprehensive_backup_list()
-        
-        # Filter out F&O stocks
-        filtered_stocks = [s for s in all_stocks if s not in exclude_fo_stocks]
-        
-        return sorted(list(set(filtered_stocks)))
-    
-    def _get_comprehensive_backup_list(_self):
-        """Comprehensive backup list of 1000+ NSE stocks across all sectors"""
-        return [
-            # Top 200 liquid stocks
-            'COFORGE', 'MPHASIS', 'PERSISTENT', 'CYIENT', 'SONATSOFTW', 'ZENSAR',
-            'KPITTECH', 'ROUTE', 'MASTEK', 'HAPPSTMNDS', 'TATAELXSI', 'LTTS',
-            'LALPATHLAB', 'METROPOLIS', 'THYROCARE', 'AARTIDRUGS', 'ABBOTINDIA',
-            'GLAXO', 'PFIZER', 'SANOFI', 'IPCALAB', 'SUPRAJIT', 'ENDURANCE',
-            'SUBROS', 'GABRIEL', 'WABCOINDIA', 'SCHAEFFLER', 'TIMKEN', 'EXIDEIND',
-            'PGHH', 'GODREJCP', 'MARICO', 'DABUR', 'EMAMILTD', 'JYOTHYLAB',
-            'VBL', 'CCL', 'RADICO', 'RELAXO', 'GILLETTE', 'PIDILITIND',
-            'AKZOINDIA', 'DEEPAKNTR', 'ALKYLAMINE', 'CLEAN', 'FINEORG',
-            'GALAXYSURF', 'ROSSARI', 'KNR', 'PNCINFRA', 'SYMPHONY', 'CERA',
-            'HINDWAREAP', 'ASTRAZEN', 'BAJAJHLDNG', 'CDSL', 'CAMS', 'MASFIN',
-            'ICICIGI', 'SBICARD', 'CHOLAHLDNG', 'SHRIRAMFIN', 'HDFCLIFE', 'SBILIFE',
-            'MAXHEALTH', 'FORTIS', 'KIMS', 'RAINBOW', 'TRENT', 'JUBLFOOD',
-            'WESTLIFE', 'SPECIALITY', 'SHOPERSTOP', 'AVENUE', 'PVRINOX',
-            'NAZARA', 'TIPS', 'ZEEL', 'SAREGAMA', 'CUMMINSIND', 'SIEMENS',
-            'HAVELLS', 'CROMPTON', 'VOLTAS', 'WHIRLPOOL', 'DIXON', 'AMBER',
-            'POLYCAB', 'NMDC', 'MOIL', 'HINDZINC', 'NATIONALUM', 'RATNAMANI',
-            'GRASIM', 'AIAENG', 'RAYMOND', 'SOMANYCERA', 'GARFIBRES',
-            'BLUEDART', 'MAHLOG', 'VRL', 'TCI', 'IEX', 'MCX', 'IRCTC',
-            'CONCOR', 'IGL', 'MGL', 'GUJGAS', 'ZOMATO', 'NYKAA', 'POLICYBZR',
-            'PAYTM', 'DELHIVERY', 'CARTRADE', 'BRITANNIA', 'CHOLAFIN', 'COLPAL',
-            'EICHERMOT', 'ESCORTS', 'GODREJPROP', 'GUJGASLTD', 'HONAUT', 'INDHOTEL',
-            'JKCEMENT', 'JSWENERGY', 'KEI', 'KPRMILL', 'MINDACORP', 'MUTHOOTFIN',
-            'NAVINFLUOR', 'OBEROIRLTY', 'OFSS', 'PAGEIND', 'PIIND', 'PRAJIND',
-            'PRESTIGE', 'RAMCOCEM', 'RBLBANK', 'SKFINDIA', 'SOBHA', 'SOLARINDS',
-            'SUNTV', 'SUPRAJIT', 'SUPREMEIND', 'TATACOMM', 'TATACONSUM', 'TATACHEM',
-            'TATAPOWER', 'TCS', 'TECHM', 'TITAN', 'TORNTPHARM', 'TORNTPOWER',
-            'TVSMOTOR', 'UBL', 'ULTRACEMCO', 'UPL', 'VEDL', 'VOLTAS',
-            'WHIRLPOOL', 'WIPRO', 'YESBANK', 'ZEEL', 'ZENSARTECH', '3MINDIA',
-            'AARTIIND', 'AAVAS', 'ABBOTINDIA', 'ACE', 'ADANIENSOL', 'ADANIGREEN',
-            'ADANIPOWER', 'ADANITRANS', 'AEGISCHEM', 'AETHER', 'AFFLE', 'AJANTPHARM',
-            'AKZOINDIA', 'ALEMBICLTD', 'ALKYLAMINE', 'ALLCARGO', 'AMARAJABAT',
-            'AMBER', 'AMBUJACEM', 'ANGELONE', 'ANURAS', 'APCOTEXIND', 'APLLTD',
-            'APOLLOPIPE', 'APLAPOLLO', 'APOLLOHOSP', 'APOLLOTYRE', 'APTUS', 'ARCHIDPLY',
-            'ARE&M', 'ASAHIINDIA', 'ASHIANA', 'ASHOKLEY', 'ASIANPAINT', 'ASTERDM',
-            'ASTRAL', 'ASTRAZEN', 'ATUL', 'AUBANK', 'AUROPHARMA', 'AVANTIFEED',
-            'AXISBANK', 'BAJAJCON', 'BAJAJELEC', 'BAJAJFINSV', 'BAJAJHLDNG', 'BAJFINANCE',
-            'BALKRISIND', 'BALMLAWRIE', 'BALRAMCHIN', 'BANCOINDIA', 'BANDHANBNK',
-            'BANKBARODA', 'BANKINDIA', 'BASF', 'BATAINDIA', 'BAYERCROP', 'BBTC',
-            'BDL', 'BEML', 'BEL', 'BERGEPAINT', 'BHARATFORG', 'BHARATRAS',
-            'BHARTIARTL', 'BHEL', 'BIKAJI', 'BIOCON', 'BIRLACORPN', 'BSOFT',
-            'BLUESTARCO', 'BOSCHLTD', 'BRIGADE', 'BRITANNIA', 'BSOFT', 'CANFINHOME',
-            'CAMS', 'CAPLIPOINT', 'CARBORUNIV', 'CASTROLIND', 'CCL', 'CDSL',
-            'CEATLTD', 'CENTRALBK', 'CENTURYPLY', 'CENTURYTEX', 'CERA', 'CEREBRAINT',
-            'CGPOWER', 'CHAMBLFERT', 'CLEAN', 'COALINDIA', 'COCHINSHIP', 'COFORGE',
-            'COLPAL', 'CONCOR', 'COROMANDEL', 'CREDITACC', 'CROMPTON', 'CUB',
-            'CUMMINSIND', 'CYIENT', 'DABUR', 'DALBHARAT', 'DATAMATICS', 'DCBBANK',
-            'DCMSHRIRAM', 'DEEPAKFERT', 'DEEPAKNTR', 'DELHIVERY', 'DELTACORP',
-            'DLF', 'DIXON', 'DIVISLAB', 'DOLLAR', 'DRREDDY', 'EICHERMOT',
-            'EIDPARRY', 'EIHOTEL', 'ELGIEQUIP', 'EMAMILTD', 'ENDURANCE', 'ENGINERSIN',
-            'EPL', 'EQUITAS', 'ERIS', 'ESCORTS', 'EXIDEIND', 'FDC',
-            'FEDERALBNK', 'FINEORG', 'FINPIPE', 'FLUOROCHEM', 'FORTIS', 'FSL',
-            'GABRIEL', 'GAEL', 'GALAXYSURF', 'GANECOS', 'GARFIBRES', 'GILLETTE',
-            'GLAND', 'GLAXO', 'GLENMARK', 'GLOBUSSPR', 'GNFC', 'GODFRYPHLP',
-            'GODREJAGRO', 'GODREJCP', 'GODREJIND', 'GODREJPROP', 'GPPL', 'GRANULES',
-            'GRAPHITE', 'GRASIM', 'GREAVESCOT', 'GRINDWELL', 'GRSE', 'GSFC',
-            'GSHIP', 'GSTL', 'GSTVL', 'GTTL', 'GUFICBIO', 'GUJALKALI',
-            'GUJGASLTD', 'GULFOILLUB', 'HAPPSTMNDS', 'HATHWAY', 'HATSUN', 'HAVELLS',
-            'HBLPOWER', 'HCLTECH', 'HDFC', 'HDFCAMC', 'HDFCBANK', 'HDFCLIFE',
-            'HEG', 'HEIDELBERG', 'HEMIPROP', 'HEROMOTOCO', 'HFCL', 'HIKAL',
-            'HIMATSEIDE', 'HINDALCO', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR',
-            'HINDWAREAP', 'HINDZINC', 'HOMEFIRST', 'HONAUT', 'HSCL', 'HUDCO',
-            'IEX', 'IGL', 'IIFL', 'IIFLSEC', 'IBREALEST', 'ICICIBANK',
-            'ICICIGI', 'ICICIPRULI', 'IDBI', 'IDEA', 'IDFC', 'IDFCFIRSTB',
-            'IGL', 'INDIACEM', 'INDIAMART', 'INDIANB', 'INDIANHUME', 'INDIGO',
-            'INDOCO', 'INDOSTAR', 'INDUSINDBK', 'INDUSTOWER', 'INFIBEAM', 'INFY',
-            'INGERRAND', 'INOXLEISUR', 'INOXWIND', 'INTELLECT', 'IOB', 'IOC',
-            'IPCALAB', 'IRB', 'IRCON', 'IRCTC', 'IRFC', 'IRFC', 'ITC',
-            'ITI', 'J&KBANK', 'JAMNAAUTO', 'JAYAGROGN', 'JAYBARMARU', 'JBCHEPHARM',
-            'JKLAKSHMI', 'JKCEMENT', 'JKPAPER', 'JKTYRE', 'JM FINANCIAL',
-            'JMFINANCIL', 'JSWENERGY', 'JSWINFRA', 'JSWSTEEL', 'JUBLFOOD', 'JUBLINGREA',
-            'JUBLPHARMA', 'JUSTDIAL', 'JYOTHYLAB', 'KAJARIACER', 'KALYANKJIL',
-            'KAMATHOTEL', 'KANSAINER', 'KARDA', 'KARMAENG', 'KAYA', 'KEC',
-            'KEI', 'KIMS', 'KINGFA', 'KIRLOSENG', 'KIRLPNU', 'KITEX',
-            'KNR', 'KOLTEPATIL', 'KOPRAN', 'KOTAKBANK', 'KPITTECH', 'KPRMILL',
-            'KRBL', 'KSCL', 'KSB', 'KTKBANK', 'L&TFH', 'LALPATHLAB',
-            'LAMBODHARA', 'LAOPALA', 'LAXMIMACH', 'LICI', 'LINDEINDIA', 'LT',
-            'LTF', 'LTIM', 'LTTS', 'LUPIN', 'LUXIND', 'LXCHEM',
-            'MAHABANK', 'MAHLIFE', 'MAHLOG', 'MAHSCOOTER', 'MAHSEAMLES', 'MANAPPURAM',
-            'MARICO', 'MARUTI', 'MASTEK', 'MAXHEALTH', 'MAYURUNIQ', 'MAZDA',
-            'MCDOWELL-N', 'MCX', 'METROPOLIS', 'MGL', 'MHRIL', 'MINDACORP',
-            'MINDTECK', 'MMTC', 'MODILUFT', 'MOIL', 'MOL', 'MONARCH',
-            'MOTHERSON', 'MOTILALOFS', 'MPHASIS', 'MRF', 'MRPL', 'MSTCLTD',
-            'MTARTECH', 'MUTHOOTFIN', 'NAGAFERT', 'NAM-INDIA', 'NATCOPHARM',
-            'NATIONALUM', 'NAUKRI', 'NAVINFLUOR', 'NAVNETEDUL', 'NAZARA', 'NBCC',
-            'NCC', 'NELCAST', 'NEOGEN', 'NESTLEIND', 'NETWORK18', 'NEULANDLAB',
-            'NEWGEN', 'NH', 'NHPC', 'NIITLTD', 'NMDC', 'NOCIL',
-            'NSLNISP', 'NTPC', 'NUCLEUS', 'NUVOCO', 'NYKAA', 'OAL',
-            'OBEROIRLTY', 'OCCL', 'OFSS', 'OIL', 'OLECTRA', 'OMAXE',
-            'ONGC', 'ONMOBILE', 'OPTIEMUS', 'ORIENTABRA', 'ORIENTCEM', 'ORIENTELEC',
-            'ORIENTHOT', 'ORIENTPPR', 'ORISSAMINE', 'ORTINLABS', 'PAGEIND', 'PAISALO',
-            'PAJ', 'PANACEABIO', 'PARAGMILK', 'PARAS', 'PARSVNATH', 'PATELENG',
-            'PATINTLOG', 'PAYTM', 'PB', 'PCBL', 'PDMJEPAPER', 'PDSL',
-            'PENINLAND', 'PERSISTENT', 'PETRONET', 'PFC', 'PFIZER', 'PGHH',
-            'PGIL', 'PHDCCI', 'PHILIPCARB', 'PHOENIXLTD', 'PIDILITIND', 'PIIND',
-            'PIL', 'PILANIINVS', 'PNB', 'PNBGILTS', 'PNBHOUSING', 'PNCINFRA',
-            'POKARNA', 'POLICYBZR', 'POLYCAB', 'POLYMED', 'POLYPLEX', 'PONNIERODE',
-            'POWERGRID', 'POWERINDIA', 'POWERMECH', 'PRAJIND', 'PRAKASH', 'PRECAM',
-            'PRECOT', 'PRESTIGE', 'PRICOLLTD', 'PRIMESECU', 'PRINCEPIPE', 'PRSMJOHNSN',
-            'PSB', 'PSPPROJECT', 'PTC', 'PTL', 'PUNJABCHEM', 'PURVA',
-            'PVP', 'PVRINOX', 'PVRINOX', 'QUESS', 'QUICKHEAL', 'RADICO',
-            'RADIOCITY', 'RAIGARSUGAR', 'RAINBOW', 'RAJESHEXPO', 'RAJRATAN', 'RAJRILTD',
-            'RAMASTEEL', 'RAMCOCEM', 'RAMCOSYS', 'RAMKY', 'RANEHOLDIN', 'RANEENGINE',
-            'RATNAMANI', 'RAYMOND', 'RBLBANK', 'RCF', 'RECLTD', 'REDINGTON',
-            'RELAXO', 'RELCHEMQ', 'RELIANCE', 'RELIGARE', 'REMSONSIND', 'RENUKA',
-            'REPCOHOME', 'RESPONIND', 'RHL', 'RICOAUTO', 'RIIL', 'RITES',
-            'RKFORGE', 'RKSWAMY', 'ROSSARI', 'ROUTE', 'RPGLIFE', 'RPOWER',
-            'RSSOFTWARE', 'RTNPOWER', 'RUBYMILLS', 'RUCHINFRA', 'RUCHIRA', 'RUPA',
-            'RUSTOMJEE', 'SAAKSHI', 'SAFARI', 'SAGA', 'SAIL', 'SAKAR',
-            'SAKHTISUG', 'SAKUMA', 'SALASAR', 'SALSTEEL', 'SALZERELEC', 'SAMBHAAV',
-            'SANOFI', 'SANGHIIND', 'SANGHVIMOV', 'SANOFI', 'SANTHNR', 'SARDAEN',
-            'SAREGAMA', 'SARLAPOLY', 'SASKEN', 'SASTASUNDR', 'SATIA', 'SATURNTEX',
-            'SBICARD', 'SBILIFE', 'SBIN', 'SCHAEFFLER', 'SEAMECLTD', 'SELAN',
-            'SENSIENT', 'SEQUENT', 'SFL', 'SGBAMARATH', 'SGL', 'SHAHALLOYS',
-            'SHAKTIPUMP', 'SHALBY', 'SHALPAINTS', 'SHANTIGEAR', 'SHARDACROP',
-            'SHARDAMOTR', 'SHAREINDIA', 'SHEMAROO', 'SHFL', 'SHILPAMED', 'SHIRPUR-G&S',
-            'SHIVALIK', 'SHIVAMAUTO', 'SHIVAMILLS', 'SHK', 'SHOPERSTOP', 'SHREECEM',
-            'SHREEPUSHK', 'SHREERAMA', 'SHREDIGCEM', 'SHRIRAMPPS', 'SHRIRAMCIT',
-            'SHRIRAMFIN', 'SHYAMCENT', 'SHYAMMETL', 'SIEMENS', 'SIGIND', 'SIKKO',
-            'SIL', 'SILGO', 'SILLYMONKS', 'SIMBHALS', 'SIMPLEXINF', 'SINTERCOM',
-            'SIYSIL', 'SJS', 'SJVN', 'SKFINDIA', 'SKMEGGPROD', 'SMARTLINK',
-            'SMCGLOBAL', 'SMLISUZU', 'SNOWMAN', 'SOBHA', 'SOLARINDS', 'SOLARA',
-            'SOMANYCERA', 'SOMICONVEY', 'SONACOMS', 'SONATSOFTW', 'SOUTHEAST', 'SOUTHBANK',
-            'SPANDANA', 'SPARC', 'SPECIALITY', 'SPENCERS', 'SPIC', 'SPLIL',
-            'SPMLINFRA', 'SPTL', 'SRHHYPOLTD', 'SRIGINFRA', 'SRPL', 'SRF',
-            'SRTRANSFIN', 'STARCEMENT', 'STARHEALTH', 'STCINDIA', 'STEELCAS', 'STEELXIND',
-            'STLTECH', 'STOVEKRAFT', 'STYRENIX', 'SUBEXLTD', 'SUBROS', 'SUMICHEM',
-            'SUMMITSEC', 'SUNCLAYLTD', 'SUNDARAM-F', 'SUNDARMFIN', 'SUNDRMFAST',
-            'SUNFLAG', 'SUNGOLD', 'SUNPHARMA', 'SUNTECK', 'SUNTV', 'SUPERHOUSE',
-            'SUPRAJIT', 'SUPREMEIND', 'SUPRIYA', 'SURANASOL', 'SURYAROSNI',
-            'SUTLEJTEX', 'SUVENPHAR', 'SUYOG', 'SUZLON', 'SWANENERGY', 'SWARAJENG',
-            'SYMPHONY', 'SYNDIBANK', 'SYNGENE', 'SYSTANGO', 'TAINWALCHM', 'TAJGVK',
-            'TAKE', 'TALBROAUTO', 'TALWALKARS', 'TANLA', 'TARC', 'TATAGLOBAL',
-            'TATACHEM', 'TATACOFFEE', 'TATACOMM', 'TATACONSUM', 'TATAELXSI',
-            'TATAINVEST', 'TATAMOTORS', 'TATAMTRDVR', 'TATAPOWER', 'TATASPONGE',
-            'TATASTEEL', 'TATASTLLP', 'TATATECH', 'TTML', 'TBZ', 'TCI',
-            'TCNSBRANDS', 'TCPLPACK', 'TCS', 'TDPOWERSYS', 'TEAMLEASE', 'TECHIN',
-            'TECHM', 'TEGA', 'TEJASNET', 'TEMBO', 'TERASOFT', 'TEXINFRA',
-            'TEXMOPIPES', 'TEXRAIL', 'TFCILTD', 'THANGAMAYL', 'THEINVEST',
-            'THERMAX', 'THOMASCOOK', 'THYROCARE', 'TI', 'TIDEWATER', 'TIIL',
-            'TIJARIA', 'TIMESGTY', 'TIMKEN', 'TINPLATE', 'TIPSINDLTD', 'TIRUMALCHM',
-            'TITAN', 'TNPETRO', 'TNPL', 'TNTELE', 'TOKYOPLAST', 'TONYK',
-            'TORF', 'TORNTPHARM', 'TORNTPOWER', 'TOTAL', 'TPLPLASTEH', 'TREEHOUSE',
-            'TREL', 'TRENT', 'TRF', 'TRIDENT', 'TRIGYN', 'TRITURBINE',
-            'TRIVENI', 'TSIL', 'TTKHLTCARE', 'TTKPRESTIG', 'TTL', 'TV18BRDCST',
-            'TVSMOTOR', 'TVSHLTD', 'TVSSCS', 'TVTODAY', 'UCOBANK', 'UFLEX',
-            'UGROCAP', 'UJJIVAN', 'UJJIVANSFB', 'ULTRACEMCO', 'UMANGDAIRY',
-            'UMAEXPORTS', 'UNICHEMLAB', 'UNIONBANK', 'UNIPARTS', 'UNITDSPR',
-            'UNITY', 'UNIVCABLES', 'UPL', 'URAVI', 'USHAMART', 'UTIAMC',
-            'UTTAMSUGAR', 'UVSL', 'V2RETAIL', 'VAIBHAVGBL', 'VAIDHYANATH', 'VAKRANGEE',
-            'VALIANTLAB', 'VALIANTORG', 'VARROC', 'VARUNMOTORS', 'VBL', 'VEDL',
-            'VENKEYS', 'VENUSREM', 'VERITASINDIA', 'VERTOZ', 'VESUVIUS', 'VFS',
-            'VGUARD', 'VIDHIING', 'VIDEOIND', 'VIDEOWCON', 'VIJAYA', 'VIJAYABANK',
-            'VIKASMCORP', 'VIKASECO', 'VIKAS', 'VINATIORGA', 'VINDHYATEL', 'VINEETLAB',
-            'VINYLINDIA', 'VIPCLOTHNG', 'VIPIND', 'VIPUL', 'VIRINCHI', 'VIRTUALIS',
-            'VISASTEEL', 'VISHNU', 'VISHWARAJ', 'VIVIDHA', 'VLSFINANCE', 'VOLTAMP',
-            'VOLTAS', 'VRLLOG', 'VRL', 'VSSL', 'VSTIND', 'VSTTILLERS',
-            'VTL', 'WABAG', 'WABCOINDIA', 'WALCHANNAG', 'WANG', 'WATERBASE',
-            'WEBELSOLAR', 'WEIZFOREX', 'WEIZMANIND', 'WELCORP', 'WELENT', 'WELINV',
-            'WELSPUNIND', 'WENDT', 'WESTLIFE', 'WHEELS', 'WHIRLPOOL', 'WILLAMAGOR',
-            'WINDMACHIN', 'WINGSL', 'WIPRO', 'WIPROINFRA', 'WOCKPHARMA', 'WONDERLA',
-            'WORTH', 'WSI', 'XCHANGING', 'XELPMOC', 'XPROINDIA', 'YAARII',
-            'YAZUR', 'YESBANK', 'YUKEN', 'ZARSOLAR', 'ZEAL', 'ZEELEARN',
-            'ZEEL', 'ZEEMEDIA', 'ZEN', 'ZENITHEXPO', 'ZENITHSTL', 'ZENSARTECH',
-            'ZENTEC', 'ZFCVINDIA', 'ZIMLAB', 'ZODIACLOTH', 'ZOMATO', 'ZOTA',
-            'ZUARI', 'ZUARIGLOB', 'ZYDUSLIFE', 'ZYDUSWELN', 'ZYDUSWELL'
-        ]
-
-
-
-@dataclass
-class SignalStrength:
-    """Professional signal strength calculation for smart sorting"""
-    symbol: str
-    pcs_score: float
-    pattern_strength: float
-    weekly_validation: float
-    volume_score: float
-    total_score: float
-    confidence_level: str
-    
-    @classmethod
-    def calculate(cls, result: Dict) -> 'SignalStrength':
-        """Calculate comprehensive signal strength from analysis result"""
-        
-        # PCS Score (0-5) - Most important
-        # Calculate from patterns if not directly available
-        if 'pcs_score' in result:
-            pcs_score = result['pcs_score']
-        elif 'patterns' in result and result['patterns']:
-            # Calculate from pattern strengths (0-100 scale to 0-5 scale)
-            max_pattern_strength = max(p['strength'] for p in result['patterns'])
-            pcs_score = max_pattern_strength / 20  # Convert 0-100 to 0-5
-        else:
-            pcs_score = 0
-        
-        # Pattern Strength (0-10)
-        pattern = result.get('pattern', {})
-        pattern_strength = 0
-        pattern_type = pattern.get('type', '')
-        
-        if 'Bullish Breakout' in pattern_type:
-            pattern_strength = 10
-        elif 'Reversal' in pattern_type:
-            pattern_strength = 8
-        elif 'Consolidation' in pattern_type:
-            pattern_strength = 7
-        else:
-            pattern_strength = 5
-        
-        # Weekly Validation (0-10)
-        weekly = result.get('weekly_validation', {})
-        weekly_validation = 10 if weekly.get('is_strong', False) else 5
-        
-        # Volume Score (0-5)
-        volume_score = 5 if result.get('volume_surge', False) else 3
-        
-        # Total Score (weighted, normalized to 0-100)
-        total_score = (
-            (pcs_score * 2) +       # PCS weighted heavily (max 10)
-            pattern_strength +      # max 10
-            weekly_validation +     # max 10
-            volume_score            # max 5
-        ) / 35 * 100  # Total max is 35
-        
-        # Confidence Level
-        if total_score >= 80:
-            confidence = "🔥 VERY HIGH"
-        elif total_score >= 65:
-            confidence = "🟢 HIGH"
-        elif total_score >= 50:
-            confidence = "🟡 MODERATE"
-        else:
-            confidence = "⚪ LOW"
-        
-        return cls(
-            symbol=result.get('symbol', ''),
-            pcs_score=pcs_score,
-            pattern_strength=pattern_strength,
-            weekly_validation=weekly_validation,
-            volume_score=volume_score,
-            total_score=total_score,
-            confidence_level=confidence
-        )
-
-def sort_results_by_strength(results: List[Dict]) -> List[Tuple[Dict, SignalStrength]]:
-    """Sort results by signal strength - best opportunities first"""
-    scored_results = []
-    
-    for result in results:
-        signal = SignalStrength.calculate(result)
-        scored_results.append((result, signal))
-    
-    # Sort by total score descending (highest first)
-    scored_results.sort(key=lambda x: x[1].total_score, reverse=True)
-    
-    return scored_results
-
 
 class ProfessionalPCSScanner:
     def __init__(self):
@@ -5255,227 +4782,6 @@ def create_main_scanner_tab(config):
             st.markdown("- Expand **RSI range** to 25-85")
             st.markdown("- Check if markets traded today")
 
-
-def render_collapsible_result_card(result: Dict, signal: SignalStrength, index: int):
-    """Render professional collapsible result card with expandable details"""
-    
-    symbol = result.get('symbol', 'N/A')
-    current_price = result.get('current_price', 0)
-    
-    # Get pattern info from patterns list
-    patterns = result.get('patterns', [])
-    if patterns:
-        pattern = max(patterns, key=lambda p: p['strength'])  # Best pattern
-        pattern_type = pattern.get('type', 'Unknown')
-    else:
-        pattern = {}
-        pattern_type = 'Unknown'
-    
-    # Determine if should be expanded - HIGH confidence or meeting criteria
-    should_expand = signal.total_score >= 65  # HIGH or VERY HIGH confidence
-    
-    # Add indicator for today's opportunities
-    today_indicator = " 🔥 TODAY!" if should_expand else ""
-    
-    # Professional expander with summary
-    with st.expander(
-        f"**{index+1}. {symbol}** • PCS: {signal.pcs_score:.1f}/5 • {signal.confidence_level} • {pattern_type}{today_indicator}",
-        expanded=should_expand  # Expand high-confidence stocks by default
-    ):
-        # Quick metrics row
-        col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
-        
-        with col1:
-            st.metric("💰 Price", f"₹{current_price:.2f}")
-        
-        with col2:
-            st.metric("📊 PCS Score", f"{signal.pcs_score:.1f}/5")
-        
-        with col3:
-            data = result.get('data')
-            if data is not None and len(data) > 1:
-                change_pct = ((data['Close'].iloc[-1] - data['Close'].iloc[-2]) / data['Close'].iloc[-2] * 100)
-            else:
-                change_pct = 0
-            st.metric("📈 Change", f"{change_pct:+.2f}%")
-        
-        with col4:
-            st.metric("🎯 Signal", f"{signal.total_score:.0f}/100")
-        
-        st.markdown("---")
-        
-        # Detailed tabs
-        dtab1, dtab2, dtab3 = st.tabs(["📊 Technical", "📈 Pattern", "🎯 Strategy"])
-        
-        with dtab1:
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.markdown("**📉 Indicators**")
-                rsi = result.get('rsi', 0)
-                adx = result.get('adx', 0)
-                data = result.get('data')
-                macd = data['MACD'].iloc[-1] if data is not None and 'MACD' in data.columns else 0
-                st.write(f"• RSI: {rsi:.2f}")
-                st.write(f"• MACD: {macd:.2f}")
-                st.write(f"• ADX: {adx:.2f}")
-            
-            with col_b:
-                st.markdown("**📊 Support/Resistance**")
-                if data is not None:
-                    support = data['Low'].tail(20).min()
-                    resistance = data['High'].tail(20).max()
-                    st.write(f"• Support: ₹{support:.2f}")
-                    st.write(f"• Resistance: ₹{resistance:.2f}")
-                else:
-                    st.write("• Support: N/A")
-                    st.write("• Resistance: N/A")
-        
-        with dtab2:
-            st.markdown(f"**🎯 Pattern: {pattern_type}**")
-            st.write(pattern.get('details', pattern.get('description', 'Pattern detected')))
-            st.write(f"**Strength:** {pattern.get('strength', 0):.0f}/100")
-            st.write(f"**Success Rate:** {pattern.get('success_rate', 0)}%")
-            
-            st.markdown("**📈 All Patterns:**")
-            for p in patterns[:5]:
-                st.write(f"• {p['type']} ({p['strength']:.0f}%)")
-        
-        with dtab3:
-            if signal.total_score >= 65:
-                st.success(f"✅ **STRONG OPPORTUNITY** - Consider {symbol} for PCS")
-                st.write(f"**PCS Score:** {signal.pcs_score:.1f}/5")
-                st.write(f"**Signal Strength:** {signal.total_score:.0f}/100")
-                if patterns:
-                    st.write(f"**Best Pattern:** {pattern_type}")
-            elif signal.total_score >= 50:
-                st.info(f"🟡 **MODERATE** - {symbol} shows potential")
-                st.write(f"**PCS Score:** {signal.pcs_score:.1f}/5")
-            else:
-                st.warning(f"⚪ **WATCH LIST** - Monitor {symbol}")
-                st.write(f"**PCS Score:** {signal.pcs_score:.1f}/5")
-
-
-
-def create_nse1000_scanner_tab(config):
-    """NSE 1000 Universe Scanner - Analyzes ALL available NSE 1000 stocks"""
-    
-    st.markdown("### 🌐 NSE 1000 Universe Scanner")
-    st.info("📊 Complete NSE 1000 market analysis - ALL available stocks analyzed with identical PCS methodology")
-    
-    # Initialize
-    fetcher = NSE1000Fetcher()
-    scanner = ProfessionalPCSScanner()
-    
-    # Fetch stocks
-    with st.spinner("🔄 Loading NSE 1000 universe..."):
-        nse_stocks = fetcher.fetch_nse_stocks(exclude_fo_stocks=COMPLETE_NSE_FO_UNIVERSE)
-    
-    st.success(f"✅ {len(nse_stocks)} non-F&O stocks ready for analysis")
-    st.warning(f"⏱️ This will analyze ALL {len(nse_stocks)} stocks. Expect longer processing time.")
-    
-    if st.button("🚀 Analyze ALL NSE 1000 Stocks", type="primary", use_container_width=True):
-        stocks_to_analyze = nse_stocks  # ANALYZE ALL STOCKS
-        
-        st.markdown("---")
-        st.markdown("### 📊 Analysis Progress")
-        
-        progress = st.progress(0)
-        status = st.empty()
-        
-        results = []
-        for idx, symbol in enumerate(stocks_to_analyze):
-            status.text(f"Analyzing {symbol}... ({idx+1}/{len(stocks_to_analyze)})")
-            progress.progress((idx + 1) / len(stocks_to_analyze))
-            
-            try:
-                data = scanner.get_stock_data(symbol)
-                if data is not None and len(data) >= 50:
-                    patterns = scanner.detect_patterns(data, symbol, config)
-                    if patterns:  # patterns is a list
-                        # Build result structure EXACTLY like working F&O tab
-                        current_price = data['Close'].iloc[-1]
-                        current_rsi = data['RSI'].iloc[-1]
-                        current_adx = data['ADX'].iloc[-1]
-                        current_volume = data['Volume'].iloc[-1]
-                        avg_volume = data['Volume'].tail(21).mean()
-                        volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1.0
-                        
-                        stock_result = {
-                            'symbol': symbol,
-                            'current_price': current_price,
-                            'volume_ratio': volume_ratio,
-                            'rsi': current_rsi,
-                            'adx': current_adx,
-                            'patterns': patterns,
-                            'data': data
-                        }
-                        results.append(stock_result)
-            except Exception as e:
-                continue
-        
-        progress.empty()
-        status.empty()
-        
-        if not results:
-            st.warning("⚠️ No qualifying opportunities found")
-            return
-        
-        # Sort by strength
-        scored_results = sort_results_by_strength(results)
-        
-        # Summary
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("📊 Analyzed", len(stocks_to_analyze))
-        col2.metric("✅ Found", len(results))
-        high_conf = sum(1 for _, s in scored_results if s.total_score >= 65)
-        col3.metric("🔥 High Confidence", high_conf)
-        avg = sum(s.total_score for _, s in scored_results) / len(scored_results)
-        col4.metric("📈 Avg Score", f"{avg:.0f}/100")
-        
-        st.markdown("---")
-        
-        # Separate high confidence and others
-        high_conf_results = [(r, s) for r, s in scored_results if s.total_score >= 65]
-        other_results = [(r, s) for r, s in scored_results if s.total_score < 65]
-        
-        # Show high confidence stocks first (EXPANDED by default)
-        if high_conf_results:
-            st.markdown("### 🔥 High Confidence Opportunities (Meeting Criteria Today)")
-            st.info(f"✅ {len(high_conf_results)} stocks meeting criteria - **Expanded by default for quick review**")
-            for idx, (result, signal) in enumerate(high_conf_results):
-                render_collapsible_result_card(result, signal, idx)
-        
-        # Show other results (COLLAPSED by default)
-        if other_results:
-            st.markdown("---")
-            st.markdown(f"### 📈 Other Opportunities ({len(other_results)} stocks)")
-            st.info("🗓️ Collapsed by default - Click to expand for details")
-            for idx, (result, signal) in enumerate(other_results, start=len(high_conf_results)):
-                render_collapsible_result_card(result, signal, idx)
-        
-        # Export
-        if st.button("📥 Export to CSV"):
-            df_data = []
-            for r, s in scored_results:
-                patterns = r.get('patterns', [])
-                best_pattern = max(patterns, key=lambda p: p['strength']) if patterns else {}
-                df_data.append({
-                    'Symbol': r.get('symbol'),
-                    'PCS_Score': s.pcs_score,
-                    'Signal_Strength': s.total_score,
-                    'Confidence': s.confidence_level,
-                    'Pattern': best_pattern.get('type', 'N/A'),
-                    'Pattern_Strength': best_pattern.get('strength', 0),
-                    'Price': r.get('current_price'),
-                    'RSI': r.get('rsi', 0),
-                    'ADX': r.get('adx', 0),
-                    'Volume_Ratio': r.get('volume_ratio', 0)
-                })
-            df = pd.DataFrame(df_data)
-            csv = df.to_csv(index=False)
-            st.download_button("Download CSV", csv, "nse1000_results.csv", "text/csv")
-
-
 def main():
     # FIXED: Angel One Style Compact Header
     st.markdown("""
@@ -5490,10 +4796,9 @@ def main():
     config = create_professional_sidebar()
     
     # Create main tabs
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2 = st.tabs([
         "🎯 Current Day Scanner",
-        "📊 Market Intelligence",
-        "🌐 NSE 1000 Universe"
+        "📊 Market Intelligence"
     ])
     
     with tab1:
@@ -5562,10 +4867,6 @@ def main():
             if 'bank_nifty' in sentiment_data:
                 bank_data = sentiment_data['bank_nifty']
                 st.metric("Bank Nifty", f"{bank_data['current']:.0f}", f"{bank_data['change_1d']:+.2f}%")
-    
-    
-    with tab3:
-        create_nse1000_scanner_tab(config)
     
     # FIXED: Compact Footer
     st.markdown("---")
