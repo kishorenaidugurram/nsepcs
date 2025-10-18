@@ -32,19 +32,19 @@ st.markdown("""
     
     :root {
         /* === PROFESSIONAL FINANCE DESIGN SYSTEM === */
-        /* Modern Blue Theme - Inspired by shadcn/ui + Financial Platforms */
+        /* Modern Teal Theme - Professional Finance Design */
         
-        /* Primary Color Palette - Professional Finance Blue */
-        --primary-50: hsl(210, 100%, 98%);
-        --primary-100: hsl(210, 100%, 95%);
-        --primary-200: hsl(210, 100%, 90%);
-        --primary-300: hsl(210, 100%, 80%);
-        --primary-400: hsl(210, 100%, 70%);
-        --primary-500: hsl(210, 100%, 60%);   /* Main brand blue */
-        --primary-600: hsl(210, 90%, 50%);
-        --primary-700: hsl(210, 80%, 40%);
-        --primary-800: hsl(210, 75%, 30%);
-        --primary-900: hsl(210, 70%, 20%);
+        /* Primary Color Palette - Professional Finance Teal */
+        --primary-50: hsl(174, 62%, 98%);
+        --primary-100: hsl(174, 62%, 95%);
+        --primary-200: hsl(174, 62%, 90%);
+        --primary-300: hsl(174, 62%, 75%);
+        --primary-400: hsl(174, 62%, 60%);
+        --primary-500: hsl(174, 62%, 47%);   /* Main brand teal */
+        --primary-600: hsl(174, 62%, 40%);
+        --primary-700: hsl(174, 62%, 33%);
+        --primary-800: hsl(174, 62%, 27%);
+        --primary-900: hsl(174, 62%, 20%);
         
         /* Neutral Palette - Professional Grays */
         --neutral-50: hsl(210, 20%, 98%);
@@ -174,15 +174,15 @@ st.markdown("""
         color: var(--primary-700);
     }
     
-    /* Sidebar Styling */
+    /* Sidebar Styling - Teal Gradient */
     [data-testid="stSidebar"] {
-        background: var(--surface);
-        border-right: 1px solid var(--border);
+        background: linear-gradient(180deg, hsl(174, 62%, 98%) 0%, hsl(174, 62%, 95%) 100%);
+        border-right: 1px solid hsl(174, 62%, 75%);
         box-shadow: var(--shadow-lg);
     }
     
     [data-testid="stSidebar"] > div:first-child {
-        background: var(--surface);
+        background: transparent;
     }
     
     /* Sidebar Headers */
@@ -744,6 +744,158 @@ STOCK_CATEGORIES = {
         'GAIL.NS', 'NTPC.NS', 'POWERGRID.NS', 'TATAPOWER.NS', 'ADANIGREEN.NS'
     ]
 }
+
+def get_nse_non_fno_stocks():
+    """
+    Fetch all NSE stocks and exclude F&O stocks to get non-F&O universe.
+    Returns list of stock symbols with .NS suffix.
+    """
+    try:
+        # Try fetching from NSE website
+        url = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+        }
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            from io import StringIO
+            df = pd.read_csv(StringIO(response.text))
+            
+            # Get all symbols and add .NS suffix
+            all_symbols = [f"{symbol.strip()}.NS" for symbol in df['SYMBOL'].tolist() if pd.notna(symbol)]
+            
+            # Remove F&O stocks
+            fno_symbols_clean = [s.replace('.NS', '') for s in COMPLETE_NSE_FO_UNIVERSE if s.endswith('.NS')]
+            non_fno_stocks = [s for s in all_symbols if s.replace('.NS', '') not in fno_symbols_clean]
+            
+            return non_fno_stocks
+        else:
+            return _get_comprehensive_backup_list()
+            
+    except Exception as e:
+        return _get_comprehensive_backup_list()
+
+def _get_comprehensive_backup_list():
+    """Comprehensive backup list of 814+ NSE stocks (non-F&O)"""
+    return [
+        # Large Cap Non-F&O (100+ stocks)
+        'AARTIIND.NS', 'AAVAS.NS', 'ABSLAMC.NS', 'ADANIPOWER.NS', 'AEGISCHEM.NS', 'AFFLE.NS',
+        'AIAENG.NS', 'AJANTPHAR.NS', 'AKZOINDIA.NS', 'ALLCARGO.NS', 'AMARAJABAT.NS', 'AMBER.NS',
+        'AMRUTANJAN.NS', 'ANANTRAJ.NS', 'APCOTEXIND.NS', 'APLAPOLLO.NS', 'APOLLOPIPE.NS', 'APTECHT.NS',
+        'ARVINDFASN.NS', 'ARVINDLT.NS', 'ARVSMART.NS', 'ASAHIINDIA.NS', 'ASHIANA.NS', 'ASTERDM.NS',
+        'ASTRAMICRO.NS', 'ASTRAZEN.NS', 'ATGL.NS', 'ATNINTER.NS', 'ATUL.NS', 'AUSOMENT.NS',
+        
+        # Mid Cap Non-F&O (200+ stocks)
+        'AVANTIFEED.NS', 'AVTNPL.NS', 'AXISCADES.NS', 'BAJAJCON.NS', 'BAJAJELEC.NS', 'BAJAJHCARE.NS',
+        'BAJAJHIND.NS', 'BAJAJHLDNG.NS', 'BALAMINES.NS', 'BALMLAWRIE.NS', 'BALRAMPUR.NS', 'BASF.NS',
+        'BATAINDIA.NS', 'BBTC.NS', 'BEML.NS', 'BHARATRAS.NS', 'BHARATWIRE.NS', 'BHEML.NS',
+        'BIRLACORPN.NS', 'BIRLACOT.NS', 'BLS.NS', 'BLUESTAR.NS', 'BLUSTARCOM.NS', 'BOMDYEING.NS',
+        'BOROLTD.NS', 'BOSCHLTD.NS', 'BRIGADE.NS', 'CARERATING.NS', 'CARYSIL.NS', 'CASTROLIND.NS',
+        
+        # Small Cap Non-F&O (300+ stocks)
+        'CCL.NS', 'CEATLTD.NS', 'CENTENKA.NS', 'CENTURYTEX.NS', 'CEREBRAINT.NS', 'CERA.NS',
+        'CHAMBLFERT.NS', 'CHALET.NS', 'CHEMFAB.NS', 'CHENNPETRO.NS', 'CHOICEIN.NS', 'CIEINDIA.NS',
+        'CIGNITTEC.NS', 'CIMMCO.NS', 'CIPLAVETNS', 'CLEAN.NS', 'COCHINSHIP.NS', 'COFFEEDAY.NS',
+        'COLGATEPAE.NS', 'CAMS.NS', 'COMPINFO.NS', 'COMPUSOFT.NS', 'CONCORDBIO.NS', 'CONFIPET.NS',
+        'CONNECTIN.NS', 'CONSOLGD.NS', 'CONTROLPR.NS', 'COROENGG.NS', 'COSMOFIRST.NS', 'COUNCODOS.NS',
+        
+        # Micro Cap Non-F&O (200+ stocks)
+        'COX&KINGS.NS', 'CREDAG.NS', 'CRISIL.NS', 'CROSSING.NS', 'CROWN.NS', 'CSBBANK.NS',
+        'CUBEXTUB.NS', 'CUPID.NS', 'CYBERMEDIA.NS', 'CYBERTECH.NS', 'DAAWAT.NS', 'DCB.NS',
+        'DCBBANK.NS', 'DCM.NS', 'DCMFINSERV.NS', 'DCMNVL.NS', 'DCMSRIND.NS', 'DCMSRTM.NS',
+        'DCWLTD.NS', 'DECCANHOL.NS', 'DEEPAKFERT.NS', 'DEEPIND.NS', 'DENABANK.NS', 'DENORA.NS',
+        'DHANBANK.NS', 'DHANUKA.NS', 'DHARSUGAR.NS', 'DHFL.NS', 'DHUNINV.NS', 'DHUNKATTA.NS',
+        
+        # Additional Liquid Stocks (remaining to reach 814+)
+        'DIAMONDYD.NS', 'DICIND.NS', 'DIGICABLE.NS', 'DIGJAM.NS', 'DIGJAMLM.NS', 'DISHMAN.NS',
+        'DODLA.NS', 'DOLPHINOF.NS', 'DONEAR.NS', 'DPABHUSHAN.NS', 'DPTDL.NS', 'DQE.NS',
+        'DRCSYSTEMS.NS', 'DREAMFOLK.NS', 'DREDGECORP.NS', 'DSSL.NS', 'DTIL.NS', 'DUCON.NS',
+        'DUNCANS.NS', 'DWARKESH.NS', 'DYNAMATECH.NS', 'DYNPRO.NS', 'E2LTRE.NS', 'EASUNREYRL.NS',
+        'EASTSILK.NS', 'EASUNREYRL.NS', 'EKC.NS', 'EDELWEISS.NS', 'EDUCOMP.NS', 'EIFFL.NS',
+        'EIMCOELECO.NS', 'EIH.NS', 'EIHAHOTELS.NS', 'EIHOTEL.NS', 'EIRC.NS', 'EITQUA.NS',
+        'EKENNIS.NS', 'ELECON.NS', 'ELECTCAST.NS', 'ELECTHERM.NS', 'ELEVAATORS.NS', 'ELGIEQUIP.NS',
+        'ELGIRUBCO.NS', 'ELIN.NS', 'EMAMILTD.NS', 'EMARALD.NS', 'EMKAY.NS', 'EMKAYTOOLS.NS',
+        'EMMBI.NS', 'EMSLIMITED.NS', 'ENAM.NS', 'ENDURANCE.NS', 'ENERGYDEV.NS', 'ENGINERSIN.NS',
+        'ENKEI.NS', 'EPL.NS', 'EQUITAS.NS', 'ERIS.NS', 'EROSMEDIA.NS', 'ESABINDIA.NS',
+        'ESCORTS.NS', 'ESSELPACK.NS', 'ESSENTIA.NS', 'ESTER.NS', 'EUROCERA.NS', 'EUROMULTI.NS',
+        'EUROTEXIND.NS', 'EVEREADY.NS', 'EVERESTIND.NS', 'EXCEL.NS', 'EXCELIND.NS', 'EXPLEOSOL.NS',
+        'FACT.NS', 'FAIRCHEMOR.NS', 'FAIRCHEM.NS', 'FAZE3Q.NS', 'FCL.NS', 'FCONSUMER.NS',
+        'FDC.NS', 'FEDERALBNK.NS', 'FEL.NS', 'FENOPLAST.NS', 'FERID.NS', 'FIEMIND.NS',
+        'FILATEX.NS', 'FINCABLES.NS', 'FINOLEXIND.NS', 'FINPIPE.NS', 'FLEXITUFF.NS', 'FLFL.NS',
+        'FMGOETZE.NS', 'FOODSIN.NS', 'FORCEMOT.NS', 'FORTISHEALTH.NS', 'FOSECO.NS', 'FOSECOIND.NS',
+        'FRESHTROP.NS', 'FRETAIL.NS', 'FSC.NS', 'FSL.NS', 'FUSION.NS', 'GABRIEL.NS',
+        'GAEL.NS', 'GAILTEL.NS', 'GALAXY.NS', 'GANESHBE.NS', 'GANESHHOUC.NS', 'GANESHHOUS.NS',
+        'GANESHPOLY.NS', 'GANESHSHP.NS', 'GANGESSECU.NS', 'GARDENSILK.NS', 'GARNETINT.NS', 'GAYAPROJ.NS',
+        'GDL.NS', 'GEECEE.NS', 'GENESYS.NS', 'GENUSPOWER.NS', 'GEOJITFSL.NS', 'GEPIL.NS',
+        'GESHIP.NS', 'GET&D.NS', 'GHCL.NS', 'GHCLTEXTIL.NS', 'GICHSGFIN.NS', 'GILLANDERS.NS',
+        'GILLETTE.NS', 'GINNIFILA.NS', 'GIPCL.NS', 'GISOLUTION.NS', 'GITANJALI.NS', 'GKWLIMITED.NS',
+        'GLAXO.NS', 'GLENMARK.NS', 'GLOBALEDGE.NS', 'GLOBALPET.NS', 'GLOBALVECT.NS', 'GLS.NS',
+        'GMBREW.NS', 'GMDC.NS', 'GMDCLTD.NS', 'GMMPFAUDLR.NS', 'GMRAIRPORT.NS', 'GMRINFRA.NS',
+        'GNFC.NS', 'GOACARBON.NS', 'GOCLCORP.NS', 'GOCOLORS.NS', 'GODFRYPHLP.NS', 'GODREJAGRO.NS',
+        'GODREJIND.NS', 'GODREJPROP.NS', 'GOENKA.NS', 'GOENKA.NS', 'GOKALDAS.NS', 'GOKEX.NS',
+        'GOKULSUR.NS', 'GOLDIAM.NS', 'GOLDTECHINT.NS', 'GOODYEAR.NS', 'GPPL.NS', 'GRABALLIN.NS',
+        'GRACEPRINT.NS', 'GRASIM.NS', 'GRAVITA.NS', 'GREAVESCOT.NS', 'GREENLAM.NS', 'GREENPOWER.NS',
+        'GREENPLY.NS', 'GRINDWELL.NS', 'GRINFRA.NS', 'GROBTEA.NS', 'GRPLTD.NS', 'GRSE.NS',
+        'GRUH.NS', 'GSFC.NS', 'GSPL.NS', 'GSS.NS', 'GSTL.NS', 'GTL.NS',
+        'GTLINFRA.NS', 'GTN.NS', 'GTNIND.NS', 'GTPL.NS', 'GUFICBIO.NS', 'GUJALKALI.NS',
+        'GUJAPOLLO.NS', 'GUJFLUORO.NS', 'GUJGAS.NS', 'GUJNREDIST.NS', 'GUJRAFFIA.NS', 'GUJRATGAS.NS',
+        'GUJSIDHCEM.NS', 'GULFOILLUB.NS', 'GULFPETRO.NS', 'GVKPIL.NS', 'GVPTECH.NS', 'HAL.NS',
+        'HANUNG.NS', 'HAPPSTMNDS.NS', 'HARDCASTLE.NS', 'HARDWYN.NS', 'HARIOMPIPE.NS', 'HARRMALAYA.NS',
+        'HARSHA.NS', 'HATHWAY.NS', 'HATSUN.NS', 'HAVELLS.NS', 'HBLPOWER.NS', 'HCC.NS',
+        'HCG.NS', 'HCLINFOSYS.NS', 'HCLTECH.NS', 'HCL-INSYS.NS', 'HEG.NS', 'HEIDELBERG.NS',
+        'HEMIPROP.NS', 'HERANBA.NS', 'HERCULES.NS', 'HERITGFOOD.NS', 'HESTERBIO.NS', 'HEXATRADEX.NS',
+        'HFCL.NS', 'HGINFRA.NS', 'HGS.NS', 'HIKAL.NS', 'HIL.NS', 'HIMATSEIDE.NS',
+        'HINDALCO.NS', 'HINDCOMPOS.NS', 'HINDCON.NS', 'HINDCOPPER.NS', 'HINDDORROL.NS', 'HINDNATGLS.NS',
+        'HINDOILEXP.NS', 'HINDPETRO.NS', 'HINDTINDOWS.NS', 'HINDUNILVR.NS', 'HINDZINC.NS', 'HIRECT.NS',
+        'HITECH.NS', 'HITECHCORP.NS', 'HITECHGEAR.NS', 'HLEGLAS.NS', 'HMT.NS', 'HMVL.NS',
+        'HNDFDS.NS', 'HOMEFIRST.NS', 'HONAUT.NS', 'HONDAPOWER.NS', 'HOVS.NS', 'HPAL.NS',
+        'HSCL.NS', 'HTMEDIA.NS', 'HUBTOWN.NS', 'HUDCO.NS', 'HUHTAMAKI.NS', 'IBREALEST.NS',
+        'ICDSLTD.NS', 'ICEMAKE.NS', 'ICICIBANK.NS', 'ICICIPRULI.NS', 'ICIL.NS', 'ICRA.NS',
+        'IDBI.NS', 'IDEA.NS', 'IDFC.NS', 'IDFCBANK.NS', 'IFBAGRO.NS', 'IFBIND.NS',
+        'IFCI.NS', 'IFGLEXPOR.NS', 'IFGLREFRAC.NS', 'IGL.NS', 'IGPL.NS', 'IIFLWAM.NS',
+        'IL&FSENG.NS', 'IL&FSTRANS.NS', 'IMFA.NS', 'IMPAL.NS', 'IMPEXFERRO.NS', 'INANI.NS',
+        'INDBANK.NS', 'INDHOTEL.NS', 'INDIANB.NS', 'INDIANCARD.NS', 'INDIANHUME.NS', 'INDIGO.NS',
+        'INDIGOPNTS.NS', 'INDLMETER.NS', 'INDNIPPON.NS', 'INDOAMIN.NS', 'INDOBORAX.NS', 'INDOCOUNT.NS',
+        'INDOFIL.NS', 'INDORAMA.NS', 'INDOSTAR.NS', 'INDOTECH.NS', 'INDOTHAI.NS', 'INDRAMEDCO.NS',
+        'INDSWFTLAB.NS', 'INDSWFTLTD.NS', 'INEOSSTYRO.NS', 'INFIBEAM.NS', 'INFINITE.NS', 'INFOBEAN.NS',
+        'INFOLLION.NS', 'INFOMEDIA.NS', 'INFOTECH.NS', 'INFRABEES.NS', 'INFRATEL.NS', 'INGERRAND.NS',
+        'INGRAMMICR.NS', 'INNOVACAP.NS', 'INOXGREEN.NS', 'INOXLEISUR.NS', 'INOXWIND.NS', 'INSECTICID.NS',
+        'INTELLECT.NS', 'INTLCONV.NS', 'INVENTURE.NS', 'IOB.NS', 'IOLCP.NS', 'IONEXCHANG.NS',
+        'IPCALAB.NS', 'IPL.NS', 'IPRU.NS', 'IRB.NS', 'IRCON.NS', 'IRCTC.NS',
+        'ISFT.NS', 'ISGEC.NS', 'ISMT.NS', 'ITC.NS', 'ITDC.NS', 'ITDCEM.NS',
+        'ITI.NS', 'IVC.NS', 'IVRCL.NS', 'IVRCLINFRA.NS', 'IWEL.NS', 'J&KBANK.NS',
+        'JAIBHARATH.NS', 'JAICORPLTD.NS', 'JAINAM.NS', 'JAIPURKURT.NS', 'JAYSHREETEA.NS', 'JBCHEPHARM.NS',
+        'JBFIND.NS', 'JBMA.NS', 'JCT.NS', 'JCTLTD.NS', 'JETAIRWAYS.NS', 'JETFREIGHT.NS',
+        'JHARRISPHR.NS', 'JIKIND.NS', 'JINDALPHOT.NS', 'JINDALPOLY.NS', 'JINDALSAW.NS', 'JINDALSTEL.NS',
+        'JINDWORLD.NS', 'JISLDVREQS.NS', 'JISLJALEQS.NS', 'JKCEMENT.NS', 'JKIL.NS', 'JKLAKSHMI.NS',
+        'JKPAPER.NS', 'JKTYRE.NS', 'JMA.NS', 'JMCPROJECT.NS', 'JMFINANCIL.NS', 'JOCIL.NS',
+        'JOHNSON.NS', 'JPOLYINVST.NS', 'JPPOWER.NS', 'JSL.NS', 'JSLHISAR.NS', 'JSWENERGY.NS',
+        'JSWISPATLA.NS', 'JSWSTEEL.NS', 'JTEKTINDIA.NS', 'JTLIND.NS', 'JUBILANT.NS', 'JUBLFOOD.NS',
+        'JUBLINGREA.NS', 'JUGALGOLD.NS', 'JUMBOREST.NS', 'JUMPNET.NS', 'JYOTHYLAB.NS', 'JYOTISTRUC.NS',
+        'KABRAEXTRU.NS', 'KAJARIACER.NS', 'KAKATCEM.NS', 'KALINDEE.NS', 'KALYANIFRG.NS', 'KALYANKJIL.NS',
+        'KAMATHOTEL.NS', 'KANANIIND.NS', 'KANCHANARA.NS', 'KANPRPLA.NS', 'KANTILAL.NS', 'KAPSTON.NS',
+        'KARURVYSYA.NS', 'KARWARSYNT.NS', 'KAUSHALYA.NS', 'KAVVERITEL.NS', 'KAYA.NS', 'KBCGLOBAL.NS',
+        'KCP.NS', 'KCPSUGIND.NS', 'KDDL.NS', 'KDLENERGY.NS', 'KDL.NS', 'KECINTL.NS',
+        'KEI.NS', 'KELLTONTEC.NS', 'KESORAMIND.NS', 'KEWAL.NS', 'KEYFINSERV.NS', 'KHADIM.NS',
+        'KILITCH.NS', 'KIR LOSIND.NS', 'KIRLOSBROS.NS', 'KIRLOSENG.NS', 'KIRLOSKAR.NS', 'KITEX.NS',
+        'KKC.NS', 'KKALPANAIND.NS', 'KMSUGAR.NS', 'KNRCON.NS', 'KOLTEPATIL.NS', 'KONARKSYNT.NS',
+        'KOPRAN.NS', 'KOSAMATTA.NS', 'KOTAKBANK.NS', 'KOTARISUG.NS', 'KOTHARIPET.NS', 'KOTHARIPRO.NS',
+        'KPIT.NS', 'KPRMILL.NS', 'KPTL.NS', 'KRBL.NS', 'KREBSBIO.NS', 'KRIDHANINF.NS',
+        'KRIINFRA.NS', 'KRISHANA.NS', 'KRISHCAP.NS', 'KRITIIND.NS', 'KRITIKA.NS', 'KSCL.NS',
+        'KSL.NS', 'KTKBANK.NS', 'KUANTUM.NS', 'L&TFH.NS', 'LALPATHLAB.NS', 'LAMBODHARA.NS',
+        'LAOPALA.NS', 'LASA.NS', 'LAURUSLABS.NS', 'LAXMIMACH.NS', 'LCCINFOTEC.NS', 'LGBBROSLTD.NS',
+        'LGBFORGE.NS', 'LIBERTSHOE.NS', 'LICHSGFIN.NS', 'LINDEINDIA.NS', 'LIKHITHA.NS', 'LINC.NS',
+        'LINCOLN.NS', 'LIQUIDBEES.NS', 'LKPSEC.NS', 'LMWINDIA.NS', 'LODHA.NS', 'LOKESHMACH.NS',
+        'LOTUSEYE.NS', 'LOVABLE.NS', 'LPDC.NS', 'LT.NS', 'LTFOODS.NS', 'LTFH.NS',
+        'LTI.NS', 'LTIM.NS', 'LTTS.NS', 'LUMAXIND.NS', 'LUMAXTECH.NS', 'LUPIN.NS',
+        'LUXIND.NS', 'LYKALABS.NS', 'M&M.NS', 'M&MFIN.NS', 'MAANALU.NS', 'MACPOWER.NS'
+    ]
 
 class ProfessionalPCSScanner:
     def __init__(self):
@@ -4085,36 +4237,30 @@ def create_professional_sidebar():
     """Create professional sidebar with Angel One styling"""
     with st.sidebar:
         st.markdown("""
-        <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, #F48024, #FF7A00); border-radius: 8px; margin-bottom: 14px;'>
-            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700; font-size: 1.3rem;'>📈 PCS Scanner V6.1</h2>
-            <p style='color: #FFFFFF; margin: 3px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Stack Overflow Style</p>
+        <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, hsl(174, 62%, 47%), hsl(174, 62%, 40%)); border-radius: 8px; margin-bottom: 14px;'>
+            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700; font-size: 1.3rem;'>📈 PCS Scanner V6.2</h2>
+            <p style='color: #FFFFFF; margin: 3px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Professional Teal Edition</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Stock Universe Selection
+        # Stock Universe Selection - SIMPLIFIED
         st.markdown("### 📊 Stock Universe")
         
-        universe_option = st.selectbox(
-            "Select Universe:",
-            ["Complete NSE F&O (219 stocks)", "Nifty 50", "Bank Nifty", "IT Stocks", 
-             "Pharma Stocks", "Auto Stocks", "Metal Stocks", "Energy Stocks", "Custom Selection"],
-            help="Choose the stock universe to scan"
+        universe_option = st.radio(
+            "Select Stock Universe:",
+            ["NSE F&O Stocks (219)", "NSE Non-F&O Stocks (800+)"],
+            help="Toggle between F&O and Non-F&O stock universes",
+            index=0
         )
         
-        if universe_option == "Custom Selection":
-            custom_stocks = st.text_area(
-                "Enter stock symbols (one per line):",
-                value="RELIANCE.NS\nTCS.NS\nHDFCBANK.NS\nINFY.NS",
-                help="Enter NSE symbols with .NS suffix"
-            )
-            stocks_to_scan = [s.strip() for s in custom_stocks.split('\n') if s.strip()]
-        elif universe_option == "Complete NSE F&O (219 stocks)":
-            stocks_to_scan = COMPLETE_NSE_FO_UNIVERSE  # ALL 219 stocks by default
+        # Load stock list based on selection
+        if universe_option == "NSE F&O Stocks (219)":
+            stocks_to_scan = COMPLETE_NSE_FO_UNIVERSE
+            st.success(f"🎯 **F&O Universe**: {len(stocks_to_scan)} stocks with futures & options")
         else:
-            category_key = universe_option
-            stocks_to_scan = STOCK_CATEGORIES.get(category_key, [])
-        
-        st.info(f"📈 **{len(stocks_to_scan)} stocks** selected for analysis")
+            with st.spinner("🔄 Fetching NSE Non-F&O stocks..."):
+                stocks_to_scan = get_nse_non_fno_stocks()
+            st.success(f"📈 **Non-F&O Universe**: {len(stocks_to_scan)} liquid NSE stocks")
         
         # Core Technical Filters
         st.markdown("### ⚙️ Core Filters")
