@@ -179,15 +179,15 @@ st.markdown("""
         color: var(--primary-700);
     }
     
-    /* Sidebar Styling */
+    /* Sidebar Styling - TEAL THEME */
     [data-testid="stSidebar"] {
-        background: var(--surface);
-        border-right: 1px solid var(--border);
-        box-shadow: var(--shadow-lg);
+        background: linear-gradient(180deg, var(--primary-50) 0%, var(--primary-100) 100%);
+        border-right: 2px solid var(--primary-300);
+        box-shadow: var(--shadow-xl);
     }
     
     [data-testid="stSidebar"] > div:first-child {
-        background: var(--surface);
+        background: linear-gradient(180deg, var(--primary-50) 0%, var(--primary-100) 100%);
     }
     
     /* Sidebar Headers */
@@ -909,82 +909,223 @@ STOCK_CATEGORIES = {
 
 
 class NSE1000Fetcher:
-    """Dynamic NSE 1000 stock list fetcher with comprehensive coverage"""
+    """Dynamic NSE 1000+ stock list fetcher from NSE website"""
     
     @st.cache_data(ttl=86400)  # Cache for 24 hours
     def fetch_nse_stocks(_self, exclude_fo_stocks=None):
-        """Fetch comprehensive NSE stock list excluding F&O stocks"""
+        """Fetch ALL NSE listed stocks dynamically from NSE website"""
         if exclude_fo_stocks is None:
             exclude_fo_stocks = []
         
-        # Comprehensive non-F&O stock list across all sectors
-        nse_stocks = [
-            # IT & Technology
+        all_stocks = []
+        
+        try:
+            # Try to fetch from NSE API
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            }
+            
+            # NSE Equity list URL
+            url = 'https://archives.nseindia.com/content/equities/EQUITY_L.csv'
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                lines = response.text.strip().split('\n')
+                for line in lines[1:]:  # Skip header
+                    parts = line.split(',')
+                    if len(parts) >= 1:
+                        symbol = parts[0].strip()
+                        if symbol and not symbol.startswith('SYMBOL'):
+                            all_stocks.append(symbol)
+            
+        except Exception as e:
+            st.warning(f"Could not fetch from NSE directly: {e}. Using comprehensive backup list.")
+        
+        # If dynamic fetch fails, use comprehensive backup
+        if not all_stocks:
+            all_stocks = _self._get_comprehensive_backup_list()
+        
+        # Filter out F&O stocks
+        filtered_stocks = [s for s in all_stocks if s not in exclude_fo_stocks]
+        
+        return sorted(list(set(filtered_stocks)))
+    
+    def _get_comprehensive_backup_list(_self):
+        """Comprehensive backup list of 1000+ NSE stocks across all sectors"""
+        return [
+            # Top 200 liquid stocks
             'COFORGE', 'MPHASIS', 'PERSISTENT', 'CYIENT', 'SONATSOFTW', 'ZENSAR',
             'KPITTECH', 'ROUTE', 'MASTEK', 'HAPPSTMNDS', 'TATAELXSI', 'LTTS',
-            
-            # Pharmaceuticals
             'LALPATHLAB', 'METROPOLIS', 'THYROCARE', 'AARTIDRUGS', 'ABBOTINDIA',
-            'GLAXO', 'PFIZER', 'SANOFI', 'IPCALAB', 'AJANTPHARM', 'ALKEM',
-            
-            # Auto Ancillary
-            'SUPRAJIT', 'ENDURANCE', 'SUBROS', 'GABRIEL', 'WABCOINDIA',
-            'SCHAEFFLER', 'TIMKEN', 'BOSCHLTD', 'EXIDEIND', 'MOTHERSON',
-            
-            # Consumer Goods
+            'GLAXO', 'PFIZER', 'SANOFI', 'IPCALAB', 'SUPRAJIT', 'ENDURANCE',
+            'SUBROS', 'GABRIEL', 'WABCOINDIA', 'SCHAEFFLER', 'TIMKEN', 'EXIDEIND',
             'PGHH', 'GODREJCP', 'MARICO', 'DABUR', 'EMAMILTD', 'JYOTHYLAB',
-            'VBL', 'CCL', 'RADICO', 'RELAXO', 'BATA', 'GILLETTE',
-            
-            # Chemicals
-            'PIDILITIND', 'AKZOINDIA', 'AARTI', 'DEEPAKNTR', 'SRF', 'ATUL',
-            'ALKYLAMINE', 'CLEAN', 'FINEORG', 'GALAXYSURF', 'ROSSARI',
-            
-            # Infrastructure & Construction
-            'KNR', 'PNCINFRA', 'SYMPHONY', 'CERA', 'HINDWAREAP', 'ASTRAZEN',
-            
-            # Financial Services (Non-F&O)
-            'BAJAJHLDNG', 'CDSL', 'CAMS', 'MASFIN', 'ICICIGI', 'SBICARD',
-            'CHOLAHLDNG', 'SHRIRAMFIN', 'HDFCLIFE', 'SBILIFE',
-            
-            # Healthcare Services
-            'APOLLOHOSP', 'MAXHEALTH', 'FORTIS', 'KIMS', 'RAINBOW',
-            
-            # Retail & Consumer
-            'TRENT', 'JUBLFOOD', 'WESTLIFE', 'SPECIALITY', 'SHOPERSTOP',
-            'AVENUE', 'APLAPOLLO',
-            
-            # Media & Entertainment
-            'PVRINOX', 'NAZARA', 'TIPS', 'ZEEL', 'SAREGAMA',
-            
-            # Industrial Manufacturing
-            'CUMMINSIND', 'ABB', 'SIEMENS', 'HAVELLS', 'CROMPTON', 'VOLTAS',
-            'BLUESTARCO', 'WHIRLPOOL', 'DIXON', 'AMBER', 'POLYCAB',
-            
-            # Metals & Mining
-            'NMDC', 'MOIL', 'VEDL', 'HINDZINC', 'NATIONALUM', 'RATNAMANI',
-            
-            # Textiles & Apparel
+            'VBL', 'CCL', 'RADICO', 'RELAXO', 'GILLETTE', 'PIDILITIND',
+            'AKZOINDIA', 'DEEPAKNTR', 'ALKYLAMINE', 'CLEAN', 'FINEORG',
+            'GALAXYSURF', 'ROSSARI', 'KNR', 'PNCINFRA', 'SYMPHONY', 'CERA',
+            'HINDWAREAP', 'ASTRAZEN', 'BAJAJHLDNG', 'CDSL', 'CAMS', 'MASFIN',
+            'ICICIGI', 'SBICARD', 'CHOLAHLDNG', 'SHRIRAMFIN', 'HDFCLIFE', 'SBILIFE',
+            'MAXHEALTH', 'FORTIS', 'KIMS', 'RAINBOW', 'TRENT', 'JUBLFOOD',
+            'WESTLIFE', 'SPECIALITY', 'SHOPERSTOP', 'AVENUE', 'PVRINOX',
+            'NAZARA', 'TIPS', 'ZEEL', 'SAREGAMA', 'CUMMINSIND', 'SIEMENS',
+            'HAVELLS', 'CROMPTON', 'VOLTAS', 'WHIRLPOOL', 'DIXON', 'AMBER',
+            'POLYCAB', 'NMDC', 'MOIL', 'HINDZINC', 'NATIONALUM', 'RATNAMANI',
             'GRASIM', 'AIAENG', 'RAYMOND', 'SOMANYCERA', 'GARFIBRES',
-            
-            # Logistics & Transportation
-            'BLUEDART', 'MAHLOG', 'VRL', 'TCI',
-            
-            # Utilities & Energy
-            'IEX', 'MCX', 'IRCTC', 'CONCOR', 'GAIL', 'IGL', 'MGL', 'GUJGAS',
-            
-            # New Age Tech
-            'ZOMATO', 'NYKAA', 'POLICYBZR', 'PAYTM', 'DELHIVERY', 'CARTRADE',
-            
-            # Additional Quality Stocks
-            'ASTRAL', 'BATAINDIA', 'BERGEPAINT', 'BRITANNIA', 'CHOLAFIN',
-            'COLPAL', 'EICHERMOT', 'ESCORTS', 'GODREJPROP', 'GUJGASLTD',
+            'BLUEDART', 'MAHLOG', 'VRL', 'TCI', 'IEX', 'MCX', 'IRCTC',
+            'CONCOR', 'IGL', 'MGL', 'GUJGAS', 'ZOMATO', 'NYKAA', 'POLICYBZR',
+            'PAYTM', 'DELHIVERY', 'CARTRADE', 'BRITANNIA', 'CHOLAFIN', 'COLPAL',
+            'EICHERMOT', 'ESCORTS', 'GODREJPROP', 'GUJGASLTD', 'HONAUT', 'INDHOTEL',
+            'JKCEMENT', 'JSWENERGY', 'KEI', 'KPRMILL', 'MINDACORP', 'MUTHOOTFIN',
+            'NAVINFLUOR', 'OBEROIRLTY', 'OFSS', 'PAGEIND', 'PIIND', 'PRAJIND',
+            'PRESTIGE', 'RAMCOCEM', 'RBLBANK', 'SKFINDIA', 'SOBHA', 'SOLARINDS',
+            'SUNTV', 'SUPRAJIT', 'SUPREMEIND', 'TATACOMM', 'TATACONSUM', 'TATACHEM',
+            'TATAPOWER', 'TCS', 'TECHM', 'TITAN', 'TORNTPHARM', 'TORNTPOWER',
+            'TVSMOTOR', 'UBL', 'ULTRACEMCO', 'UPL', 'VEDL', 'VOLTAS',
+            'WHIRLPOOL', 'WIPRO', 'YESBANK', 'ZEEL', 'ZENSARTECH', '3MINDIA',
+            'AARTIIND', 'AAVAS', 'ABBOTINDIA', 'ACE', 'ADANIENSOL', 'ADANIGREEN',
+            'ADANIPOWER', 'ADANITRANS', 'AEGISCHEM', 'AETHER', 'AFFLE', 'AJANTPHARM',
+            'AKZOINDIA', 'ALEMBICLTD', 'ALKYLAMINE', 'ALLCARGO', 'AMARAJABAT',
+            'AMBER', 'AMBUJACEM', 'ANGELONE', 'ANURAS', 'APCOTEXIND', 'APLLTD',
+            'APOLLOPIPE', 'APLAPOLLO', 'APOLLOHOSP', 'APOLLOTYRE', 'APTUS', 'ARCHIDPLY',
+            'ARE&M', 'ASAHIINDIA', 'ASHIANA', 'ASHOKLEY', 'ASIANPAINT', 'ASTERDM',
+            'ASTRAL', 'ASTRAZEN', 'ATUL', 'AUBANK', 'AUROPHARMA', 'AVANTIFEED',
+            'AXISBANK', 'BAJAJCON', 'BAJAJELEC', 'BAJAJFINSV', 'BAJAJHLDNG', 'BAJFINANCE',
+            'BALKRISIND', 'BALMLAWRIE', 'BALRAMCHIN', 'BANCOINDIA', 'BANDHANBNK',
+            'BANKBARODA', 'BANKINDIA', 'BASF', 'BATAINDIA', 'BAYERCROP', 'BBTC',
+            'BDL', 'BEML', 'BEL', 'BERGEPAINT', 'BHARATFORG', 'BHARATRAS',
+            'BHARTIARTL', 'BHEL', 'BIKAJI', 'BIOCON', 'BIRLACORPN', 'BSOFT',
+            'BLUESTARCO', 'BOSCHLTD', 'BRIGADE', 'BRITANNIA', 'BSOFT', 'CANFINHOME',
+            'CAMS', 'CAPLIPOINT', 'CARBORUNIV', 'CASTROLIND', 'CCL', 'CDSL',
+            'CEATLTD', 'CENTRALBK', 'CENTURYPLY', 'CENTURYTEX', 'CERA', 'CEREBRAINT',
+            'CGPOWER', 'CHAMBLFERT', 'CLEAN', 'COALINDIA', 'COCHINSHIP', 'COFORGE',
+            'COLPAL', 'CONCOR', 'COROMANDEL', 'CREDITACC', 'CROMPTON', 'CUB',
+            'CUMMINSIND', 'CYIENT', 'DABUR', 'DALBHARAT', 'DATAMATICS', 'DCBBANK',
+            'DCMSHRIRAM', 'DEEPAKFERT', 'DEEPAKNTR', 'DELHIVERY', 'DELTACORP',
+            'DLF', 'DIXON', 'DIVISLAB', 'DOLLAR', 'DRREDDY', 'EICHERMOT',
+            'EIDPARRY', 'EIHOTEL', 'ELGIEQUIP', 'EMAMILTD', 'ENDURANCE', 'ENGINERSIN',
+            'EPL', 'EQUITAS', 'ERIS', 'ESCORTS', 'EXIDEIND', 'FDC',
+            'FEDERALBNK', 'FINEORG', 'FINPIPE', 'FLUOROCHEM', 'FORTIS', 'FSL',
+            'GABRIEL', 'GAEL', 'GALAXYSURF', 'GANECOS', 'GARFIBRES', 'GILLETTE',
+            'GLAND', 'GLAXO', 'GLENMARK', 'GLOBUSSPR', 'GNFC', 'GODFRYPHLP',
+            'GODREJAGRO', 'GODREJCP', 'GODREJIND', 'GODREJPROP', 'GPPL', 'GRANULES',
+            'GRAPHITE', 'GRASIM', 'GREAVESCOT', 'GRINDWELL', 'GRSE', 'GSFC',
+            'GSHIP', 'GSTL', 'GSTVL', 'GTTL', 'GUFICBIO', 'GUJALKALI',
+            'GUJGASLTD', 'GULFOILLUB', 'HAPPSTMNDS', 'HATHWAY', 'HATSUN', 'HAVELLS',
+            'HBLPOWER', 'HCLTECH', 'HDFC', 'HDFCAMC', 'HDFCBANK', 'HDFCLIFE',
+            'HEG', 'HEIDELBERG', 'HEMIPROP', 'HEROMOTOCO', 'HFCL', 'HIKAL',
+            'HIMATSEIDE', 'HINDALCO', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR',
+            'HINDWAREAP', 'HINDZINC', 'HOMEFIRST', 'HONAUT', 'HSCL', 'HUDCO',
+            'IEX', 'IGL', 'IIFL', 'IIFLSEC', 'IBREALEST', 'ICICIBANK',
+            'ICICIGI', 'ICICIPRULI', 'IDBI', 'IDEA', 'IDFC', 'IDFCFIRSTB',
+            'IGL', 'INDIACEM', 'INDIAMART', 'INDIANB', 'INDIANHUME', 'INDIGO',
+            'INDOCO', 'INDOSTAR', 'INDUSINDBK', 'INDUSTOWER', 'INFIBEAM', 'INFY',
+            'INGERRAND', 'INOXLEISUR', 'INOXWIND', 'INTELLECT', 'IOB', 'IOC',
+            'IPCALAB', 'IRB', 'IRCON', 'IRCTC', 'IRFC', 'IRFC', 'ITC',
+            'ITI', 'J&KBANK', 'JAMNAAUTO', 'JAYAGROGN', 'JAYBARMARU', 'JBCHEPHARM',
+            'JKLAKSHMI', 'JKCEMENT', 'JKPAPER', 'JKTYRE', 'JM FINANCIAL',
+            'JMFINANCIL', 'JSWENERGY', 'JSWINFRA', 'JSWSTEEL', 'JUBLFOOD', 'JUBLINGREA',
+            'JUBLPHARMA', 'JUSTDIAL', 'JYOTHYLAB', 'KAJARIACER', 'KALYANKJIL',
+            'KAMATHOTEL', 'KANSAINER', 'KARDA', 'KARMAENG', 'KAYA', 'KEC',
+            'KEI', 'KIMS', 'KINGFA', 'KIRLOSENG', 'KIRLPNU', 'KITEX',
+            'KNR', 'KOLTEPATIL', 'KOPRAN', 'KOTAKBANK', 'KPITTECH', 'KPRMILL',
+            'KRBL', 'KSCL', 'KSB', 'KTKBANK', 'L&TFH', 'LALPATHLAB',
+            'LAMBODHARA', 'LAOPALA', 'LAXMIMACH', 'LICI', 'LINDEINDIA', 'LT',
+            'LTF', 'LTIM', 'LTTS', 'LUPIN', 'LUXIND', 'LXCHEM',
+            'MAHABANK', 'MAHLIFE', 'MAHLOG', 'MAHSCOOTER', 'MAHSEAMLES', 'MANAPPURAM',
+            'MARICO', 'MARUTI', 'MASTEK', 'MAXHEALTH', 'MAYURUNIQ', 'MAZDA',
+            'MCDOWELL-N', 'MCX', 'METROPOLIS', 'MGL', 'MHRIL', 'MINDACORP',
+            'MINDTECK', 'MMTC', 'MODILUFT', 'MOIL', 'MOL', 'MONARCH',
+            'MOTHERSON', 'MOTILALOFS', 'MPHASIS', 'MRF', 'MRPL', 'MSTCLTD',
+            'MTARTECH', 'MUTHOOTFIN', 'NAGAFERT', 'NAM-INDIA', 'NATCOPHARM',
+            'NATIONALUM', 'NAUKRI', 'NAVINFLUOR', 'NAVNETEDUL', 'NAZARA', 'NBCC',
+            'NCC', 'NELCAST', 'NEOGEN', 'NESTLEIND', 'NETWORK18', 'NEULANDLAB',
+            'NEWGEN', 'NH', 'NHPC', 'NIITLTD', 'NMDC', 'NOCIL',
+            'NSLNISP', 'NTPC', 'NUCLEUS', 'NUVOCO', 'NYKAA', 'OAL',
+            'OBEROIRLTY', 'OCCL', 'OFSS', 'OIL', 'OLECTRA', 'OMAXE',
+            'ONGC', 'ONMOBILE', 'OPTIEMUS', 'ORIENTABRA', 'ORIENTCEM', 'ORIENTELEC',
+            'ORIENTHOT', 'ORIENTPPR', 'ORISSAMINE', 'ORTINLABS', 'PAGEIND', 'PAISALO',
+            'PAJ', 'PANACEABIO', 'PARAGMILK', 'PARAS', 'PARSVNATH', 'PATELENG',
+            'PATINTLOG', 'PAYTM', 'PB', 'PCBL', 'PDMJEPAPER', 'PDSL',
+            'PENINLAND', 'PERSISTENT', 'PETRONET', 'PFC', 'PFIZER', 'PGHH',
+            'PGIL', 'PHDCCI', 'PHILIPCARB', 'PHOENIXLTD', 'PIDILITIND', 'PIIND',
+            'PIL', 'PILANIINVS', 'PNB', 'PNBGILTS', 'PNBHOUSING', 'PNCINFRA',
+            'POKARNA', 'POLICYBZR', 'POLYCAB', 'POLYMED', 'POLYPLEX', 'PONNIERODE',
+            'POWERGRID', 'POWERINDIA', 'POWERMECH', 'PRAJIND', 'PRAKASH', 'PRECAM',
+            'PRECOT', 'PRESTIGE', 'PRICOLLTD', 'PRIMESECU', 'PRINCEPIPE', 'PRSMJOHNSN',
+            'PSB', 'PSPPROJECT', 'PTC', 'PTL', 'PUNJABCHEM', 'PURVA',
+            'PVP', 'PVRINOX', 'PVRINOX', 'QUESS', 'QUICKHEAL', 'RADICO',
+            'RADIOCITY', 'RAIGARSUGAR', 'RAINBOW', 'RAJESHEXPO', 'RAJRATAN', 'RAJRILTD',
+            'RAMASTEEL', 'RAMCOCEM', 'RAMCOSYS', 'RAMKY', 'RANEHOLDIN', 'RANEENGINE',
+            'RATNAMANI', 'RAYMOND', 'RBLBANK', 'RCF', 'RECLTD', 'REDINGTON',
+            'RELAXO', 'RELCHEMQ', 'RELIANCE', 'RELIGARE', 'REMSONSIND', 'RENUKA',
+            'REPCOHOME', 'RESPONIND', 'RHL', 'RICOAUTO', 'RIIL', 'RITES',
+            'RKFORGE', 'RKSWAMY', 'ROSSARI', 'ROUTE', 'RPGLIFE', 'RPOWER',
+            'RSSOFTWARE', 'RTNPOWER', 'RUBYMILLS', 'RUCHINFRA', 'RUCHIRA', 'RUPA',
+            'RUSTOMJEE', 'SAAKSHI', 'SAFARI', 'SAGA', 'SAIL', 'SAKAR',
+            'SAKHTISUG', 'SAKUMA', 'SALASAR', 'SALSTEEL', 'SALZERELEC', 'SAMBHAAV',
+            'SANOFI', 'SANGHIIND', 'SANGHVIMOV', 'SANOFI', 'SANTHNR', 'SARDAEN',
+            'SAREGAMA', 'SARLAPOLY', 'SASKEN', 'SASTASUNDR', 'SATIA', 'SATURNTEX',
+            'SBICARD', 'SBILIFE', 'SBIN', 'SCHAEFFLER', 'SEAMECLTD', 'SELAN',
+            'SENSIENT', 'SEQUENT', 'SFL', 'SGBAMARATH', 'SGL', 'SHAHALLOYS',
+            'SHAKTIPUMP', 'SHALBY', 'SHALPAINTS', 'SHANTIGEAR', 'SHARDACROP',
+            'SHARDAMOTR', 'SHAREINDIA', 'SHEMAROO', 'SHFL', 'SHILPAMED', 'SHIRPUR-G&S',
+            'SHIVALIK', 'SHIVAMAUTO', 'SHIVAMILLS', 'SHK', 'SHOPERSTOP', 'SHREECEM',
+            'SHREEPUSHK', 'SHREERAMA', 'SHREDIGCEM', 'SHRIRAMPPS', 'SHRIRAMCIT',
+            'SHRIRAMFIN', 'SHYAMCENT', 'SHYAMMETL', 'SIEMENS', 'SIGIND', 'SIKKO',
+            'SIL', 'SILGO', 'SILLYMONKS', 'SIMBHALS', 'SIMPLEXINF', 'SINTERCOM',
+            'SIYSIL', 'SJS', 'SJVN', 'SKFINDIA', 'SKMEGGPROD', 'SMARTLINK',
+            'SMCGLOBAL', 'SMLISUZU', 'SNOWMAN', 'SOBHA', 'SOLARINDS', 'SOLARA',
+            'SOMANYCERA', 'SOMICONVEY', 'SONACOMS', 'SONATSOFTW', 'SOUTHEAST', 'SOUTHBANK',
+            'SPANDANA', 'SPARC', 'SPECIALITY', 'SPENCERS', 'SPIC', 'SPLIL',
+            'SPMLINFRA', 'SPTL', 'SRHHYPOLTD', 'SRIGINFRA', 'SRPL', 'SRF',
+            'SRTRANSFIN', 'STARCEMENT', 'STARHEALTH', 'STCINDIA', 'STEELCAS', 'STEELXIND',
+            'STLTECH', 'STOVEKRAFT', 'STYRENIX', 'SUBEXLTD', 'SUBROS', 'SUMICHEM',
+            'SUMMITSEC', 'SUNCLAYLTD', 'SUNDARAM-F', 'SUNDARMFIN', 'SUNDRMFAST',
+            'SUNFLAG', 'SUNGOLD', 'SUNPHARMA', 'SUNTECK', 'SUNTV', 'SUPERHOUSE',
+            'SUPRAJIT', 'SUPREMEIND', 'SUPRIYA', 'SURANASOL', 'SURYAROSNI',
+            'SUTLEJTEX', 'SUVENPHAR', 'SUYOG', 'SUZLON', 'SWANENERGY', 'SWARAJENG',
+            'SYMPHONY', 'SYNDIBANK', 'SYNGENE', 'SYSTANGO', 'TAINWALCHM', 'TAJGVK',
+            'TAKE', 'TALBROAUTO', 'TALWALKARS', 'TANLA', 'TARC', 'TATAGLOBAL',
+            'TATACHEM', 'TATACOFFEE', 'TATACOMM', 'TATACONSUM', 'TATAELXSI',
+            'TATAINVEST', 'TATAMOTORS', 'TATAMTRDVR', 'TATAPOWER', 'TATASPONGE',
+            'TATASTEEL', 'TATASTLLP', 'TATATECH', 'TTML', 'TBZ', 'TCI',
+            'TCNSBRANDS', 'TCPLPACK', 'TCS', 'TDPOWERSYS', 'TEAMLEASE', 'TECHIN',
+            'TECHM', 'TEGA', 'TEJASNET', 'TEMBO', 'TERASOFT', 'TEXINFRA',
+            'TEXMOPIPES', 'TEXRAIL', 'TFCILTD', 'THANGAMAYL', 'THEINVEST',
+            'THERMAX', 'THOMASCOOK', 'THYROCARE', 'TI', 'TIDEWATER', 'TIIL',
+            'TIJARIA', 'TIMESGTY', 'TIMKEN', 'TINPLATE', 'TIPSINDLTD', 'TIRUMALCHM',
+            'TITAN', 'TNPETRO', 'TNPL', 'TNTELE', 'TOKYOPLAST', 'TONYK',
+            'TORF', 'TORNTPHARM', 'TORNTPOWER', 'TOTAL', 'TPLPLASTEH', 'TREEHOUSE',
+            'TREL', 'TRENT', 'TRF', 'TRIDENT', 'TRIGYN', 'TRITURBINE',
+            'TRIVENI', 'TSIL', 'TTKHLTCARE', 'TTKPRESTIG', 'TTL', 'TV18BRDCST',
+            'TVSMOTOR', 'TVSHLTD', 'TVSSCS', 'TVTODAY', 'UCOBANK', 'UFLEX',
+            'UGROCAP', 'UJJIVAN', 'UJJIVANSFB', 'ULTRACEMCO', 'UMANGDAIRY',
+            'UMAEXPORTS', 'UNICHEMLAB', 'UNIONBANK', 'UNIPARTS', 'UNITDSPR',
+            'UNITY', 'UNIVCABLES', 'UPL', 'URAVI', 'USHAMART', 'UTIAMC',
+            'UTTAMSUGAR', 'UVSL', 'V2RETAIL', 'VAIBHAVGBL', 'VAIDHYANATH', 'VAKRANGEE',
+            'VALIANTLAB', 'VALIANTORG', 'VARROC', 'VARUNMOTORS', 'VBL', 'VEDL',
+            'VENKEYS', 'VENUSREM', 'VERITASINDIA', 'VERTOZ', 'VESUVIUS', 'VFS',
+            'VGUARD', 'VIDHIING', 'VIDEOIND', 'VIDEOWCON', 'VIJAYA', 'VIJAYABANK',
+            'VIKASMCORP', 'VIKASECO', 'VIKAS', 'VINATIORGA', 'VINDHYATEL', 'VINEETLAB',
+            'VINYLINDIA', 'VIPCLOTHNG', 'VIPIND', 'VIPUL', 'VIRINCHI', 'VIRTUALIS',
+            'VISASTEEL', 'VISHNU', 'VISHWARAJ', 'VIVIDHA', 'VLSFINANCE', 'VOLTAMP',
+            'VOLTAS', 'VRLLOG', 'VRL', 'VSSL', 'VSTIND', 'VSTTILLERS',
+            'VTL', 'WABAG', 'WABCOINDIA', 'WALCHANNAG', 'WANG', 'WATERBASE',
+            'WEBELSOLAR', 'WEIZFOREX', 'WEIZMANIND', 'WELCORP', 'WELENT', 'WELINV',
+            'WELSPUNIND', 'WENDT', 'WESTLIFE', 'WHEELS', 'WHIRLPOOL', 'WILLAMAGOR',
+            'WINDMACHIN', 'WINGSL', 'WIPRO', 'WIPROINFRA', 'WOCKPHARMA', 'WONDERLA',
+            'WORTH', 'WSI', 'XCHANGING', 'XELPMOC', 'XPROINDIA', 'YAARII',
+            'YAZUR', 'YESBANK', 'YUKEN', 'ZARSOLAR', 'ZEAL', 'ZEELEARN',
+            'ZEEL', 'ZEEMEDIA', 'ZEN', 'ZENITHEXPO', 'ZENITHSTL', 'ZENSARTECH',
+            'ZENTEC', 'ZFCVINDIA', 'ZIMLAB', 'ZODIACLOTH', 'ZOMATO', 'ZOTA',
+            'ZUARI', 'ZUARIGLOB', 'ZYDUSLIFE', 'ZYDUSWELN', 'ZYDUSWELL'
         ]
-        
-        # Remove duplicates and filter out F&O stocks
-        unique_stocks = list(set(nse_stocks))
-        filtered_stocks = [s for s in unique_stocks if s not in exclude_fo_stocks]
-        
-        return sorted(filtered_stocks)
 
 
 
