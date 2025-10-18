@@ -14,6 +14,8 @@ import warnings
 import json
 from bs4 import BeautifulSoup
 import re
+from io import BytesIO
+import openpyxl
 warnings.filterwarnings('ignore')
 
 # Set page config
@@ -780,6 +782,41 @@ def get_nse_non_fno_stocks():
             
     except Exception as e:
         return _get_comprehensive_backup_list()
+
+def create_excel_stock_list(results):
+    """
+    Create Excel file with just stock symbols that met criteria.
+    Simple format: One column with stock symbols.
+    """
+    # Extract clean symbols from results
+    stock_symbols = []
+    for result in results:
+        # Remove .NS suffix and clean symbol
+        clean_symbol = result['symbol'].replace('.NS', '').replace('^', '')
+        stock_symbols.append(clean_symbol)
+    
+    # Create Excel workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Qualifying Stocks"
+    
+    # Add header
+    ws['A1'] = "Stock Symbol"
+    ws['A1'].font = openpyxl.styles.Font(bold=True, size=12)
+    
+    # Add stock symbols
+    for idx, symbol in enumerate(stock_symbols, start=2):
+        ws[f'A{idx}'] = symbol
+    
+    # Auto-adjust column width
+    ws.column_dimensions['A'].width = 20
+    
+    # Save to BytesIO
+    excel_buffer = BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
+    
+    return excel_buffer.getvalue()
 
 def _get_comprehensive_backup_list():
     """Comprehensive backup list of 814+ NSE stocks (non-F&O)"""
@@ -4919,6 +4956,26 @@ def create_main_scanner_tab(config):
                         )
                         if chart:
                             st.plotly_chart(chart, use_container_width=True)
+            
+            # Export to Excel button
+            st.markdown("---")
+            st.markdown("### 📥 Export Results")
+            
+            col1, col2, col3 = st.columns([1, 1, 2])
+            with col1:
+                # Create Excel file with stock symbols only
+                excel_data = create_excel_stock_list(results)
+                st.download_button(
+                    label="📊 Download Stock List (Excel)",
+                    data=excel_data,
+                    file_name=f"qualifying_stocks_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary"
+                )
+            
+            with col2:
+                st.info(f"📋 {len(results)} stocks will be exported")
+        
         else:
             st.warning("🔍 No current day patterns found. Try adjusting filters.")
             
