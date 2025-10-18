@@ -16,6 +16,11 @@ from bs4 import BeautifulSoup
 import re
 warnings.filterwarnings('ignore')
 
+# Enhanced sorting and data structures
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, field
+
+
 # Set page config
 st.set_page_config(
     page_title="NSE F&O PCS Professional Scanner", 
@@ -744,6 +749,168 @@ STOCK_CATEGORIES = {
         'GAIL.NS', 'NTPC.NS', 'POWERGRID.NS', 'TATAPOWER.NS', 'ADANIGREEN.NS'
     ]
 }
+
+
+class NSE1000Fetcher:
+    """Dynamic NSE 1000 stock list fetcher with comprehensive coverage"""
+    
+    @st.cache_data(ttl=86400)  # Cache for 24 hours
+    def fetch_nse_stocks(_self, exclude_fo_stocks=None):
+        """Fetch comprehensive NSE stock list excluding F&O stocks"""
+        if exclude_fo_stocks is None:
+            exclude_fo_stocks = []
+        
+        # Comprehensive non-F&O stock list across all sectors
+        nse_stocks = [
+            # IT & Technology
+            'COFORGE', 'MPHASIS', 'PERSISTENT', 'CYIENT', 'SONATSOFTW', 'ZENSAR',
+            'KPITTECH', 'ROUTE', 'MASTEK', 'HAPPSTMNDS', 'TATAELXSI', 'LTTS',
+            
+            # Pharmaceuticals
+            'LALPATHLAB', 'METROPOLIS', 'THYROCARE', 'AARTIDRUGS', 'ABBOTINDIA',
+            'GLAXO', 'PFIZER', 'SANOFI', 'IPCALAB', 'AJANTPHARM', 'ALKEM',
+            
+            # Auto Ancillary
+            'SUPRAJIT', 'ENDURANCE', 'SUBROS', 'GABRIEL', 'WABCOINDIA',
+            'SCHAEFFLER', 'TIMKEN', 'BOSCHLTD', 'EXIDEIND', 'MOTHERSON',
+            
+            # Consumer Goods
+            'PGHH', 'GODREJCP', 'MARICO', 'DABUR', 'EMAMILTD', 'JYOTHYLAB',
+            'VBL', 'CCL', 'RADICO', 'RELAXO', 'BATA', 'GILLETTE',
+            
+            # Chemicals
+            'PIDILITIND', 'AKZOINDIA', 'AARTI', 'DEEPAKNTR', 'SRF', 'ATUL',
+            'ALKYLAMINE', 'CLEAN', 'FINEORG', 'GALAXYSURF', 'ROSSARI',
+            
+            # Infrastructure & Construction
+            'KNR', 'PNCINFRA', 'SYMPHONY', 'CERA', 'HINDWAREAP', 'ASTRAZEN',
+            
+            # Financial Services (Non-F&O)
+            'BAJAJHLDNG', 'CDSL', 'CAMS', 'MASFIN', 'ICICIGI', 'SBICARD',
+            'CHOLAHLDNG', 'SHRIRAMFIN', 'HDFCLIFE', 'SBILIFE',
+            
+            # Healthcare Services
+            'APOLLOHOSP', 'MAXHEALTH', 'FORTIS', 'KIMS', 'RAINBOW',
+            
+            # Retail & Consumer
+            'TRENT', 'JUBLFOOD', 'WESTLIFE', 'SPECIALITY', 'SHOPERSTOP',
+            'AVENUE', 'APLAPOLLO',
+            
+            # Media & Entertainment
+            'PVRINOX', 'NAZARA', 'TIPS', 'ZEEL', 'SAREGAMA',
+            
+            # Industrial Manufacturing
+            'CUMMINSIND', 'ABB', 'SIEMENS', 'HAVELLS', 'CROMPTON', 'VOLTAS',
+            'BLUESTARCO', 'WHIRLPOOL', 'DIXON', 'AMBER', 'POLYCAB',
+            
+            # Metals & Mining
+            'NMDC', 'MOIL', 'VEDL', 'HINDZINC', 'NATIONALUM', 'RATNAMANI',
+            
+            # Textiles & Apparel
+            'GRASIM', 'AIAENG', 'RAYMOND', 'SOMANYCERA', 'GARFIBRES',
+            
+            # Logistics & Transportation
+            'BLUEDART', 'MAHLOG', 'VRL', 'TCI',
+            
+            # Utilities & Energy
+            'IEX', 'MCX', 'IRCTC', 'CONCOR', 'GAIL', 'IGL', 'MGL', 'GUJGAS',
+            
+            # New Age Tech
+            'ZOMATO', 'NYKAA', 'POLICYBZR', 'PAYTM', 'DELHIVERY', 'CARTRADE',
+            
+            # Additional Quality Stocks
+            'ASTRAL', 'BATAINDIA', 'BERGEPAINT', 'BRITANNIA', 'CHOLAFIN',
+            'COLPAL', 'EICHERMOT', 'ESCORTS', 'GODREJPROP', 'GUJGASLTD',
+        ]
+        
+        # Remove duplicates and filter out F&O stocks
+        unique_stocks = list(set(nse_stocks))
+        filtered_stocks = [s for s in unique_stocks if s not in exclude_fo_stocks]
+        
+        return sorted(filtered_stocks)
+
+
+
+@dataclass
+class SignalStrength:
+    """Professional signal strength calculation for smart sorting"""
+    symbol: str
+    pcs_score: float
+    pattern_strength: float
+    weekly_validation: float
+    volume_score: float
+    total_score: float
+    confidence_level: str
+    
+    @classmethod
+    def calculate(cls, result: Dict) -> 'SignalStrength':
+        """Calculate comprehensive signal strength from analysis result"""
+        
+        # PCS Score (0-5) - Most important
+        pcs_score = result.get('pcs_score', 0)
+        
+        # Pattern Strength (0-10)
+        pattern = result.get('pattern', {})
+        pattern_strength = 0
+        pattern_type = pattern.get('type', '')
+        
+        if 'Bullish Breakout' in pattern_type:
+            pattern_strength = 10
+        elif 'Reversal' in pattern_type:
+            pattern_strength = 8
+        elif 'Consolidation' in pattern_type:
+            pattern_strength = 7
+        else:
+            pattern_strength = 5
+        
+        # Weekly Validation (0-10)
+        weekly = result.get('weekly_validation', {})
+        weekly_validation = 10 if weekly.get('is_strong', False) else 5
+        
+        # Volume Score (0-5)
+        volume_score = 5 if result.get('volume_surge', False) else 3
+        
+        # Total Score (weighted, normalized to 0-100)
+        total_score = (
+            (pcs_score * 2) +       # PCS weighted heavily
+            pattern_strength +      
+            weekly_validation +
+            volume_score
+        ) / 30 * 100
+        
+        # Confidence Level
+        if total_score >= 80:
+            confidence = "🔥 VERY HIGH"
+        elif total_score >= 65:
+            confidence = "🟢 HIGH"
+        elif total_score >= 50:
+            confidence = "🟡 MODERATE"
+        else:
+            confidence = "⚪ LOW"
+        
+        return cls(
+            symbol=result.get('symbol', ''),
+            pcs_score=pcs_score,
+            pattern_strength=pattern_strength,
+            weekly_validation=weekly_validation,
+            volume_score=volume_score,
+            total_score=total_score,
+            confidence_level=confidence
+        )
+
+def sort_results_by_strength(results: List[Dict]) -> List[Tuple[Dict, SignalStrength]]:
+    """Sort results by signal strength - best opportunities first"""
+    scored_results = []
+    
+    for result in results:
+        signal = SignalStrength.calculate(result)
+        scored_results.append((result, signal))
+    
+    # Sort by total score descending (highest first)
+    scored_results.sort(key=lambda x: x[1].total_score, reverse=True)
+    
+    return scored_results
+
 
 class ProfessionalPCSScanner:
     def __init__(self):
@@ -4782,6 +4949,173 @@ def create_main_scanner_tab(config):
             st.markdown("- Expand **RSI range** to 25-85")
             st.markdown("- Check if markets traded today")
 
+
+def render_collapsible_result_card(result: Dict, signal: SignalStrength, index: int):
+    """Render professional collapsible result card with expandable details"""
+    
+    symbol = result.get('symbol', 'N/A')
+    current_price = result.get('current_price', 0)
+    pattern = result.get('pattern', {})
+    pattern_type = pattern.get('type', 'Unknown')
+    
+    # Professional expander with summary
+    with st.expander(
+        f"**{index+1}. {symbol}** • PCS: {signal.pcs_score:.1f}/5 • {signal.confidence_level} • {pattern_type}",
+        expanded=False
+    ):
+        # Quick metrics row
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
+        
+        with col1:
+            st.metric("💰 Price", f"₹{current_price:.2f}")
+        
+        with col2:
+            st.metric("📊 PCS Score", f"{signal.pcs_score:.1f}/5")
+        
+        with col3:
+            change_pct = result.get('change_percent', 0)
+            st.metric("📈 Change", f"{change_pct:+.2f}%")
+        
+        with col4:
+            st.metric("🎯 Signal", f"{signal.total_score:.0f}/100")
+        
+        st.markdown("---")
+        
+        # Detailed tabs
+        dtab1, dtab2, dtab3 = st.tabs(["📊 Technical", "📈 Pattern", "🎯 Strategy"])
+        
+        with dtab1:
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.markdown("**📉 Indicators**")
+                indicators = result.get('indicators', {})
+                st.write(f"• RSI: {indicators.get('rsi', 0):.2f}")
+                st.write(f"• MACD: {indicators.get('macd', 0):.2f}")
+                st.write(f"• ADX: {indicators.get('adx', 0):.2f}")
+            
+            with col_b:
+                st.markdown("**📊 Support/Resistance**")
+                sr = result.get('support_resistance', {})
+                st.write(f"• Support: ₹{sr.get('support', 0):.2f}")
+                st.write(f"• Resistance: ₹{sr.get('resistance', 0):.2f}")
+        
+        with dtab2:
+            st.markdown(f"**🎯 Pattern: {pattern_type}**")
+            st.write(pattern.get('description', 'No description'))
+            
+            st.markdown("**📈 Key Signals:**")
+            for sig in result.get('signals', [])[:5]:
+                st.write(f"• {sig}")
+        
+        with dtab3:
+            if signal.total_score >= 65:
+                st.success(f"✅ **STRONG OPPORTUNITY** - Consider {symbol} for PCS")
+                st.write(f"**Strike:** {result.get('strike_recommendation', 'N/A')}")
+            elif signal.total_score >= 50:
+                st.info(f"🟡 **MODERATE** - {symbol} shows potential")
+            else:
+                st.warning(f"⚪ **WATCH LIST** - Monitor {symbol}")
+        
+        # Chart
+        if 'chart' in result and result['chart'] is not None:
+            st.plotly_chart(result['chart'], use_container_width=True)
+
+
+
+def create_nse1000_scanner_tab(config):
+    """NSE 1000 Universe Scanner - Same analysis as F&O"""
+    
+    st.markdown("### 🌐 NSE 1000 Universe Scanner")
+    st.info("📊 Broader market analysis beyond F&O stocks with identical PCS methodology")
+    
+    # Initialize
+    fetcher = NSE1000Fetcher()
+    scanner = ProfessionalPCSScanner()
+    
+    # Fetch stocks
+    with st.spinner("🔄 Loading NSE 1000 universe..."):
+        nse_stocks = fetcher.fetch_nse_stocks(exclude_fo_stocks=scanner.nse_fo_stocks)
+    
+    st.success(f"✅ {len(nse_stocks)} non-F&O stocks available")
+    
+    # Selection
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        selected = st.multiselect(
+            "🎯 Select stocks (or leave empty for auto-selection)",
+            options=nse_stocks,
+            default=[],
+            help="Choose specific stocks or let the system find top opportunities"
+        )
+    
+    with col2:
+        max_stocks = st.slider("Max stocks", 10, 50, 20)
+    
+    if st.button("🚀 Analyze NSE 1000", type="primary", use_container_width=True):
+        stocks_to_analyze = selected if selected else nse_stocks[:max_stocks]
+        
+        st.markdown("---")
+        st.markdown("### 📊 Analysis Progress")
+        
+        progress = st.progress(0)
+        status = st.empty()
+        
+        results = []
+        for idx, symbol in enumerate(stocks_to_analyze):
+            status.text(f"Analyzing {symbol}... ({idx+1}/{len(stocks_to_analyze)})")
+            progress.progress((idx + 1) / len(stocks_to_analyze))
+            
+            try:
+                data = scanner.get_stock_data(symbol)
+                if data is not None and len(data) >= 50:
+                    analysis = scanner.detect_patterns(data, symbol, config)
+                    if analysis:
+                        results.append(analysis)
+            except:
+                continue
+        
+        progress.empty()
+        status.empty()
+        
+        if not results:
+            st.warning("⚠️ No qualifying opportunities found")
+            return
+        
+        # Sort by strength
+        scored_results = sort_results_by_strength(results)
+        
+        # Summary
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("📊 Analyzed", len(stocks_to_analyze))
+        col2.metric("✅ Found", len(results))
+        high_conf = sum(1 for _, s in scored_results if s.total_score >= 65)
+        col3.metric("🔥 High Confidence", high_conf)
+        avg = sum(s.total_score for _, s in scored_results) / len(scored_results)
+        col4.metric("📈 Avg Score", f"{avg:.0f}/100")
+        
+        st.markdown("---")
+        st.markdown("### 🎯 Top Opportunities (Sorted by Strength)")
+        
+        # Render cards
+        for idx, (result, signal) in enumerate(scored_results):
+            render_collapsible_result_card(result, signal, idx)
+        
+        # Export
+        if st.button("📥 Export to CSV"):
+            import pandas as pd
+            df = pd.DataFrame([{
+                'Symbol': r.get('symbol'),
+                'PCS_Score': s.pcs_score,
+                'Signal_Strength': s.total_score,
+                'Confidence': s.confidence_level,
+                'Pattern': r.get('pattern', {}).get('type'),
+                'Price': r.get('current_price')
+            } for r, s in scored_results])
+            csv = df.to_csv(index=False)
+            st.download_button("Download", csv, "nse1000_results.csv", "text/csv")
+
+
 def main():
     # FIXED: Angel One Style Compact Header
     st.markdown("""
@@ -4796,9 +5130,10 @@ def main():
     config = create_professional_sidebar()
     
     # Create main tabs
-    tab1, tab2 = st.tabs([
+    tab1, tab2, tab3 = st.tabs([
         "🎯 Current Day Scanner",
         "📊 Market Intelligence"
+        "🌐 NSE 1000 Universe"
     ])
     
     with tab1:
@@ -4867,6 +5202,10 @@ def main():
             if 'bank_nifty' in sentiment_data:
                 bank_data = sentiment_data['bank_nifty']
                 st.metric("Bank Nifty", f"{bank_data['current']:.0f}", f"{bank_data['change_1d']:+.2f}%")
+    
+    
+    with tab3:
+        create_nse1000_scanner_tab(config)
     
     # FIXED: Compact Footer
     st.markdown("---")
