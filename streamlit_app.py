@@ -5034,7 +5034,7 @@ def create_nse1000_scanner_tab(config):
     
     # Fetch stocks
     with st.spinner("🔄 Loading NSE 1000 universe..."):
-        nse_stocks = fetcher.fetch_nse_stocks(exclude_fo_stocks=scanner.nse_fo_stocks)
+        nse_stocks = fetcher.fetch_nse_stocks(exclude_fo_stocks=COMPLETE_NSE_FO_UNIVERSE)
     
     st.success(f"✅ {len(nse_stocks)} non-F&O stocks available")
     
