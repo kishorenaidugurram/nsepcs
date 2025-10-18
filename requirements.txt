@@ -8,4 +8,5 @@ pytz>=2023.3
 scikit-learn>=1.3.0    # For DBSCAN clustering in support/resistance analysis
 scipy>=1.11.0          # For signal processing in pivot detection
 beautifulsoup4>=4.12.0 # For web scraping (if using NSE data scraping)
+openpyxl>=3.1.0
 
