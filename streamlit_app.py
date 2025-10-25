@@ -16,64 +16,7 @@ from bs4 import BeautifulSoup
 import re
 from io import BytesIO
 import openpyxl
-from functools import wraps
-import logging
-
 warnings.filterwarnings('ignore')
-
-# ===== ENHANCEMENT 1: COMPREHENSIVE LOGGING SYSTEM =====
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(f'nse_scanner_{datetime.now().strftime("%Y%m%d")}.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger('NSE_PCS_Scanner')
-
-# ===== ENHANCEMENT 2: SMART CACHING SYSTEM (5-min TTL) =====
-_cache = {}
-_cache_timestamps = {}
-CACHE_TTL = 300  # 5 minutes
-
-def get_cached_data(symbol, fetch_func, *args, **kwargs):
-    """Smart cache with 5-minute TTL for 900% performance boost"""
-    current_time = time.time()
-    cache_key = f"{symbol}_{fetch_func.__name__}"
-    
-    if cache_key in _cache:
-        if current_time - _cache_timestamps[cache_key] < CACHE_TTL:
-            logger.debug(f"Cache HIT for {symbol}")
-            return _cache[cache_key]
-    
-    # Fetch fresh data
-    logger.debug(f"Cache MISS for {symbol} - fetching fresh data")
-    data = fetch_func(symbol, *args, **kwargs)
-    _cache[cache_key] = data
-    _cache_timestamps[cache_key] = current_time
-    
-    return data
-
-# ===== ENHANCEMENT 3: RETRY LOGIC WITH EXPONENTIAL BACKOFF =====
-def retry_with_backoff(max_attempts=3, base_delay=1):
-    """Retry failed API calls with exponential backoff for 97% success rate"""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for attempt in range(max_attempts):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    if attempt == max_attempts - 1:
-                        logger.error(f"Failed after {max_attempts} attempts: {func.__name__} - {str(e)}")
-                        raise e
-                    
-                    delay = base_delay * (2 ** attempt)  # 1s, 2s, 4s
-                    logger.warning(f"Attempt {attempt + 1} failed for {func.__name__}, retrying in {delay}s...")
-                    time.sleep(delay)
-        return wrapper
-    return decorator
 
 # Set page config
 st.set_page_config(
@@ -712,53 +655,8 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-
-    /* ===== NEW: ENHANCED UI IMPROVEMENTS ===== */
-    
-    /* Results Table Enhancement */
-    .results-container {
-        background: var(--surface);
-        border-radius: var(--radius-lg);
-        padding: var(--spacing-6);
-        box-shadow: var(--shadow-md);
-        margin: var(--spacing-4) 0;
-    }
-    
-    /* Filter Section Styling */
-    .filter-section {
-        background: linear-gradient(135deg, var(--primary-50), var(--info-bg));
-        border: 2px solid var(--primary-200);
-        border-radius: var(--radius-lg);
-        padding: var(--spacing-6);
-        margin-bottom: var(--spacing-6);
-    }
-    
-    /* Performance Badge Styling */
-    .perf-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--spacing-2);
-        padding: var(--spacing-2) var(--spacing-4);
-        border-radius: var(--radius);
-        font-weight: 600;
-        font-size: var(--font-size-sm);
-    }
-    
-    .perf-fast {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-    }
-    
-    .perf-cached {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
-    }
 </style>
 """, unsafe_allow_html=True)
-
-# ===== REST OF YOUR ORIGINAL CODE CONTINUES EXACTLY AS-IS =====
-# I'll now append the complete rest of your file without any modifications
-
 
 # COMPLETE NSE F&O UNIVERSE - ALL 219 STOCKS (Full Official List)
 COMPLETE_NSE_FO_UNIVERSE = [
@@ -1044,12 +942,8 @@ class ProfessionalPCSScanner:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
     
-    @retry_with_backoff(max_attempts=3, base_delay=1)
     def get_stock_data(self, symbol, period="3mo"):
-        """Get stock data with focus on recent data for current trading day analysis
-        Enhanced with caching and retry logic for better performance and reliability
-        """
-        logger.info(f"Fetching stock data for {symbol}")
+        """Get stock data with focus on recent data for current trading day analysis"""
         try:
             stock = yf.Ticker(symbol)
             data = stock.history(period=period, interval="1d")
@@ -1077,12 +971,8 @@ class ProfessionalPCSScanner:
         except Exception as e:
             return None
     
-    @retry_with_backoff(max_attempts=3, base_delay=1)
     def get_weekly_stock_data(self, symbol, period="6mo"):
-        """Get weekly stock data for pattern validation
-        Enhanced with retry logic for reliability
-        """
-        logger.info(f"Fetching weekly data for {symbol}")
+        """Get weekly stock data for pattern validation"""
         try:
             stock = yf.Ticker(symbol)
             # Get more data for weekly analysis, then resample to weekly
@@ -1343,9 +1233,8 @@ class ProfessionalPCSScanner:
         
         return volume_ratio_20 >= min_ratio, volume_ratio_20, details
     
-    @retry_with_backoff(max_attempts=2, base_delay=0.5)
     def get_fundamental_news(self, symbol, stock_name):
-        """Enhanced with retry logic. Get fundamental news for the stock to explain volume/price movements"""
+        """Get fundamental news for the stock to explain volume/price movements"""
         try:
             # Clean symbol for search
             clean_symbol = symbol.replace('.NS', '')
@@ -1657,8 +1546,7 @@ class ProfessionalPCSScanner:
         # Get weekly data if needed
         weekly_data = None
         if enable_weekly_validation:
-            # Use smart caching for weekly data
-            weekly_data = get_cached_data(symbol, self.get_weekly_stock_data)
+            weekly_data = self.get_weekly_stock_data(symbol)
         
         # WEEKLY ONLY MODE - Return weekly patterns only
         if analysis_mode == "Weekly Only (New Feature)":
@@ -4603,19 +4491,6 @@ def create_professional_sidebar():
                                  help="Advanced multi-timeframe support and resistance analysis")
     }
     
-    # ===== ENHANCEMENT: CACHE MANAGEMENT =====
-    st.markdown("---")
-    st.markdown("### ⚡ Performance")
-    
-    cache_info = f"📦 Cache: {len(_cache)} items"
-    st.info(cache_info)
-    
-    if st.button("🗑️ Clear Cache", help="Clear data cache to force fresh data fetch"):
-        _cache.clear()
-        _cache_timestamps.clear()
-        logger.info("Cache cleared manually")
-        st.success("✅ Cache cleared! Next scan will fetch fresh data.")
-    
     return {
             'stocks_to_scan': stocks_to_scan[:stocks_limit],
             'rsi_min': rsi_min,
@@ -4667,10 +4542,6 @@ def create_main_scanner_tab(config):
     if scan_button:
         scanner = ProfessionalPCSScanner()
         
-        # ===== ENHANCEMENT: PERFORMANCE TRACKING =====
-        scan_start_time = time.time()
-        logger.info(f"Starting scan of {len(config['stocks_to_scan'])} stocks")
-        
         # Progress tracking
         progress_bar = st.progress(0)
         status_container = st.empty()
@@ -4686,8 +4557,7 @@ def create_main_scanner_tab(config):
             
             try:
                 # Get recent data focused on current day
-                # Use smart caching for 900% performance boost on repeat scans
-                data = get_cached_data(symbol, scanner.get_stock_data, period="3mo")
+                data = scanner.get_stock_data(symbol, period="3mo")
                 if data is None:
                     continue
                 
@@ -4796,111 +4666,12 @@ def create_main_scanner_tab(config):
         progress_bar.empty()
         status_container.empty()
         
-        # ===== ENHANCEMENT: PERFORMANCE METRICS DISPLAY =====
-        scan_duration = time.time() - scan_start_time
-        logger.info(f"Scan completed in {scan_duration:.2f}s - Found {len(results)} matching stocks")
-        
-        # Performance badge
-        perf_badge_class = "perf-fast" if scan_duration < 30 else "perf-cached"
-        st.markdown(
-            f'<div class="perf-badge {perf_badge_class}">'
-            f'⚡ Scan completed in {scan_duration:.1f}s | '
-            f'🎯 {len(config["stocks_to_scan"])} stocks analyzed | '
-            f'✅ {len(results)} matches found'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-        
         # Display results
         if results:
             # Sort by pattern strength and current day confirmation
             results.sort(key=lambda x: max(p['strength'] for p in x['patterns']), reverse=True)
             
             st.success(f"🎉 Found **{len(results)} stocks** with current day confirmed patterns!")
-            
-            # ===== ENHANCEMENT: ADVANCED FILTERING UI =====
-            st.markdown('<div class="filter-section">', unsafe_allow_html=True)
-            st.markdown("### 🔍 Filter & Sort Results")
-            
-            filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
-            
-            with filter_col1:
-                # Pattern filter
-                all_pattern_types = set()
-                for result in results:
-                    for pattern in result['patterns']:
-                        all_pattern_types.add(pattern['type'])
-                
-                selected_patterns = st.multiselect(
-                    "Filter by Pattern",
-                    options=sorted(list(all_pattern_types)),
-                    default=sorted(list(all_pattern_types)),
-                    help="Select patterns to display"
-                )
-            
-            with filter_col2:
-                # Confidence filter
-                confidence_filter = st.multiselect(
-                    "Confidence Level",
-                    options=['HIGH', 'MEDIUM', 'LOW'],
-                    default=['HIGH', 'MEDIUM'],
-                    help="Filter by confidence level"
-                )
-            
-            with filter_col3:
-                # Minimum strength
-                min_strength = st.slider(
-                    "Min Strength %",
-                    min_value=50,
-                    max_value=100,
-                    value=60,
-                    step=5,
-                    help="Minimum pattern strength"
-                )
-            
-            with filter_col4:
-                # Sort options
-                sort_by = st.selectbox(
-                    "Sort By",
-                    options=['Strength (High to Low)', 'Strength (Low to High)', 'Symbol (A-Z)', 'Symbol (Z-A)', 'Volume Ratio'],
-                    help="Sort results"
-                )
-            
-            # Apply filters
-            filtered_results = []
-            for result in results:
-                matching_patterns = []
-                for pattern in result['patterns']:
-                    if (pattern['type'] in selected_patterns and 
-                        pattern['confidence'] in confidence_filter and 
-                        pattern['strength'] >= min_strength):
-                        matching_patterns.append(pattern)
-                
-                if matching_patterns:
-                    result_copy = result.copy()
-                    result_copy['patterns'] = matching_patterns
-                    filtered_results.append(result_copy)
-            
-            # Sort results
-            if sort_by == 'Strength (High to Low)':
-                filtered_results.sort(key=lambda x: max(p['strength'] for p in x['patterns']), reverse=True)
-            elif sort_by == 'Strength (Low to High)':
-                filtered_results.sort(key=lambda x: max(p['strength'] for p in x['patterns']))
-            elif sort_by == 'Symbol (A-Z)':
-                filtered_results.sort(key=lambda x: x['symbol'])
-            elif sort_by == 'Symbol (Z-A)':
-                filtered_results.sort(key=lambda x: x['symbol'], reverse=True)
-            elif sort_by == 'Volume Ratio':
-                filtered_results.sort(key=lambda x: x['volume_ratio'], reverse=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Show filter results
-            if len(filtered_results) < len(results):
-                st.info(f"📊 Showing {len(filtered_results)} of {len(results)} stocks after filtering")
-            
-            # Use filtered results for display
-            results = filtered_results
             
             # Summary metrics
             total_patterns = sum(len(r['patterns']) for r in results)
