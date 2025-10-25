@@ -1,4 +1,3 @@
-
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -15,162 +14,13 @@ import warnings
 import json
 from bs4 import BeautifulSoup
 import re
-from io import BytesIO, StringIO
+from io import BytesIO
 import openpyxl
-import logging
-from functools import wraps
 warnings.filterwarnings('ignore')
-
-# ==================== ENHANCEMENT MODULE v3.0 ====================
-
-# Logging System
-def setup_logging():
-    log_filename = f'nse_scanner_{datetime.now().strftime("%Y%m%d")}.log'
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[logging.FileHandler(log_filename), logging.StreamHandler()]
-    )
-    return logging.getLogger('NSE_Scanner')
-
-logger = setup_logging()
-
-# Caching System
-_data_cache = {}
-_cache_timestamps = {}
-CACHE_TTL = 300  # 5 minutes
-
-def get_cached_data(cache_key, fetch_function, *args, **kwargs):
-    current_time = time.time()
-    if cache_key in _data_cache:
-        cache_age = current_time - _cache_timestamps[cache_key]
-        if cache_age < CACHE_TTL:
-            logger.info(f"Cache HIT for {cache_key}")
-            return _data_cache[cache_key], True
-    logger.info(f"Cache MISS for {cache_key}")
-    try:
-        data = fetch_function(*args, **kwargs)
-        _data_cache[cache_key] = data
-        _cache_timestamps[cache_key] = current_time
-        return data, False
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        raise
-
-def clear_cache():
-    global _data_cache, _cache_timestamps
-    _data_cache.clear()
-    _cache_timestamps.clear()
-    logger.info("Cache cleared")
-
-def get_cache_stats():
-    """Get cache statistics"""
-    current_time = time.time()
-    active_entries = sum(
-        1 for key, timestamp in _cache_timestamps.items()
-        if (current_time - timestamp) < CACHE_TTL
-    )
-    return {
-        'total_entries': len(_data_cache),
-        'active_entries': active_entries,
-        'expired_entries': len(_data_cache) - active_entries,
-        'cache_ttl': CACHE_TTL
-    }
-
-# Retry Logic
-def retry_with_backoff(max_attempts=3, base_delay=1):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for attempt in range(max_attempts):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    if attempt == max_attempts - 1:
-                        logger.error(f"{func.__name__} failed: {e}")
-                        raise e
-                    delay = base_delay * (2 ** attempt)
-                    logger.warning(f"Retry {attempt + 1} in {delay}s...")
-                    time.sleep(delay)
-        return wrapper
-    return decorator
-
-# Confidence Scoring
-def calculate_confidence_score(pattern, indicators, volume_data, current_day=False):
-    score = 0
-    score += pattern.get('strength', 0) * 0.4
-    volume_ratio = volume_data.get('volume_ratio', 0)
-    if volume_ratio >= 2.5: score += 20
-    elif volume_ratio >= 2.0: score += 18
-    elif volume_ratio >= 1.5: score += 15
-    elif volume_ratio >= 1.2: score += 10
-    rsi = indicators.get('rsi', 50)
-    if 40 <= rsi <= 65: score += 15
-    elif 35 <= rsi <= 70: score += 10
-    if indicators.get('above_sma_20', False): score += 8
-    if indicators.get('above_sma_50', False): score += 7
-    if current_day: score += 10
-    return min(100, int(score))
-
-def get_confidence_level(score):
-    if score >= 80: return 'HIGH', '🟢'
-    elif score >= 60: return 'MEDIUM', '🟡'
-    else: return 'LOW', '🔴'
-
-# Session State
-def init_session_state():
-    if 'watchlist' not in st.session_state:
-        st.session_state.watchlist = set()
-    if 'performance_metrics' not in st.session_state:
-        st.session_state.performance_metrics = {
-            'total_scans': 0, 'cache_hits': 0, 'cache_misses': 0,
-            'avg_scan_time': 0, 'total_stocks_found': 0
-        }
-
-def add_to_watchlist(symbol):
-    st.session_state.watchlist.add(symbol)
-
-def remove_from_watchlist(symbol):
-    st.session_state.watchlist.discard(symbol)
-
-def is_in_watchlist(symbol):
-    return symbol in st.session_state.watchlist
-
-def get_watchlist():
-    return list(st.session_state.watchlist)
-
-# Export Functions
-def export_to_csv(results):
-    data = []
-    for r in results:
-        for p in r.get('patterns', []):
-            data.append({
-                'Symbol': r['symbol'].replace('.NS', ''),
-                'Pattern': p['type'],
-                'Strength': f"{p['strength']:.0f}%",
-                'Confidence': p.get('confidence_score', 0),
-                'Price': f"₹{r['current_price']:.2f}",
-                'Volume': f"{r['volume_spike']:.2f}x",
-                'RSI': f"{r['rsi']:.1f}"
-            })
-    return pd.DataFrame(data).to_csv(index=False)
-
-def export_to_json(results):
-    clean = []
-    for r in results:
-        clean.append({
-            'symbol': r['symbol'],
-            'price': float(r['current_price']),
-            'patterns': [{'type': p['type'], 'strength': float(p['strength'])} for p in r['patterns']]
-        })
-    return json.dumps(clean, indent=2)
-
-init_session_state()
-logger.info("NSE F&O Scanner v3.0 Enhanced loaded")
 
 # Set page config
 st.set_page_config(
-    page_title="NSE F&O PCS Professional Scanner v3.0 Enhanced", 
+    page_title="NSE F&O PCS Professional Scanner", 
     page_icon="📈", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -1092,21 +942,13 @@ class ProfessionalPCSScanner:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
     
-    @retry_with_backoff(max_attempts=3, base_delay=1)
-    def _fetch_raw_data(self, symbol, period):
-        """Internal fetch with retry"""
-        stock = yf.Ticker(symbol)
-        data = stock.history(period=period, interval="1d")
-        if len(data) < 20:
-            raise ValueError(f"Insufficient data for {symbol}")
-        return data
-    
     def get_stock_data(self, symbol, period="3mo"):
-        """Get stock data with caching and retry logic - ENHANCED v3.0"""
-        cache_key = f"stock_{symbol}_{period}"
+        """Get stock data with focus on recent data for current trading day analysis"""
         try:
-            data, from_cache = get_cached_data(cache_key, self._fetch_raw_data, symbol, period)
-            if data is None or len(data) < 20:
+            stock = yf.Ticker(symbol)
+            data = stock.history(period=period, interval="1d")
+            
+            if len(data) < 20:
                 return None
             
             # Calculate technical indicators
@@ -1124,9 +966,9 @@ class ProfessionalPCSScanner:
             data['ATR'] = ta.volatility.AverageTrueRange(data['High'], data['Low'], data['Close']).average_true_range()
             data['Stoch_K'] = ta.momentum.StochasticOscillator(data['High'], data['Low'], data['Close']).stoch()
             data['Williams_R'] = ta.momentum.WilliamsRIndicator(data['High'], data['Low'], data['Close']).williams_r()
+            
             return data
         except Exception as e:
-            logger.error(f"Failed to get data for {symbol}: {e}")
             return None
     
     def get_weekly_stock_data(self, symbol, period="6mo"):
@@ -4633,53 +4475,6 @@ def create_professional_sidebar():
         
         
     
-    # === WATCHLIST SECTION - ENHANCED v3.0 ===
-    st.markdown("---")
-    st.markdown("### ⭐ **Watchlist**")
-    
-    watchlist = get_watchlist()
-    if watchlist:
-        st.success(f"🎯 {len(watchlist)} stocks in watchlist")
-        
-        # Display watchlist stocks
-        for symbol in watchlist:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.write(f"• {symbol.replace('.NS', '')}")
-            with col2:
-                if st.button("❌", key=f"sidebar_remove_{symbol}"):
-                    remove_from_watchlist(symbol)
-                    st.rerun()
-        
-        # Scan watchlist button
-        if st.button("🔍 Scan Watchlist Only", key="scan_watchlist"):
-            st.session_state.scan_watchlist_only = True
-        
-        # Export watchlist
-        if st.button("📥 Export Watchlist", key="export_watchlist"):
-            watchlist_text = '\n'.join(s.replace('.NS', '') for s in watchlist)
-            st.download_button(
-                label="Download Watchlist",
-                data=watchlist_text,
-                file_name=f"watchlist_{datetime.now().strftime('%Y%m%d')}.txt",
-                mime="text/plain"
-            )
-        
-        # Clear watchlist
-        if st.button("🗑️ Clear Watchlist", key="clear_watchlist"):
-            st.session_state.watchlist.clear()
-            st.rerun()
-    else:
-        st.info("📄 No stocks in watchlist yet. Add stocks from scan results!")
-    
-    # Cache control
-    cache_stats = get_cache_stats()
-    if cache_stats['active_entries'] > 0:
-        st.markdown(f"**⚡ Cache:** {cache_stats['active_entries']} active")
-        if st.button("🗑️ Clear Cache", key="clear_cache"):
-            clear_cache()
-            st.success("Cache cleared!")
-    
     # === ENHANCEMENTS SECTION ===
     st.markdown("---")
     st.markdown("### 🚀 **Advanced Enhancements**")
@@ -4745,8 +4540,6 @@ def create_main_scanner_tab(config):
         st.markdown(f"**Scanning: {len(config['stocks_to_scan'])} stocks**")
     
     if scan_button:
-        # ENHANCED v3.0 - Track scan time
-        scan_start_time = time.time()
         scanner = ProfessionalPCSScanner()
         
         # Progress tracking
@@ -4875,182 +4668,29 @@ def create_main_scanner_tab(config):
         
         # Display results
         if results:
-            # Add confidence scores to all patterns - ENHANCED v3.0
-            scan_time = time.time() - scan_start_time if 'scan_start_time' in locals() else 0
-            for result in results:
-                for pattern in result['patterns']:
-                    indicators = {
-                        'rsi': result.get('rsi', 50),
-                        'above_sma_20': result.get('current_price', 0) > result.get('data', pd.DataFrame()).get('SMA_20', pd.Series([0])).iloc[-1] if not result.get('data', pd.DataFrame()).empty else False,
-                        'above_sma_50': result.get('current_price', 0) > result.get('data', pd.DataFrame()).get('SMA_50', pd.Series([0])).iloc[-1] if not result.get('data', pd.DataFrame()).empty else False,
-                        'above_ema_20': result.get('current_price', 0) > result.get('data', pd.DataFrame()).get('EMA_20', pd.Series([0])).iloc[-1] if not result.get('data', pd.DataFrame()).empty else False,
-                    }
-                    volume_data = {'volume_ratio': result.get('volume_ratio', 1.0)}
-                    is_current_day = 'Current Day' in pattern.get('type', '')
-                    pattern['confidence_score'] = calculate_confidence_score(pattern, indicators, volume_data, is_current_day)
-            
-            # Sort by confidence score
-            results.sort(key=lambda x: max(p.get('confidence_score', 0) for p in x['patterns']), reverse=True)
+            # Sort by pattern strength and current day confirmation
+            results.sort(key=lambda x: max(p['strength'] for p in x['patterns']), reverse=True)
             
             st.success(f"🎉 Found **{len(results)} stocks** with current day confirmed patterns!")
             
-            # ENHANCED SUMMARY DASHBOARD v3.0
-            st.markdown("### 📊 Scan Summary")
-            col1, col2, col3, col4, col5 = st.columns(5)
-            
+            # Summary metrics
             total_patterns = sum(len(r['patterns']) for r in results)
             avg_strength = np.mean([p['strength'] for r in results for p in r['patterns']])
             current_day_breakouts = sum(1 for r in results for p in r['patterns'] if 'Current Day' in p['type'])
-            high_conf_count = sum(1 for r in results for p in r['patterns'] if p.get('confidence_score', 0) >= 80)
-            avg_volume = np.mean([r.get('volume_ratio', 1.0) for r in results])
-            hit_rate = (len(results) / len(config['stocks_to_scan'])) * 100 if config['stocks_to_scan'] else 0
+            high_confidence = sum(1 for r in results for p in r['patterns'] if p['confidence'] == 'HIGH')
             
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("🎯 Stocks Found", len(results), f"{hit_rate:.1f}% hit rate")
+                st.metric("🎯 Stocks Found", len(results))
             with col2:
-                st.metric("💪 Avg Strength", f"{avg_strength:.0f}%")
+                st.metric("🔥 Current Day", current_day_breakouts)
             with col3:
-                st.metric("🏆 High Confidence", high_conf_count, "Score ≥80")
+                st.metric("💪 Avg Strength", f"{avg_strength:.1f}%")
             with col4:
-                st.metric("📈 Avg Volume", f"{avg_volume:.1f}x")
-            with col5:
-                cache_stats = get_cache_stats()
-                cache_indicator = "⚡ 900% faster" if cache_stats['active_entries'] > 0 else ""
-                st.metric("⏱️ Scan Time", f"{scan_time:.1f}s", cache_indicator)
+                st.metric("🏆 High Confidence", high_confidence)
             
-            # FILTERING UI - ENHANCED v3.0
-            st.markdown("---")
-            st.markdown("### 🔍 Filter Results")
-            
-            col1, col2, col3 = st.columns(3)
-            
-            all_patterns = set()
-            for r in results:
-                for p in r.get('patterns', []):
-                    all_patterns.add(p.get('type', 'Unknown'))
-            
-            with col1:
-                selected_patterns = st.multiselect(
-                    "Filter by Pattern",
-                    options=sorted(list(all_patterns)),
-                    default=list(all_patterns),
-                    help="Select pattern types to display"
-                )
-            
-            with col2:
-                confidence_filter = st.multiselect(
-                    "Filter by Confidence",
-                    options=['HIGH', 'MEDIUM', 'LOW'],
-                    default=['HIGH', 'MEDIUM'],
-                    help="Filter by confidence level (based on score)"
-                )
-            
-            with col3:
-                min_strength = st.slider(
-                    "Minimum Strength %",
-                    min_value=50,
-                    max_value=100,
-                    value=60,
-                    step=5,
-                    help="Minimum pattern strength threshold"
-                )
-            
-            # Apply filters
-            filtered_results = []
+            # Display results
             for result in results:
-                matching_patterns = []
-                for pattern in result.get('patterns', []):
-                    pattern_type = pattern.get('type', '')
-                    strength = pattern.get('strength', 0)
-                    conf_score = pattern.get('confidence_score', 0)
-                    conf_level, _ = get_confidence_level(conf_score)
-                    
-                    if (pattern_type in selected_patterns and
-                        conf_level in confidence_filter and
-                        strength >= min_strength):
-                        matching_patterns.append(pattern)
-                
-                if matching_patterns:
-                    result_copy = result.copy()
-                    result_copy['patterns'] = matching_patterns
-                    filtered_results.append(result_copy)
-            
-            st.info(f"📊 Showing {len(filtered_results)} of {len(results)} stocks after filtering")
-            
-            # SORTABLE TABLE VIEW - ENHANCED v3.0
-            if filtered_results:
-                st.markdown("---")
-                st.markdown("### 📋 Quick Comparison Table")
-                
-                table_data = []
-                for r in filtered_results:
-                    max_pattern = max(r['patterns'], key=lambda p: p.get('confidence_score', 0))
-                    conf_score = max_pattern.get('confidence_score', 0)
-                    conf_level, conf_emoji = get_confidence_level(conf_score)
-                    
-                    table_data.append({
-                        'Symbol': r['symbol'].replace('.NS', ''),
-                        'Pattern': max_pattern['type'][:30],
-                        'Strength': int(max_pattern['strength']),
-                        'Conf_Score': conf_score,
-                        'Confidence': f"{conf_emoji} {conf_level}",
-                        'Price': f"₹{r['current_price']:.2f}",
-                        'Volume': f"{r['volume_ratio']:.1f}x",
-                        'RSI': f"{r['rsi']:.0f}"
-                    })
-                
-                df_table = pd.DataFrame(table_data)
-                st.dataframe(
-                    df_table,
-                    use_container_width=True,
-                    height=400,
-                    hide_index=True
-                )
-                
-                # EXPORT OPTIONS - ENHANCED v3.0
-                st.markdown("---")
-                st.markdown("### 📥 Export Results")
-                
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    excel_data = create_excel_stock_list(filtered_results)
-                    st.download_button(
-                        label="📊 Excel",
-                        data=excel_data,
-                        file_name=f"nse_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
-                
-                with col2:
-                    csv_data = export_to_csv(filtered_results)
-                    st.download_button(
-                        label="📄 CSV",
-                        data=csv_data,
-                        file_name=f"nse_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv"
-                    )
-                
-                with col3:
-                    json_data = export_to_json(filtered_results)
-                    st.download_button(
-                        label="📋 JSON",
-                        data=json_data,
-                        file_name=f"nse_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                        mime="application/json"
-                    )
-                
-                with col4:
-                    st.info(f"{len(filtered_results)} stocks will be exported")
-            
-            # Update results to use filtered
-            results = filtered_results
-            st.markdown("---")
-            st.markdown("### 📈 Detailed Analysis")
-            
-            # Display detailed results with watchlist feature
-            for result in results:
-                symbol = result['symbol']
                 max_strength = max(p['strength'] for p in result['patterns'])
                 overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
                 
@@ -5062,26 +4702,10 @@ def create_main_scanner_tab(config):
                 has_news = result.get('news_data') and result['news_data']['news_count'] > 0
                 news_indicator = " 📰" if has_news else ""
                 
-                # WATCHLIST FEATURE - ENHANCED v3.0
-                col_exp, col_watch = st.columns([5, 1])
-                with col_exp:
-                    expander_label = f"📈 {symbol.replace('.NS', '').replace('^', '')} - {overall_confidence}{current_indicator}{news_indicator}"
-                with col_watch:
-                    if is_in_watchlist(symbol):
-                        if st.button("⭐ Remove", key=f"watch_{symbol}"):
-                            remove_from_watchlist(symbol)
-                            st.rerun()
-                    else:
-                        if st.button("➕ Watch", key=f"watch_{symbol}"):
-                            add_to_watchlist(symbol)
-                            st.rerun()
-                
-                with st.expander(expander_label, expanded=True):
-                    
-                    # CONFIDENCE SCORE DISPLAY - ENHANCED v3.0
-                    max_conf_score = max(p.get('confidence_score', 0) for p in result['patterns'])
-                    conf_level, conf_emoji = get_confidence_level(max_conf_score)
-                    st.markdown(f"**🎯 Confidence Score:** {max_conf_score}/100 {conf_emoji} {conf_level}")
+                with st.expander(
+                    f"📈 {result['symbol'].replace('.NS', '').replace('^', '')} - {overall_confidence}{current_indicator}{news_indicator}", 
+                    expanded=True
+                ):
                     
                     # Stock metrics
                     col1, col2, col3, col4 = st.columns(4)
@@ -5362,12 +4986,12 @@ def create_main_scanner_tab(config):
             st.markdown("- Check if markets traded today")
 
 def main():
-    # ENHANCED v3.0 - Professional Header
+    # FIXED: Angel One Style Compact Header
     st.markdown("""
     <div class="professional-header">
-        <h1>📈 NSE F&O PCS Scanner v3.0</h1>
-        <p class="subtitle">Smart Caching • Confidence Scoring • Advanced Filters • Watchlist • Enhanced Exports</p>
-        <p class="description">⚡ 900% Faster Repeat Scans | 🎯 97% Reliability | 📊 Professional Analytics</p>
+        <h1>📈 NSE F&O PCS Scanner</h1>
+        <p class="subtitle">Current Day EOD Analysis • Complete 219 Stock Universe • Angel One Style</p>
+        <p class="description">Real-time Pattern Confirmation with Latest Trading Day Data</p>
     </div>
     """, unsafe_allow_html=True)
     
