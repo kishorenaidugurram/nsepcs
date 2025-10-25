@@ -5000,7 +5000,7 @@ def main():
     # Create main tabs
     tab1, tab2 = st.tabs([
         "🎯 Current Day Scanner",
-        "📊 Market Intelligence"
+        
     ])
     
     with tab1:
