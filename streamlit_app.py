@@ -1,4 +1,4 @@
-# NSE F&O PCS Professional Scanner — Enhanced App (v6.2)
+# NSE F&O PCS Professional Scanner — Enhanced App (v6.3)
 # -------------------------------------------------------
 # Single-file Streamlit app that embeds the refactored PCSScannerPro + UI
 # Focus: correctness, robustness, speed, and PCS-first signal quality
@@ -96,6 +96,70 @@ def create_excel_stock_list(symbols: List[str]) -> bytes:
     return buf.getvalue()
 
 # -------------------------------------------------------
+# Pure cached data fetchers & indicator builders (hashable params only)
+# -------------------------------------------------------
+
+def _fetch_history(symbol: str, period: str = "6mo", interval: str = "1d") -> Optional[pd.DataFrame]:
+    symbol = clean_symbol(symbol)
+    try:
+        df = yf.Ticker(symbol).history(period=period, interval=interval, auto_adjust=False)
+        if isinstance(df, pd.DataFrame) and not df.empty:
+            df = df.dropna(subset=["Open", "High", "Low", "Close"]).copy()
+            if not isinstance(df.index, pd.DatetimeIndex):
+                df.index = pd.to_datetime(df.index)
+            return df
+    except Exception:
+        return None
+    return None
+
+@st.cache_data(ttl=900, show_spinner=False)
+def _cached_history(symbol: str, period: str = "6mo", interval: str = "1d") -> Optional[pd.DataFrame]:
+    return _fetch_history(symbol, period=period, interval=interval)
+
+@st.cache_data(ttl=900, show_spinner=False)
+def _cached_daily_indicators(symbol: str, period: str = "6mo") -> Optional[pd.DataFrame]:
+    df = _cached_history(symbol, period=period, interval="1d")
+    if df is None or len(df) < 30:
+        return None
+    c, h, l = df["Close"], df["High"], df["Low"]
+    rsi = ta.momentum.RSIIndicator(c).rsi()
+    sma20 = ta.trend.SMAIndicator(c, window=20).sma_indicator()
+    sma50 = ta.trend.SMAIndicator(c, window=50).sma_indicator()
+    ema20 = ta.trend.EMAIndicator(c, window=20).ema_indicator()
+    bb = ta.volatility.BollingerBands(c)
+    macd_obj = ta.trend.MACD(c)
+    adx = ta.trend.ADXIndicator(h, l, c).adx()
+    atr = ta.volatility.AverageTrueRange(h, l, c).average_true_range()
+    stoch = ta.momentum.StochasticOscillator(h, l, c).stoch()
+    willr = ta.momentum.WilliamsRIndicator(h, l, c).williams_r()
+    out = df.assign(
+        RSI=rsi, SMA_20=sma20, SMA_50=sma50, EMA_20=ema20,
+        BB_upper=bb.bollinger_hband(), BB_middle=bb.bollinger_mavg(), BB_lower=bb.bollinger_lband(),
+        MACD=macd_obj.macd(), MACD_signal=macd_obj.macd_signal(), MACD_hist=macd_obj.macd_diff(),
+        ADX=adx, ATR=atr, Stoch_K=stoch, Williams_R=willr
+    )
+    return out.dropna().copy()
+
+@st.cache_data(ttl=1200, show_spinner=False)
+def _cached_weekly_indicators(symbol: str, period: str = "18mo") -> Optional[pd.DataFrame]:
+    d = _cached_history(symbol, period=period, interval="1d")
+    if d is None or len(d) < 60:
+        return None
+    w = d.resample('W-FRI').agg({"Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum"}).dropna()
+    if len(w) < 15:
+        return None
+    c, h, l = w['Close'], w['High'], w['Low']
+    rsi = ta.momentum.RSIIndicator(c).rsi()
+    sma10 = ta.trend.SMAIndicator(c, window=10).sma_indicator()
+    sma20 = ta.trend.SMAIndicator(c, window=20).sma_indicator()
+    ema10 = ta.trend.EMAIndicator(c, window=10).ema_indicator()
+    macd_obj = ta.trend.MACD(c)
+    adx = ta.trend.ADXIndicator(h, l, c).adx()
+    w = w.assign(RSI=rsi, SMA_10=sma10, SMA_20=sma20, EMA_10=ema10,
+                 MACD=macd_obj.macd(), MACD_signal=macd_obj.macd_signal(), MACD_hist=macd_obj.macd_diff(), ADX=adx)
+    return w.dropna().copy()
+
+# -------------------------------------------------------
 # Data Class
 # -------------------------------------------------------
 @dataclass
@@ -106,68 +170,18 @@ class WeeklyValidation:
     context: str
 
 # -------------------------------------------------------
-# Core Scanner (Refactor v6.2)
+# Core Scanner (Refactor v6.3)
 # -------------------------------------------------------
 class PCSScannerPro:
     def __init__(self):
         self.ist = pytz.timezone('Asia/Kolkata')
 
-    @staticmethod
-    def _safe_history(symbol: str, period: str="6mo", interval: str="1d") -> Optional[pd.DataFrame]:
-        symbol = clean_symbol(symbol)
-        try:
-            df = yf.Ticker(symbol).history(period=period, interval=interval, auto_adjust=False)
-            if isinstance(df, pd.DataFrame) and not df.empty:
-                df = df.dropna(subset=["Open","High","Low","Close"]).copy()
-                if not isinstance(df.index, pd.DatetimeIndex):
-                    df.index = pd.to_datetime(df.index)
-                return df
-        except Exception:
-            return None
-        return None
+    # NOTE: No @st.cache_data on methods — avoids UnhashableParamError on `self`.
+    def get_daily(self, symbol: str, period: str = "6mo") -> Optional[pd.DataFrame]:
+        return _cached_daily_indicators(symbol, period=period)
 
-    @st.cache_data(ttl=600, show_spinner=False)
-    def get_daily(self, symbol: str, period: str="6mo") -> Optional[pd.DataFrame]:
-        df = self._safe_history(symbol, period=period, interval="1d")
-        if df is None or len(df) < 30:
-            return None
-        c,h,l = df["Close"], df["High"], df["Low"]
-        rsi = ta.momentum.RSIIndicator(c).rsi()
-        sma20 = ta.trend.SMAIndicator(c, window=20).sma_indicator()
-        sma50 = ta.trend.SMAIndicator(c, window=50).sma_indicator()
-        ema20 = ta.trend.EMAIndicator(c, window=20).ema_indicator()
-        bb = ta.volatility.BollingerBands(c)
-        macd_obj = ta.trend.MACD(c)
-        adx = ta.trend.ADXIndicator(h,l,c).adx()
-        atr = ta.volatility.AverageTrueRange(h,l,c).average_true_range()
-        stoch = ta.momentum.StochasticOscillator(h,l,c).stoch()
-        willr = ta.momentum.WilliamsRIndicator(h,l,c).williams_r()
-        out = df.assign(
-            RSI=rsi, SMA_20=sma20, SMA_50=sma50, EMA_20=ema20,
-            BB_upper=bb.bollinger_hband(), BB_middle=bb.bollinger_mavg(), BB_lower=bb.bollinger_lband(),
-            MACD=macd_obj.macd(), MACD_signal=macd_obj.macd_signal(), MACD_hist=macd_obj.macd_diff(),
-            ADX=adx, ATR=atr, Stoch_K=stoch, Williams_R=willr
-        )
-        return out.dropna().copy()
-
-    @st.cache_data(ttl=1200, show_spinner=False)
-    def get_weekly(self, symbol: str, period: str="18mo") -> Optional[pd.DataFrame]:
-        d = self._safe_history(symbol, period=period, interval="1d")
-        if d is None or len(d) < 60:
-            return None
-        w = d.resample('W-FRI').agg({"Open":"first","High":"max","Low":"min","Close":"last","Volume":"sum"}).dropna()
-        if len(w) < 15:
-            return None
-        c,h,l = w['Close'], w['High'], w['Low']
-        rsi = ta.momentum.RSIIndicator(c).rsi()
-        sma10 = ta.trend.SMAIndicator(c, window=10).sma_indicator()
-        sma20 = ta.trend.SMAIndicator(c, window=20).sma_indicator()
-        ema10 = ta.trend.EMAIndicator(c, window=10).ema_indicator()
-        macd_obj = ta.trend.MACD(c)
-        adx = ta.trend.ADXIndicator(h,l,c).adx()
-        w = w.assign(RSI=rsi, SMA_10=sma10, SMA_20=sma20, EMA_10=ema10,
-                     MACD=macd_obj.macd(), MACD_signal=macd_obj.macd_signal(), MACD_hist=macd_obj.macd_diff(), ADX=adx)
-        return w.dropna().copy()
+    def get_weekly(self, symbol: str, period: str = "18mo") -> Optional[pd.DataFrame]:
+        return _cached_weekly_indicators(symbol, period=period)
 
     # ---------- Weekly Validation ----------
     def validate_weekly(self, weekly: pd.DataFrame) -> WeeklyValidation:
@@ -189,7 +203,7 @@ class PCSScannerPro:
         return WeeklyValidation(ok, bonus, signals, ctx)
 
     # ---------- Current-Day Breakout ----------
-    def current_day_breakout(self, df: pd.DataFrame, lookback: int=20, vol_ratio: float=2.0) -> Tuple[bool,float,Dict]:
+    def current_day_breakout(self, df: pd.DataFrame, lookback: int = 20, vol_ratio: float = 2.0) -> Tuple[bool, float, Dict]:
         if df is None or len(df) < lookback + 2:
             return False, 0, {}
         cur = df.iloc[-1]
@@ -218,7 +232,7 @@ class PCSScannerPro:
         return True, float(strength), details
 
     # ---------- Enhanced Support/Resistance ----------
-    def enhanced_sr(self, df: pd.DataFrame, lookback: int=50) -> Dict:
+    def enhanced_sr(self, df: pd.DataFrame, lookback: int = 50) -> Dict:
         if df is None or len(df) < lookback:
             return {"analysis_available": False, "message": "Insufficient data"}
         cur = float(df['Close'].iloc[-1])
@@ -235,19 +249,19 @@ class PCSScannerPro:
             if dist <= 1: strength += 25
             elif dist <= 3: strength += 15
             elif dist <= 5: strength += 8
-            out.append({**L, "strength": min(100, round(strength,2))})
-        supports = sorted([x for x in out if x['type']=="support"], key=lambda x: x['strength'], reverse=True)
-        resists  = sorted([x for x in out if x['type']=="resistance"], key=lambda x: x['strength'], reverse=True)
+            out.append({**L, "strength": min(100, round(strength, 2))})
+        supports = sorted([x for x in out if x['type'] == "support"], key=lambda x: x['strength'], reverse=True)
+        resists  = sorted([x for x in out if x['type'] == "resistance"], key=lambda x: x['strength'], reverse=True)
         return {"analysis_available": True, "current_price": cur, "support_levels": supports[:5], "resistance_levels": resists[:5]}
 
     def _pivot_levels(self, df: pd.DataFrame, lookback: int) -> List[Dict]:
         lev = []; r = df.tail(lookback)
         H, L = r['High'].values, r['Low'].values
-        for i in range(2, len(r)-2):
+        for i in range(2, len(r) - 2):
             if H[i] > H[i-1] and H[i] > H[i-2] and H[i] > H[i+1] and H[i] > H[i+2]:
-                lev.append({"level": float(H[i]), "type":"resistance", "method":"pivot_high", "base_strength": 30})
+                lev.append({"level": float(H[i]), "type": "resistance", "method": "pivot_high", "base_strength": 30})
             if L[i] < L[i-1] and L[i] < L[i-2] and L[i] < L[i+1] and L[i] < L[i+2]:
-                lev.append({"level": float(L[i]), "type":"support", "method":"pivot_low", "base_strength": 30})
+                lev.append({"level": float(L[i]), "type": "support", "method": "pivot_low", "base_strength": 30})
         return lev
 
     def _ma_levels(self, df: pd.DataFrame) -> List[Dict]:
@@ -264,7 +278,7 @@ class PCSScannerPro:
         thresh = r['Volume'].quantile(0.8)
         hv = r[r['Volume'] >= thresh]
         if hv.empty: return []
-        centers = [float((row['High']+row['Low'])/2.0) for _, row in hv.iterrows()]
+        centers = [float((row['High'] + row['Low']) / 2.0) for _, row in hv.iterrows()]
         centers.sort()
         clusters: List[List[float]] = []
         for z in centers:
@@ -297,8 +311,8 @@ class PCSScannerPro:
         out = []
         for f in fibs:
             lvl = lo + span * f
-            out.append({"level": float(lvl), "type":"support", "method": f"fib_{f}", "base_strength": 20})
-            out.append({"level": float(lvl), "type":"resistance", "method": f"fib_{f}", "base_strength": 20})
+            out.append({"level": float(lvl), "type": "support", "method": f"fib_{f}", "base_strength": 20})
+            out.append({"level": float(lvl), "type": "resistance", "method": f"fib_{f}", "base_strength": 20})
         return out
 
     # ---------- PCS helpers ----------
@@ -306,12 +320,12 @@ class PCSScannerPro:
         cur = df.iloc[-1]
         atr = float(cur.get('ATR', np.nan))
         close = float(cur['Close'])
-        atr_pct = (atr/close*100) if (atr and close) else np.nan
+        atr_pct = (atr / close * 100) if (atr and close) else np.nan
         return {"rsi": float(cur.get('RSI', np.nan)), "adx": float(cur.get('ADX', np.nan)), "atr_pct": atr_pct}
 
-    def pcs_pick_put_delta_stub(self, underlying: float, target_delta: float=0.20) -> float:
-        T = 20/252; vol = 0.22; z = 0.8416
-        return round(underlying * (1 - z*vol*math.sqrt(T)), 1)
+    def pcs_pick_put_delta_stub(self, underlying: float, target_delta: float = 0.20) -> float:
+        T = 20 / 252; vol = 0.22; z = 0.8416
+        return round(underlying * (1 - z * vol * math.sqrt(T)), 1)
 
     def fundamental_news_hook(self, symbol: str) -> Dict:
         return {"items": [], "sentiment": "neutral"}
@@ -319,14 +333,15 @@ class PCSScannerPro:
 # -------------------------------------------------------
 # Chart helper (light TradingView-style)
 # -------------------------------------------------------
-def make_chart(df: pd.DataFrame, title: str, mark_resistance: Optional[float]=None) -> go.Figure:
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7,0.3])
+
+def make_chart(df: pd.DataFrame, title: str, mark_resistance: Optional[float] = None) -> go.Figure:
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
     fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='Price'), row=1, col=1)
     if 'EMA_20' in df.columns:
         fig.add_trace(go.Scatter(x=df.index, y=df['EMA_20'], name='EMA 20', mode='lines'), row=1, col=1)
     if 'SMA_50' in df.columns:
         fig.add_trace(go.Scatter(x=df.index, y=df['SMA_50'], name='SMA 50', mode='lines'), row=1, col=1)
-    if mark_resistance:
+    if mark_resistance is not None:
         fig.add_hline(y=mark_resistance, line_dash='dash', line_color='orange', row=1, col=1)
     fig.add_trace(go.Bar(x=df.index, y=df['Volume'], name='Volume', opacity=0.7), row=2, col=1)
     fig.update_layout(title=title, height=560, template='plotly_dark', xaxis_rangeslider_visible=False)
@@ -335,13 +350,14 @@ def make_chart(df: pd.DataFrame, title: str, mark_resistance: Optional[float]=No
 # -------------------------------------------------------
 # Sidebar Controls
 # -------------------------------------------------------
-st.title("📈 NSE F&O PCS Professional Scanner — v6.2")
+
+st.title("📈 NSE F&O PCS Professional Scanner — v6.3")
 scanner = PCSScannerPro()
 
 with st.sidebar:
     st.header("Universe & Filters")
-    universe_choice = st.selectbox("Universe", ["Nifty 50","Bank Nifty","IT Stocks","Pharma Stocks","Custom Selection","All (short list)"])
-    custom_syms = st.text_area("Custom (comma-separated .NS)", placeholder="RELIANCE.NS, TCS.NS") if universe_choice=="Custom Selection" else ""
+    universe_choice = st.selectbox("Universe", ["Nifty 50", "Bank Nifty", "IT Stocks", "Pharma Stocks", "Custom Selection", "All (short list)"])
+    custom_syms = st.text_area("Custom (comma-separated .NS)", placeholder="RELIANCE.NS, TCS.NS") if universe_choice == "Custom Selection" else ""
     rsi_min, rsi_max = st.slider("RSI range (daily)", 10, 90, (35, 70))
     adx_min = st.slider("ADX minimum (daily)", 5, 40, 15)
     ma_support = st.checkbox("Require price above EMA20", value=True)
@@ -364,14 +380,16 @@ st.caption(f"Scanning {len(symbols)} symbols…")
 # -------------------------------------------------------
 # Scanner Logic (parallel)
 # -------------------------------------------------------
-@st.cache_data(ttl=600, show_spinner=False)
+
+# NOTE: Keep this function UN-CACHED to avoid hashing surprises from nested calls.
 def scan_symbol(symbol: str, rsi_min: int, rsi_max: int, adx_min: int, ma_support: bool, lookback: int, vol_ratio: float, min_strength: int):
     d = scanner.get_daily(symbol)
     if d is None or len(d) < 30:
         return None
     # Daily filters
     cur = d.iloc[-1]
-    if not (rsi_min <= float(cur.get('RSI', np.nan)) <= rsi_max):
+    rsi_val = float(cur.get('RSI', np.nan))
+    if not (rsi_min <= rsi_val <= rsi_max):
         return None
     if float(cur.get('ADX', 0)) < adx_min:
         return None
@@ -381,7 +399,7 @@ def scan_symbol(symbol: str, rsi_min: int, rsi_max: int, adx_min: int, ma_suppor
     if not ok or score < min_strength:
         return None
     w = scanner.get_weekly(symbol)
-    wv = scanner.validate_weekly(w) if w is not None else WeeklyValidation(False,0,[],"no weekly")
+    wv = scanner.validate_weekly(w) if w is not None else WeeklyValidation(False, 0, [], "no weekly")
     sr = scanner.enhanced_sr(d)
     ctx = scanner.pcs_context(d)
     total = score + (wv.bonus if wv else 0)
@@ -407,7 +425,7 @@ if run_scan:
         for i, fut in enumerate(as_completed(futs)):
             res = fut.result()
             if res: collected.append(res)
-            progress.progress((i+1)/len(symbols))
+            progress.progress((i + 1) / len(symbols))
     progress.empty()
     if not collected:
         st.warning("No matches with the current filters.")
@@ -422,21 +440,21 @@ if results:
     st.subheader("Qualified Breakouts (Current-Day Confirmed)")
     table = pd.DataFrame([
         {
-            'Symbol': r['symbol'].replace('.NS',''),
+            'Symbol': r['symbol'].replace('.NS', ''),
             'Final Score': int(r['final_strength']),
             'Daily Strength': int(r['daily_strength']),
             'Weekly Bonus': int(r['weekly_bonus']),
-            'Res(lookback)': round(r['breakout']['resistance_level'],2),
-            'Vol xAvg': round(r['breakout']['volume_ratio'],2),
-            'Cons%': round(r['breakout']['consolidation_range'],1),
-            'RSI': round(r['ctx']['rsi'],1) if r['ctx']['rsi']==r['ctx']['rsi'] else None,
-            'ADX': round(r['ctx']['adx'],1) if r['ctx']['adx']==r['ctx']['adx'] else None,
-            'ATR%': round(r['ctx']['atr_pct'],1) if r['ctx']['atr_pct']==r['ctx']['atr_pct'] else None,
+            'Res(lookback)': round(r['breakout']['resistance_level'], 2),
+            'Vol xAvg': round(r['breakout']['volume_ratio'], 2),
+            'Cons%': round(r['breakout']['consolidation_range'], 1),
+            'RSI': round(r['ctx']['rsi'], 1) if r['ctx']['rsi'] == r['ctx']['rsi'] else None,
+            'ADX': round(r['ctx']['adx'], 1) if r['ctx']['adx'] == r['ctx']['adx'] else None,
+            'ATR%': round(r['ctx']['atr_pct'], 1) if r['ctx']['atr_pct'] == r['ctx']['atr_pct'] else None,
         } for r in results
     ])
     st.dataframe(table, use_container_width=True)
 
-    dl = st.download_button(
+    st.download_button(
         "⬇️ Download symbols (.xlsx)",
         data=create_excel_stock_list([r['symbol'] for r in results]),
         file_name="pcs_breakouts.xlsx",
@@ -451,10 +469,10 @@ if results:
             cols = st.columns(3)
             cols[0].metric("Vol xAvg", f"{r['breakout']['volume_ratio']:.2f}")
             cols[1].metric("Consolidation %", f"{r['breakout']['consolidation_range']:.1f}%")
-            cols[2].metric("ATR %", f"{r['ctx']['atr_pct']:.1f}%" if r['ctx']['atr_pct']==r['ctx']['atr_pct'] else "—")
+            cols[2].metric("ATR %", f"{r['ctx']['atr_pct']:.1f}%" if r['ctx']['atr_pct'] == r['ctx']['atr_pct'] else "—")
 
             d = scanner.get_daily(r['symbol'])
-            fig = make_chart(d, f"{r['symbol'].replace('.NS','')} — Current-Day Breakout", r['breakout']['resistance_level'])
+            fig = make_chart(d, f"{r['symbol'].replace('.NS', '')} — Current-Day Breakout", r['breakout']['resistance_level'])
             st.plotly_chart(fig, use_container_width=True)
 
             # Support/Resistance snapshot
@@ -464,6 +482,5 @@ if results:
                 r_levels = sr['resistance_levels'][:3]
                 st.markdown("**Top Supports**: " + ", ".join([f"{x['level']:.2f} ({x['method']})" for x in s_levels]))
                 st.markdown("**Top Resistances**: " + ", ".join([f"{x['level']:.2f} ({x['method']})" for x in r_levels]))
-
 else:
     st.info("Set your filters and click **Scan Now** to search for current-day breakouts across your chosen universe.")
