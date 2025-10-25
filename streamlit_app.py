@@ -20,7 +20,7 @@ warnings.filterwarnings('ignore')
 
 # Set page config
 st.set_page_config(
-    page_title="NSE F&O PCS Professional Scanner", 
+    page_title="NSE F&O Scanner", 
     page_icon="📈", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -658,8 +658,129 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# COMPLETE NSE F&O UNIVERSE - ALL 219 STOCKS (Full Official List)
-COMPLETE_NSE_FO_UNIVERSE = [
+
+# ===========================
+# DYNAMIC NSE F&O STOCK FETCHER
+# ===========================
+@st.cache_data(ttl=3600)
+def fetch_nse_fno_stocks_dynamic():
+    """
+    Dynamically fetch NSE F&O stocks from NSE website.
+    Returns list of stock symbols with .NS suffix for yfinance.
+    """
+    fallback_list = [
+        '360ONE.NS', 'ABB.NS', 'ABCAPITAL.NS', 'ABFRL.NS', 'ACC.NS', 'ADANIENSOL.NS', 'ADANIENT.NS', 
+        'ADANIGREEN.NS', 'ADANIPORTS.NS', 'ADANITRANS.NS', 'AJANTPHARM.NS', 'ALKEM.NS', 'AMBUJACEM.NS', 
+        'ANGELONE.NS', 'APLAPOLLO.NS', 'APOLLOHOSP.NS', 'APOLLOTYRE.NS', 'ASHOKLEY.NS', 'ASIANPAINT.NS', 
+        'ASTRAL.NS', 'ATUL.NS', 'AUBANK.NS', 'AUROPHARMA.NS', 'AXISBANK.NS', 'BAJAJ-AUTO.NS', 
+        'BAJAJFINSV.NS', 'BAJFINANCE.NS', 'BALKRISIND.NS', 'BALRAMCHIN.NS', 'BANDHANBNK.NS', 'BANKBARODA.NS', 
+        'BANKINDIA.NS', 'BATAINDIA.NS', 'BDL.NS', 'BEL.NS', 'BERGEPAINT.NS', 'BHARATFORG.NS', 
+        'BHARTIARTL.NS', 'BHEL.NS', 'BIOCON.NS', 'BLUESTARCO.NS', 'BOSCHLTD.NS', 'BPCL.NS', 
+        'BRITANNIA.NS', 'BSE.NS', 'BSOFT.NS', 'CAMS.NS', 'CANBK.NS', 'CANFINHOME.NS', 'CDSL.NS', 
+        'CESC.NS', 'CGCL.NS', 'CGPOWER.NS', 'CHAMBLFERT.NS', 'CHOLAFIN.NS', 'CIPLA.NS', 'COALINDIA.NS', 
+        'COFORGE.NS', 'COLPAL.NS', 'CONCOR.NS', 'COROMANDEL.NS', 'CROMPTON.NS', 'CUB.NS', 'CUMMINSIND.NS', 
+        'CYIENT.NS', 'DABUR.NS', 'DALBHARAT.NS', 'DEEPAKNTR.NS', 'DELHIVERY.NS', 'DELTACORP.NS', 
+        'DIVISLAB.NS', 'DIXON.NS', 'DLF.NS', 'DMART.NS', 'DRREDDY.NS', 'EICHERMOT.NS', 'ESCORTS.NS', 
+        'ETERNAL.NS', 'EXIDEIND.NS', 'FEDERALBNK.NS', 'FORTIS.NS', 'GAIL.NS', 'GLENMARK.NS', 
+        'GMRAIRPORT.NS', 'GMRINFRA.NS', 'GNFC.NS', 'GODREJCP.NS', 'GODREJPROP.NS', 'GRANULES.NS', 
+        'GRASIM.NS', 'GUJGASLTD.NS', 'HAL.NS', 'HAVELLS.NS', 'HCLTECH.NS', 'HDFCAMC.NS', 'HDFCBANK.NS', 
+        'HDFCLIFE.NS', 'HEROMOTOCO.NS', 'HFCL.NS', 'HINDALCO.NS', 'HINDCOPPER.NS', 'HINDPETRO.NS', 
+        'HINDUNILVR.NS', 'HINDZINC.NS', 'HONAUT.NS', 'HUDCO.NS', 'ICICIBANK.NS', 'ICICIGI.NS', 
+        'ICICIPRULI.NS', 'IDEA.NS', 'IDFCFIRSTB.NS', 'IEX.NS', 'IGL.NS', 'IIFL.NS', 'INDHOTEL.NS', 
+        'INDIANB.NS', 'INDIAMART.NS', 'INDIGO.NS', 'INDUSINDBK.NS', 'INDUSTOWER.NS', 'INFY.NS', 
+        'INOXWIND.NS', 'IOC.NS', 'IPCALAB.NS', 'IRCTC.NS', 'IREDA.NS', 'IRFC.NS', 'ITC.NS', 
+        'JINDALSTEL.NS', 'JIOFIN.NS', 'JKCEMENT.NS', 'JSWENERGY.NS', 'JSWSTEEL.NS', 'JUBLFOOD.NS', 
+        'KALYANKJIL.NS', 'KAYNES.NS', 'KEI.NS', 'KFINTECH.NS', 'KOTAKBANK.NS', 'KPITTECH.NS', 
+        'KPRMILL.NS', 'KRBL.NS', 'L&TFH.NS', 'LALPATHLAB.NS', 'LAURUSLABS.NS', 'LICHSGFIN.NS', 
+        'LICI.NS', 'LODHA.NS', 'LT.NS', 'LTF.NS', 'LTIM.NS', 'LTTS.NS', 'LUPIN.NS', 'M&M.NS', 
+        'M&MFIN.NS', 'MANAPPURAM.NS', 'MANKIND.NS', 'MARICO.NS', 'MARUTI.NS', 'MAXHEALTH.NS', 
+        'MAZDOCK.NS', 'MCX.NS', 'METROPOLIS.NS', 'MFSL.NS', 'MGL.NS', 'MOTHERSON.NS', 'MPHASIS.NS', 
+        'MRF.NS', 'MUTHOOTFIN.NS', 'NATIONALUM.NS', 'NAUKRI.NS', 'NAVINFLUOR.NS', 'NBCC.NS', 
+        'NCC.NS', 'NESTLEIND.NS', 'NHPC.NS', 'NMDC.NS', 'NTPC.NS', 'NUVAMA.NS', 'NYKAA.NS', 
+        'OBEROIRLTY.NS', 'OFSS.NS', 'OIL.NS', 'ONGC.NS', 'PAGEIND.NS', 'PATANJALI.NS', 'PAYTM.NS', 
+        'PERSISTENT.NS', 'PETRONET.NS', 'PFC.NS', 'PGEL.NS', 'PHOENIXLTD.NS', 'PIDILITIND.NS', 
+        'PIIND.NS', 'PNB.NS', 'PNBHOUSING.NS', 'POLICYBZR.NS', 'POLYCAB.NS', 'POWERGRID.NS', 
+        'POWERINDIA.NS', 'PPLPHARMA.NS', 'PRESTIGE.NS', 'PVRINOX.NS', 'RAMCOCEM.NS', 'RBLBANK.NS', 
+        'RECLTD.NS', 'RELIANCE.NS', 'RVNL.NS', 'SAIL.NS', 'SAMMAANCAP.NS', 'SBICARD.NS', 'SBILIFE.NS', 
+        'SBIN.NS', 'SHREECEM.NS', 'SHRIRAMFIN.NS', 'SIEMENS.NS', 'SOLARINDS.NS', 'SONACOMS.NS', 
+        'SRF.NS', 'STAR.NS', 'SUNPHARMA.NS', 'SUPREMEIND.NS', 'SUNTV.NS', 'SUZLON.NS', 'SYNGENE.NS', 
+        'TATACHEM.NS', 'TATACOMM.NS', 'TATACONSUM.NS', 'TATAELXSI.NS', 'TATAMOTORS.NS', 'TATAPOWER.NS', 
+        'TATASTEEL.NS', 'TATATECH.NS', 'TCS.NS', 'TECHM.NS', 'TIINDIA.NS', 'TITAGARH.NS', 'TITAN.NS', 
+        'TORNTPHARM.NS', 'TORNTPOWER.NS', 'TRENT.NS', 'TVSMOTOR.NS', 'UBL.NS', 'ULTRACEMCO.NS', 
+        'UNIONBANK.NS', 'UNITDSPR.NS', 'UNOMINDA.NS', 'UPL.NS', 'VBL.NS', 'VEDL.NS', 'VOLTAS.NS', 
+        'WIPRO.NS', 'YESBANK.NS', 'ZEEL.NS', 'ZYDUSLIFE.NS'
+    ]
+    
+    try:
+        # Method 1: Try NSE F&O Market Lots CSV
+        csv_url = "https://archives.nseindia.com/content/fo/fo_mktlots.csv"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+        
+        response = requests.get(csv_url, headers=headers, timeout=15)
+        
+        if response.status_code == 200:
+            from io import StringIO
+            df = pd.read_csv(StringIO(response.text))
+            
+            # Extract symbols from the CSV
+            if 'SYMBOL' in df.columns:
+                symbols = df['SYMBOL'].unique().tolist()
+            elif 'Symbol' in df.columns:
+                symbols = df['Symbol'].unique().tolist()
+            else:
+                # Second column usually contains symbols
+                symbols = df.iloc[:, 1].unique().tolist()
+            
+            # Clean and add .NS suffix
+            fno_stocks = []
+            for symbol in symbols:
+                if pd.notna(symbol) and symbol and not str(symbol).startswith('NIFTY'):
+                    clean_symbol = str(symbol).strip()
+                    fno_stocks.append(f"{clean_symbol}.NS")
+            
+            if len(fno_stocks) > 50:  # Sanity check
+                return sorted(fno_stocks)
+        
+        # Method 2: Fallback to NSE API
+        api_url = "https://www.nseindia.com/api/equity-stockIndices?index=SECURITIES%20IN%20F%26O"
+        
+        session = requests.Session()
+        session.headers.update(headers)
+        session.get("https://www.nseindia.com", timeout=10)
+        
+        response = session.get(api_url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            stocks = []
+            
+            if 'data' in data:
+                for stock in data['data']:
+                    symbol = stock.get('symbol', '')
+                    if symbol and symbol not in ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY']:
+                        stocks.append(f"{symbol}.NS")
+            
+            if len(stocks) > 50:
+                return sorted(stocks)
+        
+        # Fallback to hardcoded list
+        return fallback_list
+            
+    except Exception as e:
+        return fallback_list
+
+
+
+# Dynamic F&O Universe (fetched from NSE)
+COMPLETE_NSE_FO_UNIVERSE = fetch_nse_fno_stocks_dynamic()
+
+# Backup static list (commented out)
+# COMPLETE_NSE_FO_UNIVERSE_STATIC = [
     # Indices (4)
     '^NSEI', '^NSEBANK', '^CNXFINANCE', '^CNXMIDCAP',
     
@@ -4998,78 +5119,11 @@ def main():
     # Get sidebar configuration
     config = create_professional_sidebar()
     
-    # Create main tabs
-    tab1, tab2 = st.tabs([
-        "🎯 Current Day Scanner",
-        "📊 Market Intelligence"
-    ])
+    # Scanner only - Market Intelligence removed
+    # tab1 = Scanner
     
-    with tab1:
-        create_main_scanner_tab(config)
+    create_main_scanner_tab(config)
     
-    with tab2:
-        st.markdown("### 📊 Market Intelligence Dashboard")
-        
-        # Get market data
-        scanner = ProfessionalPCSScanner()
-        sentiment_data = scanner.get_market_sentiment_indicators()
-        
-        # Market Overview
-        col1, col2, col3 = st.columns(3)
-        
-        overall_sentiment = sentiment_data.get('overall', {})
-        
-        with col1:
-            sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
-            sentiment_emoji = "🟢" if sentiment_level == 'BULLISH' else "🟡" if sentiment_level == 'NEUTRAL' else "🔴"
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>{sentiment_emoji} Market Sentiment</h3>
-                <h2 style="color: var(--primary-green);">{sentiment_level}</h2>
-                <p>{overall_sentiment.get('pcs_recommendation', 'Moderate opportunities')}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            risk_level = overall_sentiment.get('risk_level', 'MEDIUM')
-            risk_color = "var(--primary-green)" if risk_level == 'LOW' else "var(--primary-orange)" if risk_level == 'MEDIUM' else "var(--primary-red)"
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>⚠️ Risk Level</h3>
-                <h2 style="color: {risk_color};">{risk_level}</h2>
-                <p>Current PCS risk assessment</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            ist = pytz.timezone('Asia/Kolkata')
-            current_time = datetime.now(ist)
-            is_trading_day = current_time.weekday() < 5  # Monday=0, Friday=4
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>🕐 Market Status</h3>
-                <h2 style="color: var(--primary-blue);">{current_time.strftime('%H:%M')}</h2>
-                <p>{'Trading Day' if is_trading_day else 'Non-Trading Day'}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Detailed metrics
-        st.markdown("#### 📈 Current Day Market Data")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if 'nifty' in sentiment_data:
-                nifty_data = sentiment_data['nifty']
-                st.metric("Nifty 50", f"{nifty_data['current']:.0f}", f"{nifty_data['change_1d']:+.2f}%")
-        
-        with col2:
-            if 'bank_nifty' in sentiment_data:
-                bank_data = sentiment_data['bank_nifty']
-                st.metric("Bank Nifty", f"{bank_data['current']:.0f}", f"{bank_data['change_1d']:+.2f}%")
     
     # FIXED: Compact Footer
     st.markdown("---")
