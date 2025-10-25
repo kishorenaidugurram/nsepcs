@@ -1,3 +1,4 @@
+
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -61,6 +62,20 @@ def clear_cache():
     _data_cache.clear()
     _cache_timestamps.clear()
     logger.info("Cache cleared")
+
+def get_cache_stats():
+    """Get cache statistics"""
+    current_time = time.time()
+    active_entries = sum(
+        1 for key, timestamp in _cache_timestamps.items()
+        if (current_time - timestamp) < CACHE_TTL
+    )
+    return {
+        'total_entries': len(_data_cache),
+        'active_entries': active_entries,
+        'expired_entries': len(_data_cache) - active_entries,
+        'cache_ttl': CACHE_TTL
+    }
 
 # Retry Logic
 def retry_with_backoff(max_attempts=3, base_delay=1):
