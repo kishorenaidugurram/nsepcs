@@ -1,486 +1,378 @@
-# NSE F&O PCS Professional Scanner — Enhanced App (v6.3)
-# -------------------------------------------------------
-# Single-file Streamlit app that embeds the refactored PCSScannerPro + UI
-# Focus: correctness, robustness, speed, and PCS-first signal quality
+# streamlit_app.py
+# ------------------------------------------------------------
+# NSE F&O Current-Day Breakout Scanner (full, self-contained)
+# - Live F&O list pulled from NSE website (MII .gz -> CSV fallback)
+# - Threaded scanning over entire list with yfinance
+# - Breakout conditions:
+#     * Today's close > (lookback High * 1.005)
+#     * Today's volume > (lookback avg volume * min_volume_ratio)
+#     * Tight consolidation (< 15%) in lookback
+# - Export results to Excel
+# ------------------------------------------------------------
 
-from __future__ import annotations
-
-import math
-import re
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
-
-import numpy as np
-import pandas as pd
-import yfinance as yf
-import ta
 import streamlit as st
-from io import BytesIO
-import openpyxl
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
+import pandas as pd
+import numpy as np
+import requests, time, gzip, io, csv, re
+from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import pytz
+import yfinance as yf
+import openpyxl
+from io import BytesIO
 
-# -------------------------------------------------------
-# Streamlit Page Config + Styling
-# -------------------------------------------------------
-st.set_page_config(
-    page_title="NSE F&O PCS Professional Scanner",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# ---------------------- Page & Styles -----------------------
+st.set_page_config(page_title="NSE F&O — Full Universe Breakout Scanner",
+                   page_icon="📈", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
-/* keep things lightweight; rely on Streamlit theme and add only minor polish */
-.block-container{padding-top:1rem;padding-bottom:1rem;}
-h1,h2,h3{letter-spacing:-.01em}
-.dataframe td{font-size:.9rem}
+body, [data-testid="stAppViewContainer"] { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+.block-container { padding-top: 1rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------------------------------------------
-# Universe/Lists (trimmed; feel free to expand)
-# -------------------------------------------------------
-COMPLETE_NSE_FO_UNIVERSE = [
-    'RELIANCE.NS','TCS.NS','HDFCBANK.NS','INFY.NS','ICICIBANK.NS','BHARTIARTL.NS','ITC.NS','SBIN.NS',
-    'LT.NS','KOTAKBANK.NS','AXISBANK.NS','MARUTI.NS','ASIANPAINT.NS','WIPRO.NS','ONGC.NS','NTPC.NS',
-    'POWERGRID.NS','TATAMOTORS.NS','TECHM.NS','ULTRACEMCO.NS','SUNPHARMA.NS','TITAN.NS','COALINDIA.NS',
-    'BAJFINANCE.NS','HCLTECH.NS','JSWSTEEL.NS','INDUSINDBK.NS','BRITANNIA.NS','CIPLA.NS','DRREDDY.NS',
-    'EICHERMOT.NS','GRASIM.NS','HEROMOTOCO.NS','HINDALCO.NS','TATASTEEL.NS','BPCL.NS','M&M.NS',
-    'BAJAJ-AUTO.NS','SHRIRAMFIN.NS','ADANIPORTS.NS','APOLLOHOSP.NS','BAJAJFINSV.NS','DIVISLAB.NS',
-    'NESTLEIND.NS','TRENT.NS','HDFCLIFE.NS','SBILIFE.NS','LTIM.NS','ADANIENT.NS','HINDUNILVR.NS'
-]
+st.title("📈 NSE F&O — Live Universe Breakout Scanner (Current-Day)")
 
-STOCK_CATEGORIES = {
-    'Nifty 50': [
-        'RELIANCE.NS','TCS.NS','HDFCBANK.NS','INFY.NS','ICICIBANK.NS','BHARTIARTL.NS','ITC.NS','SBIN.NS',
-        'LT.NS','KOTAKBANK.NS','AXISBANK.NS','MARUTI.NS','ASIANPAINT.NS','WIPRO.NS','ONGC.NS','NTPC.NS',
-        'POWERGRID.NS','TATAMOTORS.NS','TECHM.NS','ULTRACEMCO.NS','SUNPHARMA.NS','TITAN.NS','COALINDIA.NS',
-        'BAJFINANCE.NS','HCLTECH.NS','JSWSTEEL.NS','INDUSINDBK.NS','BRITANNIA.NS','CIPLA.NS','DRREDDY.NS',
-        'EICHERMOT.NS','GRASIM.NS','HEROMOTOCO.NS','HINDALCO.NS','TATASTEEL.NS','BPCL.NS','M&M.NS',
-        'BAJAJ-AUTO.NS','SHRIRAMFIN.NS','ADANIPORTS.NS','APOLLOHOSP.NS','BAJAJFINSV.NS','DIVISLAB.NS',
-        'NESTLEIND.NS','TRENT.NS','HDFCLIFE.NS','SBILIFE.NS','LTIM.NS','ADANIENT.NS','HINDUNILVR.NS'
-    ],
-    'Bank Nifty': ['HDFCBANK.NS','ICICIBANK.NS','SBIN.NS','KOTAKBANK.NS','AXISBANK.NS','INDUSINDBK.NS','BANKBARODA.NS','CANBK.NS','FEDERALBNK.NS','PNB.NS','IDFCFIRSTB.NS','AUBANK.NS'],
-    'IT Stocks': ['TCS.NS','INFY.NS','WIPRO.NS','HCLTECH.NS','TECHM.NS','LTIM.NS','MPHASIS.NS','COFORGE.NS','PERSISTENT.NS','LTTS.NS'],
-    'Pharma Stocks': ['SUNPHARMA.NS','CIPLA.NS','DRREDDY.NS','DIVISLAB.NS','LUPIN.NS','BIOCON.NS','AUROPHARMA.NS','ALKEM.NS','TORNTPHARM.NS','GLENMARK.NS'],
+# ---------------------- NSE fetch utils ---------------------
+
+NSE_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Connection": "keep-alive",
+    "Pragma": "no-cache",
+    "Cache-Control": "no-cache",
 }
 
-# -------------------------------------------------------
-# Helpers (symbol cleaning, export)
-# -------------------------------------------------------
-_SYMBOL_CLEAN_RE = re.compile(r"[^A-Z0-9\.-]")
+LEGACY_FO_UNDERLYING_CSV = "https://archives.nseindia.com/content/fo/fo_underlyinglist.csv"
+DERIV_ALL_REPORTS = "https://www.nseindia.com/all-reports-derivatives"  # Page that lists F&O-MII Contract File (.gz)
 
-def clean_symbol(sym: str) -> str:
-    sym = sym.strip().upper()
-    sym = _SYMBOL_CLEAN_RE.sub("", sym)
-    sym = sym.replace("IIFLWAM.NS", "360ONE.NS")
-    return sym
+def _bootstrap_nse_session(timeout=10) -> requests.Session:
+    s = requests.Session()
+    s.headers.update(NSE_HEADERS)
+    try:
+        s.get("https://www.nseindia.com", timeout=timeout)
+        s.get("https://www.nseindia.com/market-data", timeout=timeout)
+    except Exception:
+        pass
+    return s
 
+def _extract_gz_links_from_html(html: str):
+    # Pull every .gz link; we’ll pick the first that looks like contract file
+    candidates = re.findall(r'https?://[^\s"\']+\.gz', html)
+    # Prefer links with 'contract' or 'mii' in path
+    ranked = sorted(candidates, key=lambda u: (("contract" in u.lower()) or ("mii" in u.lower())), reverse=True)
+    return ranked
 
-def create_excel_stock_list(symbols: List[str]) -> bytes:
+def _download_gz_as_text(s: requests.Session, url: str, timeout=20) -> str:
+    r = s.get(url, timeout=timeout)
+    r.raise_for_status()
+    raw = io.BytesIO(r.content)
+    with gzip.GzipFile(fileobj=raw, mode="rb") as gz:
+        return gz.read().decode("utf-8", errors="replace")
+
+def _symbols_from_mii_csv_text(csv_text: str):
+    cols_candidates = [
+        "SYMBOL","UnderlyingSymbol","Underlying","UNDERLYING","TRD_SYMBOL","TRADING_SYMBOL"
+    ]
+    syms = set()
+    try:
+        df = pd.read_csv(io.StringIO(csv_text))
+        df_cols = {c.strip().upper(): c for c in df.columns}
+        chosen = None
+        for cand in cols_candidates:
+            if cand.upper() in df_cols:
+                chosen = df_cols[cand.upper()]
+                break
+        if chosen is None:
+            for c in df.columns:
+                if "SYMBOL" in c.upper() or "UNDER" in c.upper():
+                    chosen = c
+                    break
+        if chosen is None:
+            return []
+        for v in df[chosen].astype(str).tolist():
+            sym = v.strip().upper()
+            if not sym:
+                continue
+            if sym in ("NIFTY","BANKNIFTY","FINNIFTY","MIDCPNIFTY","NIFTYIT","NIFTYBANK"):
+                continue
+            root = re.split(r'[\-_/ ]', sym)[0]
+            root = re.sub(r'\d.*$', '', root)
+            root = re.sub(r'(PE|CE|FUT|OPT).*$', '', root)
+            root = root.strip(".& ").upper()
+            # Keep alpha-only roots typical for equities
+            if 2 <= len(root) <= 15 and root.isalpha():
+                syms.add(root)
+    except Exception:
+        try:
+            reader = csv.DictReader(io.StringIO(csv_text))
+            fieldnames = [f.strip() for f in (reader.fieldnames or [])]
+            chosen = None
+            for cand in cols_candidates:
+                if cand in fieldnames or cand.upper() in [f.upper() for f in fieldnames]:
+                    chosen = cand
+                    break
+            rows = list(reader)
+            if not chosen and fieldnames:
+                for f in fieldnames:
+                    if "SYMBOL" in f.upper() or "UNDER" in f.upper():
+                        chosen = f
+                        break
+            if chosen:
+                for row in rows:
+                    v = str(row.get(chosen, "")).strip().upper()
+                    if not v:
+                        continue
+                    if v in ("NIFTY","BANKNIFTY","FINNIFTY","MIDCPNIFTY","NIFTYIT","NIFTYBANK"):
+                        continue
+                    root = re.split(r'[\-_/ ]', v)[0]
+                    root = re.sub(r'\d.*$', '', root)
+                    root = re.sub(r'(PE|CE|FUT|OPT).*$', '', root)
+                    root = root.strip(".& ").upper()
+                    if 2 <= len(root) <= 15 and root.isalpha():
+                        syms.add(root)
+        except Exception:
+            return []
+    out = sorted({f"{x}.NS" for x in syms})
+    return out
+
+@st.cache_data(show_spinner=False)
+def fetch_current_fno_symbols_from_nse(max_age_hours=24) -> list:
+    """
+    Fetch live NSE F&O symbols (with .NS suffix) from NSE website.
+    Cached for 24h to avoid rate-limits.
+    """
+    s = _bootstrap_nse_session()
+    # 1) Try All Reports – Derivatives page
+    try:
+        r = s.get(DERIV_ALL_REPORTS, timeout=15)
+        r.raise_for_status()
+        gz_links = _extract_gz_links_from_html(r.text)
+        for link in gz_links[:5]:  # Try a few plausible links
+            try:
+                text = _download_gz_as_text(s, link, timeout=25)
+                syms = _symbols_from_mii_csv_text(text)
+                if syms:
+                    return syms
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    # 2) Fallback to legacy CSV (still available in many regions)
+    try:
+        r = s.get(LEGACY_FO_UNDERLYING_CSV, timeout=15)
+        if r.status_code == 200:
+            df = pd.read_csv(io.StringIO(r.text))
+            # Expect a column named 'SYMBOL'
+            if 'SYMBOL' in df.columns:
+                base = df['SYMBOL'].astype(str).str.strip().str.upper()
+                base = [b for b in base if b not in ("NIFTY","BANKNIFTY","FINNIFTY","MIDCPNIFTY","NIFTYIT","NIFTYBANK")]
+                syms = sorted({f"{x}.NS" for x in base if x})
+                if syms:
+                    return syms
+    except Exception:
+        pass
+
+    return []  # Let caller decide a backup locally
+
+# -------------------- Scanner: Breakout Logic ----------------
+
+def _get_history(symbol: str, period="6mo", interval="1d"):
+    try:
+        data = yf.Ticker(symbol).history(period=period, interval=interval, auto_adjust=False)
+        if isinstance(data.index, pd.DatetimeIndex):
+            data = data.tz_localize(None)
+        return data
+    except Exception:
+        return pd.DataFrame()
+
+def detect_current_day_breakout(data: pd.DataFrame, lookback_days=20, min_volume_ratio=2.0):
+    """
+    Returns (detected: bool, strength: float, info: dict)
+    """
+    if data is None or data.empty or len(data) < lookback_days + 2:
+        return False, 0.0, {}
+
+    current = data.iloc[-1]
+    lookback = data.iloc[-(lookback_days+1):-1]
+
+    # Resistance & support
+    resistance = float(lookback['High'].max())
+    support = float(lookback['Low'].min())
+
+    # Conditions (today only)
+    price_breakout = current['Close'] > resistance * 1.005
+    volume_breakout = current['Volume'] > (lookback['Volume'].mean() * min_volume_ratio)
+
+    # Consolidation quality
+    cons_range = (resistance - support) / max(support, 1e-9) * 100.0
+    tight_cons = cons_range < 15
+
+    if not (price_breakout and volume_breakout and tight_cons):
+        return False, 0.0, {}
+
+    # Strength score
+    strength = 0.0
+    breakout_pct = (current['Close'] - resistance) / resistance * 100.0
+    if breakout_pct >= 3: strength += 35
+    elif breakout_pct >= 2: strength += 25
+    elif breakout_pct >= 1: strength += 20
+    elif breakout_pct >= 0.5: strength += 15
+
+    vol_ratio = current['Volume'] / max(lookback['Volume'].mean(), 1.0)
+    if vol_ratio >= 4: strength += 30
+    elif vol_ratio >= 3: strength += 25
+    elif vol_ratio >= 2: strength += 20
+
+    if cons_range <= 8: strength += 25
+    elif cons_range <= 12: strength += 20
+    elif cons_range <= 15: strength += 15
+
+    # Close-in-range strength
+    day_range = max(current['High'] - current['Low'], 1e-9)
+    close_strength = (current['Close'] - current['Low']) / day_range * 100.0
+    if close_strength >= 80: strength += 10
+    elif close_strength >= 60: strength += 5
+
+    info = {
+        "current_date": str(current.name.date()) if hasattr(current.name, "date") else str(current.name),
+        "current_close": float(current['Close']),
+        "current_high": float(current['High']),
+        "current_low": float(current['Low']),
+        "current_volume": int(current['Volume']),
+        "resistance_level": float(resistance),
+        "support_level": float(support),
+        "breakout_percentage": float(breakout_pct),
+        "volume_ratio": float(vol_ratio),
+        "consolidation_range_pct": float(cons_range),
+        "close_strength_pct": float(close_strength),
+        "lookback_days": int(lookback_days),
+    }
+    return True, strength, info
+
+def scan_symbol(symbol: str, lookback_days=20, min_volume_ratio=2.0):
+    data = _get_history(symbol, period="6mo", interval="1d")
+    if data is None or data.empty:
+        return None
+    detected, strength, info = detect_current_day_breakout(data, lookback_days, min_volume_ratio)
+    if not detected:
+        return None
+    row = {
+        "symbol": symbol,
+        "date": info["current_date"],
+        "close": info["current_close"],
+        "high": info["current_high"],
+        "low": info["current_low"],
+        "volume": info["current_volume"],
+        "resistance": info["resistance_level"],
+        "support": info["support_level"],
+        "breakout_%": info["breakout_percentage"],
+        "vol_ratio": info["volume_ratio"],
+        "cons_range_%": info["consolidation_range_pct"],
+        "close_strength_%": info["close_strength_pct"],
+        "strength_score": strength,
+    }
+    return row
+
+def to_excel_bytes(df: pd.DataFrame, sheet_name="Qualifying Stocks"):
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Qualifying Stocks"
-    ws['A1'] = "Stock Symbol"
-    ws['A1'].font = openpyxl.styles.Font(bold=True, size=12)
-    for i, s in enumerate(symbols, start=2):
-        ws[f"A{i}"] = s.replace('.NS','')
-    ws.column_dimensions['A'].width = 20
-    buf = BytesIO()
-    wb.save(buf)
-    buf.seek(0)
-    return buf.getvalue()
+    ws.title = sheet_name
+    # Header
+    headers = list(df.columns)
+    for c, h in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=c, value=h)
+        cell.font = openpyxl.styles.Font(bold=True)
+    # Rows
+    for r_idx, (_, r) in enumerate(df.iterrows(), start=2):
+        for c_idx, h in enumerate(headers, start=1):
+            ws.cell(row=r_idx, column=c_idx, value=r[h])
+    # Widths
+    for i in range(1, len(headers)+1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = 16
+    bio = BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+    return bio.read()
 
-# -------------------------------------------------------
-# Pure cached data fetchers & indicator builders (hashable params only)
-# -------------------------------------------------------
-
-def _fetch_history(symbol: str, period: str = "6mo", interval: str = "1d") -> Optional[pd.DataFrame]:
-    symbol = clean_symbol(symbol)
-    try:
-        df = yf.Ticker(symbol).history(period=period, interval=interval, auto_adjust=False)
-        if isinstance(df, pd.DataFrame) and not df.empty:
-            df = df.dropna(subset=["Open", "High", "Low", "Close"]).copy()
-            if not isinstance(df.index, pd.DatetimeIndex):
-                df.index = pd.to_datetime(df.index)
-            return df
-    except Exception:
-        return None
-    return None
-
-@st.cache_data(ttl=900, show_spinner=False)
-def _cached_history(symbol: str, period: str = "6mo", interval: str = "1d") -> Optional[pd.DataFrame]:
-    return _fetch_history(symbol, period=period, interval=interval)
-
-@st.cache_data(ttl=900, show_spinner=False)
-def _cached_daily_indicators(symbol: str, period: str = "6mo") -> Optional[pd.DataFrame]:
-    df = _cached_history(symbol, period=period, interval="1d")
-    if df is None or len(df) < 30:
-        return None
-    c, h, l = df["Close"], df["High"], df["Low"]
-    rsi = ta.momentum.RSIIndicator(c).rsi()
-    sma20 = ta.trend.SMAIndicator(c, window=20).sma_indicator()
-    sma50 = ta.trend.SMAIndicator(c, window=50).sma_indicator()
-    ema20 = ta.trend.EMAIndicator(c, window=20).ema_indicator()
-    bb = ta.volatility.BollingerBands(c)
-    macd_obj = ta.trend.MACD(c)
-    adx = ta.trend.ADXIndicator(h, l, c).adx()
-    atr = ta.volatility.AverageTrueRange(h, l, c).average_true_range()
-    stoch = ta.momentum.StochasticOscillator(h, l, c).stoch()
-    willr = ta.momentum.WilliamsRIndicator(h, l, c).williams_r()
-    out = df.assign(
-        RSI=rsi, SMA_20=sma20, SMA_50=sma50, EMA_20=ema20,
-        BB_upper=bb.bollinger_hband(), BB_middle=bb.bollinger_mavg(), BB_lower=bb.bollinger_lband(),
-        MACD=macd_obj.macd(), MACD_signal=macd_obj.macd_signal(), MACD_hist=macd_obj.macd_diff(),
-        ADX=adx, ATR=atr, Stoch_K=stoch, Williams_R=willr
-    )
-    return out.dropna().copy()
-
-@st.cache_data(ttl=1200, show_spinner=False)
-def _cached_weekly_indicators(symbol: str, period: str = "18mo") -> Optional[pd.DataFrame]:
-    d = _cached_history(symbol, period=period, interval="1d")
-    if d is None or len(d) < 60:
-        return None
-    w = d.resample('W-FRI').agg({"Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum"}).dropna()
-    if len(w) < 15:
-        return None
-    c, h, l = w['Close'], w['High'], w['Low']
-    rsi = ta.momentum.RSIIndicator(c).rsi()
-    sma10 = ta.trend.SMAIndicator(c, window=10).sma_indicator()
-    sma20 = ta.trend.SMAIndicator(c, window=20).sma_indicator()
-    ema10 = ta.trend.EMAIndicator(c, window=10).ema_indicator()
-    macd_obj = ta.trend.MACD(c)
-    adx = ta.trend.ADXIndicator(h, l, c).adx()
-    w = w.assign(RSI=rsi, SMA_10=sma10, SMA_20=sma20, EMA_10=ema10,
-                 MACD=macd_obj.macd(), MACD_signal=macd_obj.macd_signal(), MACD_hist=macd_obj.macd_diff(), ADX=adx)
-    return w.dropna().copy()
-
-# -------------------------------------------------------
-# Data Class
-# -------------------------------------------------------
-@dataclass
-class WeeklyValidation:
-    ok: bool
-    bonus: float
-    signals: List[str]
-    context: str
-
-# -------------------------------------------------------
-# Core Scanner (Refactor v6.3)
-# -------------------------------------------------------
-class PCSScannerPro:
-    def __init__(self):
-        self.ist = pytz.timezone('Asia/Kolkata')
-
-    # NOTE: No @st.cache_data on methods — avoids UnhashableParamError on `self`.
-    def get_daily(self, symbol: str, period: str = "6mo") -> Optional[pd.DataFrame]:
-        return _cached_daily_indicators(symbol, period=period)
-
-    def get_weekly(self, symbol: str, period: str = "18mo") -> Optional[pd.DataFrame]:
-        return _cached_weekly_indicators(symbol, period=period)
-
-    # ---------- Weekly Validation ----------
-    def validate_weekly(self, weekly: pd.DataFrame) -> WeeklyValidation:
-        if weekly is None or len(weekly) < 10:
-            return WeeklyValidation(False, 0, [], "Insufficient weekly data")
-        c = weekly['Close'].iloc[-1]
-        rsi = weekly['RSI'].iloc[-1]
-        macd = weekly['MACD'].iloc[-1]; macd_sig = weekly['MACD_signal'].iloc[-1]
-        sma10 = weekly['SMA_10'].iloc[-1]; sma20 = weekly['SMA_20'].iloc[-1]
-        adx = weekly['ADX'].iloc[-1]
-        signals, bonus = [], 0
-        if c > sma10 > sma20: signals.append("Weekly uptrend (Close>SMA10>SMA20)"); bonus += 15
-        elif c > sma10: signals.append("Close above SMA10"); bonus += 8
-        if 40 <= rsi <= 70: signals.append(f"RSI healthy ({rsi:.1f})"); bonus += 10
-        if macd > macd_sig and macd > 0: signals.append("MACD bullish >0 & >signal"); bonus += 12
-        if adx >= 25: signals.append(f"ADX {adx:.1f} strong"); bonus += 8
-        ok = bonus >= 20 and len(signals) >= 2
-        ctx = "Strong weekly alignment" if bonus >= 30 else ("Moderate weekly support" if bonus >= 20 else "Weak weekly")
-        return WeeklyValidation(ok, bonus, signals, ctx)
-
-    # ---------- Current-Day Breakout ----------
-    def current_day_breakout(self, df: pd.DataFrame, lookback: int = 20, vol_ratio: float = 2.0) -> Tuple[bool, float, Dict]:
-        if df is None or len(df) < lookback + 2:
-            return False, 0, {}
-        cur = df.iloc[-1]
-        lb = df.iloc[-(lookback+1):-1]
-        res = float(lb['High'].max()); sup = float(lb['Low'].min())
-        avgv = float(lb['Volume'].mean()) if lb['Volume'].mean() > 0 else 1.0
-        price_break = cur['Close'] > res * 1.005
-        vol_ok = cur['Volume'] > avgv * vol_ratio
-        cons_range = (res - sup) / max(sup, 1e-9) * 100
-        if not (price_break and vol_ok and cons_range < 15):
-            return False, 0, {}
-        strength = 0
-        brk_pct = (cur['Close'] - res) / res * 100
-        strength += 35 if brk_pct >= 3 else 25 if brk_pct >= 2 else 20 if brk_pct >= 1 else 15
-        vratio = cur['Volume'] / avgv
-        strength += 30 if vratio >= 4 else 25 if vratio >= 3 else 20
-        strength += 25 if cons_range <= 8 else 20 if cons_range <= 12 else 15
-        rng = cur['High'] - cur['Low']
-        close_pos = (cur['Close'] - cur['Low']) / rng * 100 if rng > 0 else 50
-        strength += 10 if close_pos >= 80 else 5 if close_pos >= 60 else 0
-        details = {
-            'current_close': float(cur['Close']), 'current_high': float(cur['High']), 'current_volume': int(cur['Volume']),
-            'resistance_level': res, 'support_level': sup, 'breakout_percentage': brk_pct,
-            'volume_ratio': vratio, 'consolidation_range': cons_range, 'lookback_days': lookback,
-        }
-        return True, float(strength), details
-
-    # ---------- Enhanced Support/Resistance ----------
-    def enhanced_sr(self, df: pd.DataFrame, lookback: int = 50) -> Dict:
-        if df is None or len(df) < lookback:
-            return {"analysis_available": False, "message": "Insufficient data"}
-        cur = float(df['Close'].iloc[-1])
-        levels = []
-        levels += self._pivot_levels(df, lookback)
-        levels += self._ma_levels(df)
-        levels += self._volume_zones(df, lookback)
-        levels += self._psych_levels(cur)
-        levels += self._fib_levels(df, lookback)
-        out = []
-        for L in levels:
-            strength = L.get('base_strength', 20)
-            dist = abs(L['level'] - cur) / cur * 100
-            if dist <= 1: strength += 25
-            elif dist <= 3: strength += 15
-            elif dist <= 5: strength += 8
-            out.append({**L, "strength": min(100, round(strength, 2))})
-        supports = sorted([x for x in out if x['type'] == "support"], key=lambda x: x['strength'], reverse=True)
-        resists  = sorted([x for x in out if x['type'] == "resistance"], key=lambda x: x['strength'], reverse=True)
-        return {"analysis_available": True, "current_price": cur, "support_levels": supports[:5], "resistance_levels": resists[:5]}
-
-    def _pivot_levels(self, df: pd.DataFrame, lookback: int) -> List[Dict]:
-        lev = []; r = df.tail(lookback)
-        H, L = r['High'].values, r['Low'].values
-        for i in range(2, len(r) - 2):
-            if H[i] > H[i-1] and H[i] > H[i-2] and H[i] > H[i+1] and H[i] > H[i+2]:
-                lev.append({"level": float(H[i]), "type": "resistance", "method": "pivot_high", "base_strength": 30})
-            if L[i] < L[i-1] and L[i] < L[i-2] and L[i] < L[i+1] and L[i] < L[i+2]:
-                lev.append({"level": float(L[i]), "type": "support", "method": "pivot_low", "base_strength": 30})
-        return lev
-
-    def _ma_levels(self, df: pd.DataFrame) -> List[Dict]:
-        lev, cur = [], float(df['Close'].iloc[-1])
-        for p in (20, 50, 100, 200):
-            if len(df) >= p:
-                ma = float(df['Close'].tail(p).mean())
-                lev.append({"level": ma, "type": "support" if cur > ma else "resistance", "method": f"MA_{p}", "base_strength": min(20 + p/10, 50)})
-        return lev
-
-    def _volume_zones(self, df: pd.DataFrame, lookback: int) -> List[Dict]:
-        r = df.tail(lookback)
-        if r.empty: return []
-        thresh = r['Volume'].quantile(0.8)
-        hv = r[r['Volume'] >= thresh]
-        if hv.empty: return []
-        centers = [float((row['High'] + row['Low']) / 2.0) for _, row in hv.iterrows()]
-        centers.sort()
-        clusters: List[List[float]] = []
-        for z in centers:
-            if not clusters: clusters.append([z])
-            else:
-                last = clusters[-1]
-                if abs(z - last[-1]) / last[-1] < 0.02: last.append(z)
-                else: clusters.append([z])
-        out = []
-        for cl in clusters:
-            lvl = float(np.mean(cl)); base = 35 if len(cl) >= 3 else 25
-            out.append({"level": lvl, "type": "resistance", "method": "volume_zone", "base_strength": base})
-            out.append({"level": lvl, "type": "support", "method": "volume_zone", "base_strength": base})
-        return out
-
-    def _psych_levels(self, price: float) -> List[Dict]:
-        lev = []
-        for step in (100, 50, 25):
-            lvl = round(price / step) * step
-            if lvl > 0:
-                lev.append({"level": float(lvl), "type": "resistance", "method": f"psych_{step}", "base_strength": 18})
-                lev.append({"level": float(lvl), "type": "support", "method": f"psych_{step}", "base_strength": 18})
-        return lev
-
-    def _fib_levels(self, df: pd.DataFrame, lookback: int) -> List[Dict]:
-        r = df.tail(lookback)
-        hi, lo = float(r['High'].max()), float(r['Low'].min())
-        if hi <= 0 or lo <= 0 or hi <= lo: return []
-        span = hi - lo; fibs = [0.236, 0.382, 0.5, 0.618]
-        out = []
-        for f in fibs:
-            lvl = lo + span * f
-            out.append({"level": float(lvl), "type": "support", "method": f"fib_{f}", "base_strength": 20})
-            out.append({"level": float(lvl), "type": "resistance", "method": f"fib_{f}", "base_strength": 20})
-        return out
-
-    # ---------- PCS helpers ----------
-    def pcs_context(self, df: pd.DataFrame) -> Dict:
-        cur = df.iloc[-1]
-        atr = float(cur.get('ATR', np.nan))
-        close = float(cur['Close'])
-        atr_pct = (atr / close * 100) if (atr and close) else np.nan
-        return {"rsi": float(cur.get('RSI', np.nan)), "adx": float(cur.get('ADX', np.nan)), "atr_pct": atr_pct}
-
-    def pcs_pick_put_delta_stub(self, underlying: float, target_delta: float = 0.20) -> float:
-        T = 20 / 252; vol = 0.22; z = 0.8416
-        return round(underlying * (1 - z * vol * math.sqrt(T)), 1)
-
-    def fundamental_news_hook(self, symbol: str) -> Dict:
-        return {"items": [], "sentiment": "neutral"}
-
-# -------------------------------------------------------
-# Chart helper (light TradingView-style)
-# -------------------------------------------------------
-
-def make_chart(df: pd.DataFrame, title: str, mark_resistance: Optional[float] = None) -> go.Figure:
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
-    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='Price'), row=1, col=1)
-    if 'EMA_20' in df.columns:
-        fig.add_trace(go.Scatter(x=df.index, y=df['EMA_20'], name='EMA 20', mode='lines'), row=1, col=1)
-    if 'SMA_50' in df.columns:
-        fig.add_trace(go.Scatter(x=df.index, y=df['SMA_50'], name='SMA 50', mode='lines'), row=1, col=1)
-    if mark_resistance is not None:
-        fig.add_hline(y=mark_resistance, line_dash='dash', line_color='orange', row=1, col=1)
-    fig.add_trace(go.Bar(x=df.index, y=df['Volume'], name='Volume', opacity=0.7), row=2, col=1)
-    fig.update_layout(title=title, height=560, template='plotly_dark', xaxis_rangeslider_visible=False)
-    return fig
-
-# -------------------------------------------------------
-# Sidebar Controls
-# -------------------------------------------------------
-
-st.title("📈 NSE F&O PCS Professional Scanner — v6.3")
-scanner = PCSScannerPro()
+# -------------------------- UI ------------------------------
 
 with st.sidebar:
-    st.header("Universe & Filters")
-    universe_choice = st.selectbox("Universe", ["Nifty 50", "Bank Nifty", "IT Stocks", "Pharma Stocks", "Custom Selection", "All (short list)"])
-    custom_syms = st.text_area("Custom (comma-separated .NS)", placeholder="RELIANCE.NS, TCS.NS") if universe_choice == "Custom Selection" else ""
-    rsi_min, rsi_max = st.slider("RSI range (daily)", 10, 90, (35, 70))
-    adx_min = st.slider("ADX minimum (daily)", 5, 40, 15)
-    ma_support = st.checkbox("Require price above EMA20", value=True)
-    lookback = st.slider("Lookback (days) for resistance", 10, 60, 20)
-    vol_ratio = st.slider("Min volume ratio vs avg", 1.0, 4.0, 2.0, 0.1)
-    min_strength = st.slider("Min pattern strength", 40, 95, 65)
-    max_workers = st.slider("Parallel scans", 2, 16, 8)
-    run_scan = st.button("🔎 Scan Now", use_container_width=True)
+    st.subheader("Universe & Scan Settings")
+    st.caption("Symbols fetched live from NSE (MII .gz → CSV fallback). Cached 24h.")
+    colA, colB = st.columns(2)
+    lookback_days = colA.number_input("Lookback Days", min_value=10, max_value=60, value=20, step=1)
+    min_vol_ratio = colB.number_input("Min Volume Ratio (x)", min_value=1.0, max_value=5.0, value=2.0, step=0.1)
+    max_workers = st.slider("Threads", 4, 32, 16, 2)
+    st.markdown("---")
+    st.caption("Tip: Reduce lookback or threads if you hit rate limits.")
 
-# Select symbols
-if universe_choice == "Custom Selection":
-    symbols = [clean_symbol(s) for s in custom_syms.split(',') if s.strip()]
-elif universe_choice == "All (short list)":
-    symbols = COMPLETE_NSE_FO_UNIVERSE
+st.info("Fetching **current** NSE F&O universe from NSE website…")
+symbols = fetch_current_fno_symbols_from_nse()  # cached
+if not symbols:
+    st.error("Could not fetch F&O list from NSE (both sources failed). You can retry or use a local backup list.")
 else:
-    symbols = STOCK_CATEGORIES.get(universe_choice, COMPLETE_NSE_FO_UNIVERSE)
+    st.success(f"Fetched **{len(symbols)}** live F&O symbols from NSE.")
+    st.write(", ".join(symbols[:25]) + (" …" if len(symbols) > 25 else ""))
 
-st.caption(f"Scanning {len(symbols)} symbols…")
+st.markdown("### Run Scan")
+run = st.button("🚀 Scan Entire F&O Universe", type="primary")
 
-# -------------------------------------------------------
-# Scanner Logic (parallel)
-# -------------------------------------------------------
-
-# NOTE: Keep this function UN-CACHED to avoid hashing surprises from nested calls.
-def scan_symbol(symbol: str, rsi_min: int, rsi_max: int, adx_min: int, ma_support: bool, lookback: int, vol_ratio: float, min_strength: int):
-    d = scanner.get_daily(symbol)
-    if d is None or len(d) < 30:
-        return None
-    # Daily filters
-    cur = d.iloc[-1]
-    rsi_val = float(cur.get('RSI', np.nan))
-    if not (rsi_min <= rsi_val <= rsi_max):
-        return None
-    if float(cur.get('ADX', 0)) < adx_min:
-        return None
-    if ma_support and float(cur['Close']) < float(cur.get('EMA_20', cur['Close'])):
-        return None
-    ok, score, det = scanner.current_day_breakout(d, lookback=lookback, vol_ratio=vol_ratio)
-    if not ok or score < min_strength:
-        return None
-    w = scanner.get_weekly(symbol)
-    wv = scanner.validate_weekly(w) if w is not None else WeeklyValidation(False, 0, [], "no weekly")
-    sr = scanner.enhanced_sr(d)
-    ctx = scanner.pcs_context(d)
-    total = score + (wv.bonus if wv else 0)
-    return {
-        'symbol': symbol,
-        'daily_strength': score,
-        'weekly_bonus': (wv.bonus if wv else 0),
-        'final_strength': total,
-        'breakout': det,
-        'weekly_ok': (wv.ok if wv else False),
-        'weekly_ctx': (wv.context if wv else ""),
-        'sr': sr,
-        'ctx': ctx,
-    }
-
-results: List[Dict] = []
-
-if run_scan:
+if run and symbols:
     progress = st.progress(0.0, text="Scanning…")
-    collected = []
+    results = []
+    errors = 0
+
+    def _task(sym):
+        try:
+            return scan_symbol(sym, lookback_days=lookback_days, min_volume_ratio=min_vol_ratio)
+        except Exception:
+            return "ERROR"
+
+    total = len(symbols)
+    done = 0
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
-        futs = {ex.submit(scan_symbol, s, rsi_min, rsi_max, adx_min, ma_support, lookback, vol_ratio, min_strength): s for s in symbols}
-        for i, fut in enumerate(as_completed(futs)):
+        futures = {ex.submit(_task, s): s for s in symbols}
+        for fut in as_completed(futures):
             res = fut.result()
-            if res: collected.append(res)
-            progress.progress((i + 1) / len(symbols))
+            if res == "ERROR":
+                errors += 1
+            elif isinstance(res, dict):
+                results.append(res)
+            done += 1
+            progress.progress(done/total, text=f"Scanning… {done}/{total}")
+
     progress.empty()
-    if not collected:
-        st.warning("No matches with the current filters.")
+
+    if not results:
+        st.warning("No symbols met the breakout criteria today.")
     else:
-        # sort by final_strength desc
-        results = sorted(collected, key=lambda x: x['final_strength'], reverse=True)
+        df = pd.DataFrame(results)
+        df = df.sort_values(["strength_score","breakout_%","vol_ratio"], ascending=[False, False, False]).reset_index(drop=True)
+        st.subheader(f"✅ {len(df)} Symbols Passed")
+        st.dataframe(df, use_container_width=True, hide_index=True)
 
-# -------------------------------------------------------
-# Results Table + Actions
-# -------------------------------------------------------
-if results:
-    st.subheader("Qualified Breakouts (Current-Day Confirmed)")
-    table = pd.DataFrame([
-        {
-            'Symbol': r['symbol'].replace('.NS', ''),
-            'Final Score': int(r['final_strength']),
-            'Daily Strength': int(r['daily_strength']),
-            'Weekly Bonus': int(r['weekly_bonus']),
-            'Res(lookback)': round(r['breakout']['resistance_level'], 2),
-            'Vol xAvg': round(r['breakout']['volume_ratio'], 2),
-            'Cons%': round(r['breakout']['consolidation_range'], 1),
-            'RSI': round(r['ctx']['rsi'], 1) if r['ctx']['rsi'] == r['ctx']['rsi'] else None,
-            'ADX': round(r['ctx']['adx'], 1) if r['ctx']['adx'] == r['ctx']['adx'] else None,
-            'ATR%': round(r['ctx']['atr_pct'], 1) if r['ctx']['atr_pct'] == r['ctx']['atr_pct'] else None,
-        } for r in results
-    ])
-    st.dataframe(table, use_container_width=True)
+        # Download
+        excel_bytes = to_excel_bytes(df[["symbol"]].rename(columns={"symbol":"Stock Symbol"}))
+        st.download_button("💾 Download Qualifying Symbols (Excel)",
+                           data=excel_bytes, file_name=f"fno_breakouts_{datetime.now().date()}.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-    st.download_button(
-        "⬇️ Download symbols (.xlsx)",
-        data=create_excel_stock_list([r['symbol'] for r in results]),
-        file_name="pcs_breakouts.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
-    )
+        csv_bytes = df.to_csv(index=False).encode()
+        st.download_button("⬇️ Download Full Results (CSV)",
+                           data=csv_bytes, file_name=f"fno_breakout_results_{datetime.now().date()}.csv",
+                           mime="text/csv")
 
-    # Detailed cards with charts
-    st.subheader("Details & Charts")
-    for r in results:
-        with st.expander(f"{r['symbol']} — Score {int(r['final_strength'])} | Weekly: {r['weekly_ctx']}"):
-            cols = st.columns(3)
-            cols[0].metric("Vol xAvg", f"{r['breakout']['volume_ratio']:.2f}")
-            cols[1].metric("Consolidation %", f"{r['breakout']['consolidation_range']:.1f}%")
-            cols[2].metric("ATR %", f"{r['ctx']['atr_pct']:.1f}%" if r['ctx']['atr_pct'] == r['ctx']['atr_pct'] else "—")
+        st.caption(f"Errors during scan (likely rate-limit/timeouts): {errors}")
 
-            d = scanner.get_daily(r['symbol'])
-            fig = make_chart(d, f"{r['symbol'].replace('.NS', '')} — Current-Day Breakout", r['breakout']['resistance_level'])
-            st.plotly_chart(fig, use_container_width=True)
-
-            # Support/Resistance snapshot
-            sr = r['sr']
-            if sr.get('analysis_available'):
-                s_levels = sr['support_levels'][:3]
-                r_levels = sr['resistance_levels'][:3]
-                st.markdown("**Top Supports**: " + ", ".join([f"{x['level']:.2f} ({x['method']})" for x in s_levels]))
-                st.markdown("**Top Resistances**: " + ", ".join([f"{x['level']:.2f} ({x['method']})" for x in r_levels]))
-else:
-    st.info("Set your filters and click **Scan Now** to search for current-day breakouts across your chosen universe.")
+# ----------------------- Footer Notes -----------------------
+st.markdown("""
+---  
+**Notes**
+- F&O universe source priority: **All Reports – Derivatives → F&O-MII Contract File (.gz)**, then legacy **fo_underlyinglist.csv**.
+- Breakout logic uses *today’s* close & volume only (vs last `lookback_days`) to avoid stale signals.
+- yfinance can rate-limit; adjust **Threads** if you see many errors.
+""")
