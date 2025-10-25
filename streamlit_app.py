@@ -793,11 +793,9 @@ def main():
         display_cols = ['symbol', 'confidence_score', 'patterns', 'current_price', 
                        'price_change_pct', 'rsi', 'volume_ratio']
         
+        # Display dataframe without styling to avoid matplotlib dependency
         st.dataframe(
-            df_display[display_cols].style.background_gradient(
-                subset=['confidence_score'], 
-                cmap='RdYlGn'
-            ),
+            df_display[display_cols],
             use_container_width=True,
             height=400
         )
