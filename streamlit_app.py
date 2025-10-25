@@ -4990,8 +4990,7 @@ def main():
     st.markdown("""
     <div class="professional-header">
         <h1>📈 NSE F&O PCS Scanner</h1>
-        <p class="subtitle">Current Day EOD Analysis • Complete 219 Stock Universe • Angel One Style</p>
-        <p class="description">Real-time Pattern Confirmation with Latest Trading Day Data</p>
+       
     </div>
     """, unsafe_allow_html=True)
     
