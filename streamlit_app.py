@@ -1,3 +1,16 @@
+====================================================================================================
+COMPLETE NSE F&O MOMENTUM SCANNER - READY TO COPY AND PASTE
+====================================================================================================
+
+Instructions:
+1. Copy the ENTIRE code below (from 'import streamlit' to the end)
+2. Save as: nse_fno_scanner.py
+3. Run: streamlit run nse_fno_scanner.py
+
+====================================================================================================
+START OF CODE
+====================================================================================================
+
 import streamlit as st
 import yfinance as yf
 import pandas as pd
@@ -21,7 +34,7 @@ warnings.filterwarnings('ignore')
 # Set page config
 st.set_page_config(
     page_title="NSE F&O PCS Professional Scanner", 
-    page_icon="ðŸ“ˆ", 
+    page_icon="📈", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -2679,14 +2692,14 @@ class ProfessionalPCSScanner:
                         line_dash="dash", 
                         line_color="#DD6B20", 
                         row=1, col=1,
-                        annotation_text=f"Resistance: â‚¹{resistance_level:.2f}"
+                        annotation_text=f"Resistance: ₹{resistance_level:.2f}"
                     )
                     
                     # Highlight current day breakout
                     fig.add_annotation(
                         x=data.index[-1],
                         y=current_close,
-                        text=f"ðŸ“ˆ TODAY: â‚¹{current_close:.2f}",
+                        text=f"📈 TODAY: ₹{current_close:.2f}",
                         showarrow=True,
                         arrowhead=2,
                         arrowcolor="#38A169",
@@ -3104,7 +3117,7 @@ class ProfessionalPCSScanner:
             strength = 0
             
             if test_count >= 2:
-                signals.append(f"Resistance level tested {test_count} times at â‚¹{resistance_level:.2f}")
+                signals.append(f"Resistance level tested {test_count} times at ₹{resistance_level:.2f}")
                 strength += 25
             
             if 0 < distance_to_resistance <= 5:
@@ -4238,7 +4251,7 @@ class ProfessionalPCSScanner:
                 top_vol_level = high_vol_levels[0]
                 if top_vol_level['volume_ratio'] > 1.5:
                     summary['key_insights'].append(
-                        f"Strong {top_vol_level['type']} at â‚¹{top_vol_level['level']:.2f} with high volume"
+                        f"Strong {top_vol_level['type']} at ₹{top_vol_level['level']:.2f} with high volume"
                     )
             
             # Support/Resistance strength
@@ -4275,13 +4288,13 @@ def create_professional_sidebar():
     with st.sidebar:
         st.markdown("""
         <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, hsl(174, 62%, 47%), hsl(174, 62%, 40%)); border-radius: 8px; margin-bottom: 14px;'>
-            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700; font-size: 1.3rem;'>ðŸ“ˆ PCS Scanner V6.2</h2>
+            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700; font-size: 1.3rem;'>📈 PCS Scanner V6.2</h2>
             <p style='color: #FFFFFF; margin: 3px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Professional Teal Edition</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Stock Universe Selection - SIMPLIFIED
-        st.markdown("### ðŸ“Š Stock Universe")
+        st.markdown("### 📊 Stock Universe")
         
         universe_option = st.radio(
             "Select Stock Universe:",
@@ -4293,16 +4306,16 @@ def create_professional_sidebar():
         # Load stock list based on selection
         if universe_option == "NSE F&O Stocks (219)":
             stocks_to_scan = COMPLETE_NSE_FO_UNIVERSE
-            st.success(f"ðŸŽ¯ **F&O Universe**: {len(stocks_to_scan)} stocks with futures & options")
+            st.success(f"🎯 **F&O Universe**: {len(stocks_to_scan)} stocks with futures & options")
         else:
-            with st.spinner("ðŸ”„ Fetching NSE Non-F&O stocks..."):
+            with st.spinner("🔄 Fetching NSE Non-F&O stocks..."):
                 stocks_to_scan = get_nse_non_fno_stocks()
-            st.success(f"ðŸ“ˆ **Non-F&O Universe**: {len(stocks_to_scan)} liquid NSE stocks")
+            st.success(f"📈 **Non-F&O Universe**: {len(stocks_to_scan)} liquid NSE stocks")
         
         # Core Technical Filters
-        st.markdown("### âš™ï¸ Core Filters")
+        st.markdown("### ⚙️ Core Filters")
         
-        with st.expander("ðŸŽ¯ Technical Settings", expanded=True):
+        with st.expander("🎯 Technical Settings", expanded=True):
             col1, col2 = st.columns(2)
             with col1:
                 rsi_min = st.slider("RSI Min:", 20, 80, 30)
@@ -4320,14 +4333,14 @@ def create_professional_sidebar():
                     ma_tolerance = st.slider("MA Tolerance %:", 0, 10, 3)
         
         # Volume & Breakout Settings
-        with st.expander("ðŸ“Š Volume & Breakout", expanded=True):
+        with st.expander("📊 Volume & Breakout", expanded=True):
             min_volume_ratio = st.slider("Min Volume Ratio:", 0.8, 5.0, 1.2, 0.1)
             volume_breakout_ratio = st.slider("Breakout Volume:", 1.5, 5.0, 2.0, 0.1)
             lookback_days = st.slider("Lookback Period:", 15, 30, 20)
         
         # NEW V6: Chart Pattern Filters
-        st.markdown("### ðŸ“ˆ Chart Pattern Filters")
-        with st.expander("ðŸŽ¯ Pattern Selection", expanded=False):
+        st.markdown("### 📈 Chart Pattern Filters")
+        with st.expander("🎯 Pattern Selection", expanded=False):
             st.markdown("**Select patterns to detect:**")
             
             # Create columns for better layout
@@ -4363,7 +4376,7 @@ def create_professional_sidebar():
             )
             
             # NEW V6.1: Separate Daily/Weekly Analysis Options
-            st.markdown("**ðŸ” Timeframe Analysis:**")
+            st.markdown("**🔍 Timeframe Analysis:**")
             
             analysis_mode = st.radio(
                 "Select Analysis Mode:",
@@ -4379,21 +4392,21 @@ def create_professional_sidebar():
             # Analysis mode explanations
             if analysis_mode == "Daily Only (V6.0 Style)":
                 st.info(
-                    "ðŸ“Š **Daily Analysis**: Pattern detection using current day EOD confirmation only. Fast scanning with original V6.0 logic."
+                    "📊 **Daily Analysis**: Pattern detection using current day EOD confirmation only. Fast scanning with original V6.0 logic."
                 )
                 enable_daily_analysis = True
                 enable_weekly_validation = False
                 
             elif analysis_mode == "Weekly Only (New Feature)":
                 st.info(
-                    "ðŸ“ˆ **Weekly Analysis**: Pattern detection using weekly timeframe only. Slower but captures longer-term trends."
+                    "📈 **Weekly Analysis**: Pattern detection using weekly timeframe only. Slower but captures longer-term trends."
                 )
                 enable_daily_analysis = False
                 enable_weekly_validation = True
                 
             else:  # Combined mode
                 st.info(
-                    "ðŸŽ¯ **Combined Analysis**: Daily patterns validated with weekly confirmation. Best accuracy with moderate scan time."
+                    "🎯 **Combined Analysis**: Daily patterns validated with weekly confirmation. Best accuracy with moderate scan time."
                 )
                 enable_daily_analysis = True
                 enable_weekly_validation = True
@@ -4402,7 +4415,7 @@ def create_professional_sidebar():
         pattern_strength_min = st.slider("Pattern Strength Min:", 50, 100, 65, 5)
         
         # Scanning Options  
-        with st.expander("ðŸš€ Scan Settings", expanded=True):
+        with st.expander("🚀 Scan Settings", expanded=True):
             # FIXED: Default to ALL stocks, not limited to 50
             max_stocks = st.selectbox(
                 "Stocks to Scan:",
@@ -4427,22 +4440,22 @@ def create_professional_sidebar():
         
         # === ENHANCEMENTS SECTION ===
         st.markdown("---")
-        st.markdown("### ðŸš€ **Advanced Enhancements**")
+        st.markdown("### 🚀 **Advanced Enhancements**")
         
         # Enhancement toggles
         enhancement_options = {
-            'delivery_volume': st.checkbox("ðŸ“Š Delivery Volume Analysis", value=True, 
+            'delivery_volume': st.checkbox("📊 Delivery Volume Analysis", value=True, 
                                          help="Analyze delivery percentage and institutional participation"),
-            'fno_consolidation': st.checkbox("ðŸ”„ F&O Consolidation Detection", value=True,
+            'fno_consolidation': st.checkbox("🔄 F&O Consolidation Detection", value=True,
                                            help="Detect consolidation patterns near resistance levels"),
-            'breakout_pullback': st.checkbox("ðŸ“ˆ Breakout-Pullback Patterns", value=True,
+            'breakout_pullback': st.checkbox("📈 Breakout-Pullback Patterns", value=True,
                                            help="Identify breakout-pullback-breakout patterns with strong green candles"),
-            'enhanced_sr': st.checkbox("ðŸŽ¯ Enhanced Support & Resistance", value=True,
+            'enhanced_sr': st.checkbox("🎯 Enhanced Support & Resistance", value=True,
                                      help="Advanced multi-timeframe support and resistance analysis")
         }
         
         # Market Sentiment
-        st.markdown("### ðŸŒ Market Sentiment")
+        st.markdown("### 🌍 Market Sentiment")
         
         scanner = ProfessionalPCSScanner()
         sentiment_data = scanner.get_market_sentiment_indicators()
@@ -4456,7 +4469,7 @@ def create_professional_sidebar():
         st.markdown(f"""
         <div class="{sentiment_class}" style="padding: 10px; border-radius: 6px; margin: 6px 0;">
             <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1rem;">
-                {'ðŸŸ¢' if sentiment_level == 'BULLISH' else 'ðŸŸ¡' if sentiment_level == 'NEUTRAL' else 'ðŸ”´'} 
+                {'🟢' if sentiment_level == 'BULLISH' else '🟡' if sentiment_level == 'NEUTRAL' else '🔴'} 
                 {sentiment_level}
             </h4>
             <p style="margin: 0; font-size: 0.8rem; opacity: 0.9;">{pcs_recommendation}</p>
@@ -4477,17 +4490,17 @@ def create_professional_sidebar():
     
     # === ENHANCEMENTS SECTION ===
     st.markdown("---")
-    st.markdown("### ðŸš€ **Advanced Enhancements**")
+    st.markdown("### 🚀 **Advanced Enhancements**")
     
     # Enhancement toggles
     enhancement_options = {
-        'delivery_volume': st.checkbox("ðŸ“Š Delivery Volume Analysis", value=True, 
+        'delivery_volume': st.checkbox("📊 Delivery Volume Analysis", value=True, 
                                      help="Analyze delivery percentage and institutional participation"),
-        'fno_consolidation': st.checkbox("ðŸ”„ F&O Consolidation Detection", value=True,
+        'fno_consolidation': st.checkbox("🔄 F&O Consolidation Detection", value=True,
                                        help="Detect consolidation patterns near resistance levels"),
-        'breakout_pullback': st.checkbox("ðŸ“ˆ Breakout-Pullback Patterns", value=True,
+        'breakout_pullback': st.checkbox("📈 Breakout-Pullback Patterns", value=True,
                                        help="Identify breakout-pullback-breakout patterns with strong green candles"),
-        'enhanced_sr': st.checkbox("ðŸŽ¯ Enhanced Support & Resistance", value=True,
+        'enhanced_sr': st.checkbox("🎯 Enhanced Support & Resistance", value=True,
                                  help="Advanced multi-timeframe support and resistance analysis")
     }
     
@@ -4521,18 +4534,18 @@ def create_professional_sidebar():
 
 def create_main_scanner_tab(config):
     """Create main scanner tab with current day focus"""
-    st.markdown("### ðŸŽ¯ Multi-Timeframe Pattern Scanner V6.1")
-    st.info("ðŸ’¡ **Options**: Daily Only (Fast) | Weekly Only (Trends) | Daily + Weekly Combined (Best Accuracy)")
+    st.markdown("### 🎯 Multi-Timeframe Pattern Scanner V6.1")
+    st.info("💡 **Options**: Daily Only (Fast) | Weekly Only (Trends) | Daily + Weekly Combined (Best Accuracy)")
     
     # Action buttons
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        scan_button = st.button("ðŸš€ Scan Multi-Timeframe Patterns", type="primary", key="main_scan")
+        scan_button = st.button("🚀 Scan Multi-Timeframe Patterns", type="primary", key="main_scan")
     
     with col2:
         if config['export_results']:
-            export_button = st.button("ðŸ“Š Export", key="export")
+            export_button = st.button("📊 Export", key="export")
         else:
             st.markdown("*Enable export*")
     
@@ -4553,7 +4566,7 @@ def create_main_scanner_tab(config):
             progress_bar.progress(progress)
             
             clean_symbol = symbol.replace('.NS', '').replace('^', '')
-            status_container.info(f"ðŸ” Analyzing {clean_symbol} ({i+1}/{len(config['stocks_to_scan'])})")
+            status_container.info(f"🔍 Analyzing {clean_symbol} ({i+1}/{len(config['stocks_to_scan'])})")
             
             try:
                 # Get recent data focused on current day
@@ -4671,7 +4684,7 @@ def create_main_scanner_tab(config):
             # Sort by pattern strength and current day confirmation
             results.sort(key=lambda x: max(p['strength'] for p in x['patterns']), reverse=True)
             
-            st.success(f"ðŸŽ‰ Found **{len(results)} stocks** with current day confirmed patterns!")
+            st.success(f"🎉 Found **{len(results)} stocks** with current day confirmed patterns!")
             
             # Summary metrics
             total_patterns = sum(len(r['patterns']) for r in results)
@@ -4681,13 +4694,13 @@ def create_main_scanner_tab(config):
             
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("ðŸŽ¯ Stocks Found", len(results))
+                st.metric("🎯 Stocks Found", len(results))
             with col2:
-                st.metric("ðŸ”¥ Current Day", current_day_breakouts)
+                st.metric("🔥 Current Day", current_day_breakouts)
             with col3:
-                st.metric("ðŸ’ª Avg Strength", f"{avg_strength:.1f}%")
+                st.metric("💪 Avg Strength", f"{avg_strength:.1f}%")
             with col4:
-                st.metric("ðŸ† High Confidence", high_confidence)
+                st.metric("🏆 High Confidence", high_confidence)
             
             # Display results
             for result in results:
@@ -4696,43 +4709,43 @@ def create_main_scanner_tab(config):
                 
                 # Check for current day breakout
                 has_current_breakout = any('Current Day' in p['type'] for p in result['patterns'])
-                current_indicator = " ðŸ”¥ TODAY!" if has_current_breakout else ""
+                current_indicator = " 🔥 TODAY!" if has_current_breakout else ""
                 
                 # Check for news
                 has_news = result.get('news_data') and result['news_data']['news_count'] > 0
-                news_indicator = " ðŸ“°" if has_news else ""
+                news_indicator = " 📰" if has_news else ""
                 
                 with st.expander(
-                    f"ðŸ“ˆ {result['symbol'].replace('.NS', '').replace('^', '')} - {overall_confidence}{current_indicator}{news_indicator}", 
+                    f"📈 {result['symbol'].replace('.NS', '').replace('^', '')} - {overall_confidence}{current_indicator}{news_indicator}", 
                     expanded=True
                 ):
                     
                     # Stock metrics
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("ðŸ’° Current Price", f"â‚¹{result['current_price']:.2f}")
+                        st.metric("💰 Current Price", f"₹{result['current_price']:.2f}")
                     with col2:
                         volume_color = "inverse" if result['volume_ratio'] >= 2 else "normal"
-                        st.metric("ðŸ“Š Volume Today", f"{result['volume_ratio']:.2f}x", delta_color=volume_color)
+                        st.metric("📊 Volume Today", f"{result['volume_ratio']:.2f}x", delta_color=volume_color)
                     with col3:
-                        st.metric("ðŸ“ˆ RSI", f"{result['rsi']:.1f}")
+                        st.metric("📈 RSI", f"{result['rsi']:.1f}")
                     with col4:
-                        st.metric("âš¡ ADX", f"{result['adx']:.1f}")
+                        st.metric("⚡ ADX", f"{result['adx']:.1f}")
                     
                     # Current day trading info
                     current_day_data = result['data'].iloc[-1]
                     trading_date = current_day_data.name.strftime('%Y-%m-%d')
                     
                     st.markdown(f"""
-                    **ðŸ—“ï¸ Trading Date:** {trading_date} | 
-                    **ðŸ“Š Day Range:** â‚¹{current_day_data['Low']:.2f} - â‚¹{current_day_data['High']:.2f} |
-                    **ðŸ’¹ Day Change:** {((current_day_data['Close'] - current_day_data['Open']) / current_day_data['Open'] * 100):+.2f}%
+                    **🗓️ Trading Date:** {trading_date} | 
+                    **📊 Day Range:** ₹{current_day_data['Low']:.2f} - ₹{current_day_data['High']:.2f} |
+                    **💹 Day Change:** {((current_day_data['Close'] - current_day_data['Open']) / current_day_data['Open'] * 100):+.2f}%
                     """)
                     
                     # NEWS ANALYSIS
                     if has_news:
                         news_data = result['news_data']
-                        sentiment_emoji = "ðŸŸ¢" if news_data['overall_sentiment'] == 'positive' else "ðŸ”´" if news_data['overall_sentiment'] == 'negative' else "ðŸŸ¡"
+                        sentiment_emoji = "🟢" if news_data['overall_sentiment'] == 'positive' else "🔴" if news_data['overall_sentiment'] == 'negative' else "🟡"
                         
                         st.markdown(f"""
                         <div class="news-card">
@@ -4740,14 +4753,14 @@ def create_main_scanner_tab(config):
                         """, unsafe_allow_html=True)
                         
                         for news_item in news_data['news_items'][:2]:
-                            relevance_emoji = "ðŸ”¥" if news_item['relevance'] == 'high' else "âš¡" if news_item['relevance'] == 'medium' else "ðŸ“„"
+                            relevance_emoji = "🔥" if news_item['relevance'] == 'high' else "⚡" if news_item['relevance'] == 'medium' else "📄"
                             st.markdown(f"**{relevance_emoji}** {news_item['headline'][:120]}...")
                         
                         st.markdown("</div>", unsafe_allow_html=True)
                     
                     # Pattern details
                     for pattern in result['patterns']:
-                        confidence_emoji = "ðŸŸ¢" if pattern['confidence'] == 'HIGH' else "ðŸŸ¡" if pattern['confidence'] == 'MEDIUM' else "ðŸ”´"
+                        confidence_emoji = "🟢" if pattern['confidence'] == 'HIGH' else "🟡" if pattern['confidence'] == 'MEDIUM' else "🔴"
                         
                         if pattern.get('special') == 'CURRENT_DAY_BREAKOUT':
                             details = pattern.get('details', {})
@@ -4760,7 +4773,7 @@ def create_main_scanner_tab(config):
                                 weekly_context = weekly_val.get('weekly_context', '')
                                 weekly_info = f"""
                                 <div style='background: rgba(25, 135, 84, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #198754;'>
-                                    <strong>ðŸ“ˆ Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
+                                    <strong>📈 Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
                                     <small>Weekly Trend: {weekly_val.get('weekly_trend', 'N/A')} | Weekly RSI: {weekly_val.get('weekly_rsi', 0):.1f}</small>
                                 </div>
                                 """
@@ -4769,13 +4782,13 @@ def create_main_scanner_tab(config):
                                 weekly_context = weekly_val.get('weekly_context', '')
                                 weekly_info = f"""
                                 <div style='background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #ffc107;'>
-                                    <strong>ðŸ“Š Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
+                                    <strong>📊 Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
                                 </div>
                                 """
                             
                             st.markdown(f"""
                             <div class="consolidation-card">
-                                <h4>ðŸ”¥ {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
+                                <h4>🔥 {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
                                 <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
                                     <span><strong>Total Strength:</strong> {pattern['strength']}%</span>
                                     <span><strong>Daily:</strong> {pattern.get('daily_strength', pattern['strength'])}%</span>
@@ -4792,7 +4805,7 @@ def create_main_scanner_tab(config):
                                 </div>
                                 {weekly_info}
 
-                                <p style="color: var(--primary-green); font-weight: 600;">âš¡ CONFIRMED TODAY: Pattern validated with current trading day EOD data</p>
+                                <p style="color: var(--primary-green); font-weight: 600;">⚡ CONFIRMED TODAY: Pattern validated with current trading day EOD data</p>
                             </div>
                             """, unsafe_allow_html=True)
                         else:
@@ -4808,7 +4821,7 @@ def create_main_scanner_tab(config):
                                 signal_text = " | ".join(weekly_signals[:2])  # Show first 2 signals
                                 weekly_info = f"""
                                 <div style='background: rgba(25, 135, 84, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #198754;'>
-                                    <strong>ðŸ“ˆ Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
+                                    <strong>📈 Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
                                     <small>{signal_text}</small>
                                 </div>
                                 """
@@ -4817,7 +4830,7 @@ def create_main_scanner_tab(config):
                                 weekly_context = weekly_val.get('weekly_context', '')
                                 weekly_info = f"""
                                 <div style='background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #ffc107;'>
-                                    <strong>ðŸ“Š Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
+                                    <strong>📊 Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
                                 </div>
                                 """
                             
@@ -4842,7 +4855,7 @@ def create_main_scanner_tab(config):
                     enhancements = result.get('enhancements', {})
                     
                     if enhancements:
-                        st.markdown("### ðŸš€ **Enhancement Analysis**")
+                        st.markdown("### 🚀 **Enhancement Analysis**")
                         
                         # Create columns for enhancements
                         enh_cols = st.columns(2)
@@ -4855,20 +4868,20 @@ def create_main_scanner_tab(config):
                                     confidence_color = "var(--primary-green)" if delivery.get('confidence') == 'High' else "var(--primary-orange)" if delivery.get('confidence') == 'Medium' else "var(--primary-red)"
                                     st.markdown(f"""
                                     <div class="pattern-card" style="border-left-color: {confidence_color};">
-                                        <h4>ðŸ“Š Delivery Volume Analysis</h4>
+                                        <h4>📊 Delivery Volume Analysis</h4>
                                         <p><strong>Estimated Delivery:</strong> {delivery.get('delivery_percentage', 0):.1f}%</p>
                                         <p><strong>Analysis:</strong> {delivery.get('delivery_analysis', 'N/A')}</p>
                                         <p><strong>Confidence:</strong> <span style="color: {confidence_color};">{delivery.get('confidence', 'Low')}</span></p>
                                         <div style="font-size: 0.9rem; margin-top: 8px;">
-                                            {''.join(f'<div>â€¢ {signal}</div>' for signal in delivery.get('delivery_signals', []))}
+                                            {''.join(f'<div>• {signal}</div>' for signal in delivery.get('delivery_signals', []))}
                                         </div>
                                     </div>
                                     """, unsafe_allow_html=True)
                                 else:
                                     st.markdown(f"""
                                     <div class="pattern-card" style="border-left-color: var(--primary-red);">
-                                        <h4>ðŸ“Š Delivery Volume Analysis</h4>
-                                        <p style="color: var(--primary-red);">âš ï¸ {delivery.get('delivery_analysis', 'Analysis unavailable')}</p>
+                                        <h4>📊 Delivery Volume Analysis</h4>
+                                        <p style="color: var(--primary-red);">⚠️ {delivery.get('delivery_analysis', 'Analysis unavailable')}</p>
                                     </div>
                                     """, unsafe_allow_html=True)
                         
@@ -4876,17 +4889,17 @@ def create_main_scanner_tab(config):
                         if 'fno_consolidation' in enhancements:
                             with enh_cols[1]:
                                 consolidation = enhancements['fno_consolidation']
-                                status = "âœ… Detected" if consolidation.get('consolidation_detected') else "âŒ Not Detected"
+                                status = "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected"
                                 status_color = "var(--primary-green)" if consolidation.get('consolidation_detected') else "var(--primary-orange)"
                                 strength = consolidation.get('consolidation_strength', 0)
                                 st.markdown(f"""
                                 <div class="consolidation-card">
-                                    <h4>ðŸ”„ F&O Consolidation</h4>
+                                    <h4>🔄 F&O Consolidation</h4>
                                     <p><strong>Status:</strong> <span style="color: {status_color};">{status}</span></p>
                                     <p><strong>Strength:</strong> {strength}/100</p>
                                     <p><strong>Analysis:</strong> {consolidation.get('analysis', 'N/A')}</p>
                                     <div style="font-size: 0.9rem; margin-top: 8px;">
-                                        {''.join(f'<div>â€¢ {signal}</div>' for signal in consolidation.get('signals', []))}
+                                        {''.join(f'<div>• {signal}</div>' for signal in consolidation.get('signals', []))}
                                     </div>
                                 </div>
                                 """, unsafe_allow_html=True)
@@ -4898,17 +4911,17 @@ def create_main_scanner_tab(config):
                         if 'breakout_pullback' in enhancements:
                             with enh_cols2[0]:
                                 breakout = enhancements['breakout_pullback']
-                                status = "âœ… Detected" if breakout.get('pattern_detected') else "âŒ Not Detected"
+                                status = "✅ Detected" if breakout.get('pattern_detected') else "❌ Not Detected"
                                 status_color = "var(--primary-green)" if breakout.get('pattern_detected') else "var(--primary-orange)"
                                 strength = breakout.get('pattern_strength', 0)
                                 st.markdown(f"""
                                 <div class="high-confidence">
-                                    <h4>ðŸ“ˆ Breakout-Pullback Pattern</h4>
+                                    <h4>📈 Breakout-Pullback Pattern</h4>
                                     <p><strong>Status:</strong> <span style="color: {status_color};">{status}</span></p>
                                     <p><strong>Strength:</strong> {strength}/100</p>
                                     <p><strong>Analysis:</strong> {breakout.get('analysis', 'N/A')}</p>
                                     <div style="font-size: 0.9rem; margin-top: 8px;">
-                                        {''.join(f'<div>â€¢ {signal}</div>' for signal in breakout.get('signals', []))}
+                                        {''.join(f'<div>• {signal}</div>' for signal in breakout.get('signals', []))}
                                     </div>
                                 </div>
                                 """, unsafe_allow_html=True)
@@ -4926,21 +4939,21 @@ def create_main_scanner_tab(config):
                                     
                                     st.markdown(f"""
                                     <div class="news-card">
-                                        <h4>ðŸŽ¯ Enhanced Support & Resistance</h4>
+                                        <h4>🎯 Enhanced Support & Resistance</h4>
                                         <p><strong>Support Levels:</strong> {support_count}</p>
                                         <p><strong>Resistance Levels:</strong> {resistance_count}</p>
                                         <p><strong>Position:</strong> {position}</p>
                                         <p><strong>Breakout Probability:</strong> <span style="color: var(--primary-green);">{breakout_prob}</span></p>
                                         <div style="font-size: 0.9rem; margin-top: 8px;">
-                                            {''.join(f'<div>â€¢ {insight}</div>' for insight in sr.get('analysis_summary', {}).get('key_insights', []))}
+                                            {''.join(f'<div>• {insight}</div>' for insight in sr.get('analysis_summary', {}).get('key_insights', []))}
                                         </div>
                                     </div>
                                     """, unsafe_allow_html=True)
                                 else:
                                     st.markdown(f"""
                                     <div class="news-card">
-                                        <h4>ðŸŽ¯ Enhanced Support & Resistance</h4>
-                                        <p style="color: var(--primary-orange);">âš ï¸ {sr.get('message', 'Analysis not available')}</p>
+                                        <h4>🎯 Enhanced Support & Resistance</h4>
+                                        <p style="color: var(--primary-orange);">⚠️ {sr.get('message', 'Analysis not available')}</p>
                                     </div>
                                     """, unsafe_allow_html=True)
                         
@@ -4948,7 +4961,7 @@ def create_main_scanner_tab(config):
                     
                     # Chart with current day focus
                     if config['show_charts']:
-                        st.markdown("#### ðŸ“Š Current Day Chart Analysis")
+                        st.markdown("#### 📊 Current Day Chart Analysis")
                         chart = scanner.create_tradingview_chart(
                             result['data'], 
                             result['symbol'], 
@@ -4959,14 +4972,14 @@ def create_main_scanner_tab(config):
             
             # Export to Excel button
             st.markdown("---")
-            st.markdown("### ðŸ“¥ Export Results")
+            st.markdown("### 📥 Export Results")
             
             col1, col2, col3 = st.columns([1, 1, 2])
             with col1:
                 # Create Excel file with stock symbols only
                 excel_data = create_excel_stock_list(results)
                 st.download_button(
-                    label="ðŸ“Š Download Stock List (Excel)",
+                    label="📊 Download Stock List (Excel)",
                     data=excel_data,
                     file_name=f"qualifying_stocks_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -4974,12 +4987,12 @@ def create_main_scanner_tab(config):
                 )
             
             with col2:
-                st.info(f"ðŸ“‹ {len(results)} stocks will be exported")
+                st.info(f"📋 {len(results)} stocks will be exported")
         
         else:
-            st.warning("ðŸ” No current day patterns found. Try adjusting filters.")
+            st.warning("🔍 No current day patterns found. Try adjusting filters.")
             
-            st.markdown("### ðŸ’¡ Suggestions:")
+            st.markdown("### 💡 Suggestions:")
             st.markdown("- Lower **Pattern Strength** to 50-60%")
             st.markdown("- Reduce **Volume Ratio** to 1.0x")  
             st.markdown("- Expand **RSI range** to 25-85")
@@ -4989,8 +5002,8 @@ def main():
     # FIXED: Angel One Style Compact Header
     st.markdown("""
     <div class="professional-header">
-        <h1>ðŸ“ˆ NSE F&O PCS Scanner</h1>
-        <p class="subtitle">Current Day EOD Analysis â€¢ Complete 219 Stock Universe â€¢ Angel One Style</p>
+        <h1>📈 NSE F&O PCS Scanner</h1>
+        <p class="subtitle">Current Day EOD Analysis • Complete 219 Stock Universe • Angel One Style</p>
         <p class="description">Real-time Pattern Confirmation with Latest Trading Day Data</p>
     </div>
     """, unsafe_allow_html=True)
@@ -5000,15 +5013,15 @@ def main():
     
     # Create main tabs
     tab1, tab2 = st.tabs([
-        "ðŸŽ¯ Current Day Scanner",
-        "ðŸ“Š Market Intelligence"
+        "🎯 Current Day Scanner",
+        "📊 Market Intelligence"
     ])
     
     with tab1:
         create_main_scanner_tab(config)
     
     with tab2:
-        st.markdown("### ðŸ“Š Market Intelligence Dashboard")
+        st.markdown("### 📊 Market Intelligence Dashboard")
         
         # Get market data
         scanner = ProfessionalPCSScanner()
@@ -5021,7 +5034,7 @@ def main():
         
         with col1:
             sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
-            sentiment_emoji = "ðŸŸ¢" if sentiment_level == 'BULLISH' else "ðŸŸ¡" if sentiment_level == 'NEUTRAL' else "ðŸ”´"
+            sentiment_emoji = "🟢" if sentiment_level == 'BULLISH' else "🟡" if sentiment_level == 'NEUTRAL' else "🔴"
             
             st.markdown(f"""
             <div class="metric-card">
@@ -5037,7 +5050,7 @@ def main():
             
             st.markdown(f"""
             <div class="metric-card">
-                <h3>âš ï¸ Risk Level</h3>
+                <h3>⚠️ Risk Level</h3>
                 <h2 style="color: {risk_color};">{risk_level}</h2>
                 <p>Current PCS risk assessment</p>
             </div>
@@ -5050,14 +5063,14 @@ def main():
             
             st.markdown(f"""
             <div class="metric-card">
-                <h3>ðŸ• Market Status</h3>
+                <h3>🕐 Market Status</h3>
                 <h2 style="color: var(--primary-blue);">{current_time.strftime('%H:%M')}</h2>
                 <p>{'Trading Day' if is_trading_day else 'Non-Trading Day'}</p>
             </div>
             """, unsafe_allow_html=True)
         
         # Detailed metrics
-        st.markdown("#### ðŸ“ˆ Current Day Market Data")
+        st.markdown("#### 📈 Current Day Market Data")
         
         col1, col2 = st.columns(2)
         
@@ -5077,3 +5090,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+====================================================================================================
+END OF CODE
+====================================================================================================
