@@ -2,6 +2,11 @@
 COMPLETE NSE F&O MOMENTUM SCANNER - READY TO COPY AND PASTE
 ====================================================================================================
 
+Instructions:
+1. Copy the ENTIRE code below (from 'import streamlit' to the end)
+2. Save as: nse_fno_scanner.py
+3. Run: streamlit run nse_fno_scanner.py
+
 ====================================================================================================
 START OF CODE
 ====================================================================================================
