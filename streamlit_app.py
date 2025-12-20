@@ -278,8 +278,38 @@ st.markdown("""
         background: transparent !important;
     }
     
-    /* === METRICS - NO CUSTOM STYLING (Let Streamlit Default Work) === */
-    /* All metric CSS removed to fix display issue */
+    /* === METRICS - Bloomberg Style === */
+    [data-testid="stMetric"] {
+        background: var(--bg-secondary) !important;
+        padding: 12px 16px !important;
+        border: 1px solid var(--border-primary) !important;
+        border-left: 3px solid var(--bloomberg-orange) !important;
+        border-radius: 0 !important;
+    }
+    
+    [data-testid="stMetric"]:hover {
+        background: var(--bg-hover) !important;
+        border-left-color: var(--bloomberg-orange-hover) !important;
+    }
+    
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        font-family: var(--font-mono) !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--text-secondary) !important;
+        text-transform: uppercase !important;
+        font-size: var(--font-size-xs) !important;
+        letter-spacing: 0.5px !important;
+        font-weight: 600 !important;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        font-family: var(--font-mono) !important;
+    }
     
     /* === DATAFRAMES & TABLES - Bloomberg Terminal Style === */
     [data-testid="stDataFrame"],
@@ -5273,39 +5303,21 @@ def create_main_scanner_tab(config):
                 
             with detail_tabs[2]:  # Enhancements tab
                 enhancements = result.get('enhancements', {})
-                
-                # Debug: Show what we have
-                st.markdown("### 🚀 Enhancement Analysis")
-                
-                # TEST: Simple hardcoded metric to verify CSS
-                st.markdown("#### 🧪 TEST METRICS (Hardcoded)")
-                test_col1, test_col2 = st.columns(2)
-                with test_col1:
-                    st.metric("TEST LABEL 1", "TEST VALUE 1")
-                with test_col2:
-                    st.metric("TEST LABEL 2", "TEST VALUE 2")
-                st.markdown("---")
-                
-                with st.expander("🔍 Debug: Enhancement Data", expanded=False):
-                    st.json(enhancements)
                     
                 if enhancements:
+                    st.markdown("### 🚀 Enhancement Analysis")
+                        
                     # Delivery Volume
                     if 'delivery_volume' in enhancements:
                         delivery = enhancements['delivery_volume']
-                        st.markdown("#### 📊 Delivery Volume Analysis")
-                        ecol1, ecol2 = st.columns(2)
-                        with ecol1:
-                            delivery_pct = delivery.get('delivery_percentage')
-                            if delivery_pct is not None:
-                                st.metric("Estimated Delivery", f"{delivery_pct:.1f}%")
-                            else:
-                                st.metric("Estimated Delivery", "N/A")
-                        with ecol2:
-                            st.metric("Confidence", delivery.get('confidence', 'Low'))
-                        st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'Data unavailable')}")
-                    else:
-                        st.info("📊 Delivery Volume Analysis - Not enabled in settings")
+                        if delivery.get('delivery_percentage') is not None:
+                            st.markdown("#### 📊 Delivery Volume Analysis")
+                            ecol1, ecol2 = st.columns(2)
+                            with ecol1:
+                                st.metric("Estimated Delivery", f"{delivery.get('delivery_percentage', 0):.1f}%")
+                            with ecol2:
+                                st.metric("Confidence", delivery.get('confidence', 'Low'))
+                            st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'N/A')}")
                         
                     # F&O Consolidation
                     if 'fno_consolidation' in enhancements:
@@ -5317,8 +5329,6 @@ def create_main_scanner_tab(config):
                         with ecol2:
                             st.metric("Strength", f"{consolidation.get('consolidation_strength', 0)}/100")
                         st.write(f"**Analysis:** {consolidation.get('analysis', 'N/A')}")
-                    else:
-                        st.info("🔄 F&O Consolidation - Not enabled in settings")
                         
                     # Breakout-Pullback
                     if 'breakout_pullback' in enhancements:
