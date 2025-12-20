@@ -16,6 +16,8 @@ from bs4 import BeautifulSoup
 import re
 from io import BytesIO
 import openpyxl
+from sklearn.cluster import KMeans
+from scipy.signal import argrelextrema
 warnings.filterwarnings('ignore')
 
 # Set page config
@@ -2881,6 +2883,112 @@ class ProfessionalPCSScanner:
         else:
             return 'LOW'
     
+    def identify_support_resistance_levels(self, data, num_levels=3):
+        """
+        Scientific Support & Resistance identification using multiple methods:
+        1. K-Means Clustering for price level grouping
+        2. Local Minima/Maxima detection using scipy
+        3. Volume-weighted price levels
+        
+        Returns: dict with 'support' and 'resistance' lists [S1, S2, S3] and [R1, R2, R3]
+        """
+        if len(data) < 50:
+            return {'support': [], 'resistance': [], 'method': 'insufficient_data'}
+        
+        current_price = data['Close'].iloc[-1]
+        
+        # METHOD 1: Local Minima and Maxima (Scipy)
+        # Find local lows (support) and highs (resistance)
+        order = 5  # Look at 5 candles on each side
+        local_min_idx = argrelextrema(data['Low'].values, np.less, order=order)[0]
+        local_max_idx = argrelextrema(data['High'].values, np.greater, order=order)[0]
+        
+        local_mins = data['Low'].iloc[local_min_idx].values
+        local_maxs = data['High'].iloc[local_max_idx].values
+        
+        # METHOD 2: Volume-weighted levels
+        # Calculate price levels weighted by volume at those levels
+        price_vol_data = []
+        for i in range(len(data)):
+            price_range = np.linspace(data['Low'].iloc[i], data['High'].iloc[i], 5)
+            for price in price_range:
+                price_vol_data.append([price, data['Volume'].iloc[i] / 5])
+        
+        price_vol_df = pd.DataFrame(price_vol_data, columns=['Price', 'Volume'])
+        
+        # METHOD 3: K-Means Clustering
+        # Combine all significant price levels
+        all_support_candidates = list(local_mins)
+        all_resistance_candidates = list(local_maxs)
+        
+        # Filter by recency and significance (last 100 days more important)
+        recent_weight = 2.0
+        recent_cutoff = len(data) - 100 if len(data) > 100 else 0
+        
+        weighted_supports = []
+        for idx in local_min_idx:
+            weight = recent_weight if idx >= recent_cutoff else 1.0
+            weighted_supports.extend([data['Low'].iloc[idx]] * int(weight))
+        
+        weighted_resistances = []
+        for idx in local_max_idx:
+            weight = recent_weight if idx >= recent_cutoff else 1.0
+            weighted_resistances.extend([data['High'].iloc[idx]] * int(weight))
+        
+        # Apply K-Means clustering to group nearby levels
+        support_levels = []
+        resistance_levels = []
+        
+        if len(weighted_supports) >= num_levels:
+            # Cluster support levels
+            supports_array = np.array(weighted_supports).reshape(-1, 1)
+            kmeans_support = KMeans(n_clusters=min(num_levels * 2, len(weighted_supports)), 
+                                   random_state=42, n_init=10)
+            kmeans_support.fit(supports_array)
+            clustered_supports = sorted(kmeans_support.cluster_centers_.flatten())
+            
+            # Filter supports below current price
+            support_levels = [s for s in clustered_supports if s < current_price * 0.98]
+            support_levels = sorted(support_levels, reverse=True)[:num_levels]
+        
+        if len(weighted_resistances) >= num_levels:
+            # Cluster resistance levels
+            resistances_array = np.array(weighted_resistances).reshape(-1, 1)
+            kmeans_resistance = KMeans(n_clusters=min(num_levels * 2, len(weighted_resistances)), 
+                                      random_state=42, n_init=10)
+            kmeans_resistance.fit(resistances_array)
+            clustered_resistances = sorted(kmeans_resistance.cluster_centers_.flatten())
+            
+            # Filter resistances above current price
+            resistance_levels = [r for r in clustered_resistances if r > current_price * 1.02]
+            resistance_levels = sorted(resistance_levels)[:num_levels]
+        
+        # Fallback: if not enough levels found, use percentile-based approach
+        if len(support_levels) < num_levels:
+            recent_data = data.tail(100)
+            percentiles = [10, 20, 30]
+            for p in percentiles[:num_levels - len(support_levels)]:
+                level = np.percentile(recent_data['Low'], p)
+                if level < current_price * 0.98:
+                    support_levels.append(level)
+            support_levels = sorted(set(support_levels), reverse=True)[:num_levels]
+        
+        if len(resistance_levels) < num_levels:
+            recent_data = data.tail(100)
+            percentiles = [70, 80, 90]
+            for p in percentiles[:num_levels - len(resistance_levels)]:
+                level = np.percentile(recent_data['High'], p)
+                if level > current_price * 1.02:
+                    resistance_levels.append(level)
+            resistance_levels = sorted(set(resistance_levels))[:num_levels]
+        
+        return {
+            'support': support_levels,
+            'resistance': resistance_levels,
+            'current_price': current_price,
+            'method': 'clustering_minmax_volume'
+        }
+    
     def create_tradingview_chart(self, data, symbol, pattern_info=None):
         """Create professional TradingView-style chart with current day highlighting"""
         if len(data) < 20:
@@ -2932,6 +3040,67 @@ class ProfessionalPCSScanner:
                 line=dict(color='#3182CE', width=2, dash='dot')
             ),
             row=1, col=1
+        )
+        
+        # === ADD SCIENTIFIC SUPPORT & RESISTANCE LEVELS ===
+        sr_levels = self.identify_support_resistance_levels(data, num_levels=3)
+        
+        # Add Support Levels (S1, S2, S3) - Green horizontal lines
+        support_labels = ['S1', 'S2', 'S3']
+        for i, support in enumerate(sr_levels['support']):
+            if support > 0:
+                fig.add_hline(
+                    y=support,
+                    line_dash="dot",
+                    line_color="#00d084",  # Bloomberg green
+                    line_width=2,
+                    opacity=0.7,
+                    row=1, col=1,
+                    annotation_text=f"{support_labels[i]}: ₹{support:.2f}",
+                    annotation_position="right",
+                    annotation=dict(
+                        font=dict(size=10, color="#00d084", family="Roboto Mono"),
+                        bgcolor="rgba(0, 208, 132, 0.1)",
+                        bordercolor="#00d084"
+                    )
+                )
+        
+        # Add Resistance Levels (R1, R2, R3) - Red horizontal lines
+        resistance_labels = ['R1', 'R2', 'R3']
+        for i, resistance in enumerate(sr_levels['resistance']):
+            if resistance > 0:
+                fig.add_hline(
+                    y=resistance,
+                    line_dash="dot",
+                    line_color="#ff3b69",  # Bloomberg red
+                    line_width=2,
+                    opacity=0.7,
+                    row=1, col=1,
+                    annotation_text=f"{resistance_labels[i]}: ₹{resistance:.2f}",
+                    annotation_position="right",
+                    annotation=dict(
+                        font=dict(size=10, color="#ff3b69", family="Roboto Mono"),
+                        bgcolor="rgba(255, 59, 105, 0.1)",
+                        bordercolor="#ff3b69"
+                    )
+                )
+        
+        # Add Current Price line
+        current_price = sr_levels['current_price']
+        fig.add_hline(
+            y=current_price,
+            line_dash="solid",
+            line_color="#ff6b00",  # Bloomberg orange
+            line_width=3,
+            row=1, col=1,
+            annotation_text=f"CURRENT: ₹{current_price:.2f}",
+            annotation_position="left",
+            annotation=dict(
+                font=dict(size=11, color="#ff6b00", family="Roboto Mono", weight="bold"),
+                bgcolor="rgba(255, 107, 0, 0.15)",
+                bordercolor="#ff6b00",
+                borderwidth=2
+            )
         )
         
         # Highlight current day breakout if present
