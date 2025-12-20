@@ -288,6 +288,19 @@ st.markdown("""
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
+        min-height: 80px !important;
+    }
+    
+    /* Force all child elements to be visible */
+    [data-testid="stMetric"] * {
+        visibility: visible !important;
+        opacity: 1 !important;
+        display: inline-block !important;
+    }
+    
+    [data-testid="stMetric"] > div {
+        display: block !important;
+        width: 100% !important;
     }
     
     [data-testid="stMetric"]:hover {
@@ -298,22 +311,25 @@ st.markdown("""
     [data-testid="stMetricValue"] {
         font-size: 1.8rem !important;
         font-weight: 700 !important;
-        color: var(--text-primary) !important;
+        color: #ffffff !important;
         font-family: var(--font-mono) !important;
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
+        line-height: 1.2 !important;
+        margin: 8px 0 !important;
     }
     
     [data-testid="stMetricLabel"] {
-        color: var(--text-secondary) !important;
+        color: #999999 !important;
         text-transform: uppercase !important;
-        font-size: var(--font-size-xs) !important;
+        font-size: 0.7rem !important;
         letter-spacing: 0.5px !important;
         font-weight: 600 !important;
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
+        margin-bottom: 4px !important;
     }
     
     [data-testid="stMetricDelta"] {
