@@ -655,6 +655,193 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
+    
+    /* === DARK MODE STYLING === */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            /* Dark Mode Color Overrides */
+            --background: hsl(210, 20%, 12%);
+            --background-secondary: hsl(210, 20%, 15%);
+            --surface: hsl(210, 18%, 18%);
+            --surface-elevated: hsl(210, 18%, 20%);
+            
+            /* Dark Mode Borders */
+            --border: hsl(210, 14%, 25%);
+            --border-hover: hsl(210, 16%, 35%);
+            
+            /* Dark Mode Text - High Contrast */
+            --text-primary: hsl(210, 20%, 98%);
+            --text-secondary: hsl(210, 15%, 75%);
+            --text-tertiary: hsl(210, 12%, 60%);
+            --text-disabled: hsl(210, 10%, 45%);
+            
+            /* Dark Mode Primary Colors */
+            --primary-700: hsl(174, 62%, 65%);
+            --primary-600: hsl(174, 62%, 55%);
+            
+            /* Dark Mode Semantic Colors */
+            --success-text: hsl(142, 76%, 65%);
+            --warning-text: hsl(38, 92%, 65%);
+            --error-text: hsl(0, 86%, 65%);
+            --info-text: hsl(174, 62%, 65%);
+        }
+        
+        /* Dark Blue Sidebar */
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, hsl(220, 40%, 15%) 0%, hsl(220, 40%, 12%) 100%) !important;
+            border-right: 1px solid hsl(220, 30%, 25%) !important;
+        }
+        
+        [data-testid="stSidebar"] > div:first-child {
+            background: transparent !important;
+        }
+        
+        /* Sidebar Text - High Contrast */
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] span,
+        [data-testid="stSidebar"] div {
+            color: hsl(210, 20%, 95%) !important;
+        }
+        
+        /* Sidebar Headers */
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3 {
+            color: hsl(174, 62%, 75%) !important;
+        }
+        
+        /* Sidebar Inputs */
+        [data-testid="stSidebar"] input,
+        [data-testid="stSidebar"] select,
+        [data-testid="stSidebar"] textarea {
+            background: hsl(220, 35%, 18%) !important;
+            border: 1px solid hsl(220, 30%, 28%) !important;
+            color: hsl(210, 20%, 95%) !important;
+        }
+        
+        /* Sidebar Checkboxes */
+        [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
+            color: hsl(210, 20%, 95%) !important;
+        }
+        
+        /* Sidebar Radio Buttons */
+        [data-testid="stSidebar"] [role="radiogroup"] label {
+            color: hsl(210, 20%, 95%) !important;
+        }
+        
+        /* Sidebar Markdown */
+        [data-testid="stSidebar"] .stMarkdown {
+            color: hsl(210, 20%, 95%) !important;
+        }
+        
+        /* Main Content Area */
+        .main {
+            background: var(--background) !important;
+        }
+        
+        /* Cards and Surfaces */
+        .stTabs,
+        .element-container,
+        [data-testid="stDataFrame"],
+        [data-testid="stTable"] {
+            background: var(--surface) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Text Elements */
+        p, span, div, label {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Headers */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary) !important;
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, hsl(174, 62%, 65%), hsl(174, 62%, 75%));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Input Fields */
+        input, select, textarea {
+            background: var(--surface) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Buttons */
+        .stButton > button {
+            background: var(--primary-600) !important;
+            color: white !important;
+        }
+        
+        /* Metrics */
+        [data-testid="stMetricValue"] {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-testid="stMetricLabel"] {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* DataFrames */
+        [data-testid="stDataFrame"] table {
+            background: var(--surface) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-testid="stDataFrame"] th {
+            background: var(--surface-elevated) !important;
+            color: var(--text-primary) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        
+        [data-testid="stDataFrame"] td {
+            color: var(--text-primary) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            background: var(--surface) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            color: var(--text-secondary) !important;
+        }
+        
+        .stTabs [aria-selected="true"] {
+            color: var(--primary-600) !important;
+            border-bottom-color: var(--primary-600) !important;
+        }
+        
+        /* Success/Warning/Error Messages */
+        .stSuccess, .stWarning, .stError, .stInfo {
+            background: var(--surface-elevated) !important;
+            border: 1px solid var(--border) !important;
+        }
+        
+        .stSuccess {
+            color: var(--success-text) !important;
+        }
+        
+        .stWarning {
+            color: var(--warning-text) !important;
+        }
+        
+        .stError {
+            color: var(--error-text) !important;
+        }
+        
+        .stInfo {
+            color: var(--info-text) !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
