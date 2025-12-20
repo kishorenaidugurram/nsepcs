@@ -3165,6 +3165,40 @@ class ProfessionalPCSScanner:
             )
         )
         
+        # Add Support Levels Info Box (Top-Right Corner)
+        s1_price = sr_levels['support'][0] if sr_levels['support'][0] > 0 else 'N/A'
+        s2_price = sr_levels['support'][1] if sr_levels['support'][1] > 0 else 'N/A'
+        s3_price = sr_levels['support'][2] if sr_levels['support'][2] > 0 else 'N/A'
+        
+        s1_text = f"₹{s1_price:.2f}" if isinstance(s1_price, (int, float)) else s1_price
+        s2_text = f"₹{s2_price:.2f}" if isinstance(s2_price, (int, float)) else s2_price
+        s3_text = f"₹{s3_price:.2f}" if isinstance(s3_price, (int, float)) else s3_price
+        
+        support_info_text = (
+            f"<b>SUPPORT LEVELS</b><br>"
+            f"<span style='color:#00d084'>▲ S1:</span> <b>{s1_text}</b><br>"
+            f"<span style='color:#ffa500'>▲ S2:</span> <b>{s2_text}</b> (Stop-Loss)<br>"
+            f"<span style='color:#ff3b69'>▲ S3:</span> <b>{s3_text}</b>"
+        )
+        
+        fig.add_annotation(
+            text=support_info_text,
+            xref="paper", yref="paper",
+            x=0.98, y=0.98,
+            xanchor="right", yanchor="top",
+            showarrow=False,
+            bgcolor="rgba(10, 10, 10, 0.92)",
+            bordercolor="#ff6b00",
+            borderwidth=2,
+            borderpad=10,
+            font=dict(
+                size=13,
+                color="white",
+                family="Roboto Mono"
+            ),
+            align="left"
+        )
+        
         # Highlight current day breakout if present
         if pattern_info and pattern_info.get('special') == 'CURRENT_DAY_BREAKOUT':
             details = pattern_info.get('details', {})
