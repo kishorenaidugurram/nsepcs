@@ -187,6 +187,13 @@ st.markdown("""
         background: transparent;
     }
     
+    /* Sidebar Text - Smaller for Better Fit */
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span {
+        font-size: 0.85rem;
+    }
+    
     /* Sidebar Headers */
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
@@ -194,6 +201,12 @@ st.markdown("""
         color: var(--primary-700);
         font-weight: 700;
         padding: var(--spacing-4) 0;
+        font-size: 1rem;
+    }
+    
+    /* Sidebar Checkboxes - Smaller Text */
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
+        font-size: 0.82rem;
     }
     
     /* Input Fields */
@@ -256,6 +269,46 @@ st.markdown("""
     .stDownloadButton > button:hover {
         background: hsl(142, 76%, 25%);
         box-shadow: var(--shadow-md);
+    }
+    
+    /* === METRIC CARDS - PROPER STYLING === */
+    [data-testid="stMetricValue"] {
+        background: var(--surface);
+        padding: var(--spacing-4);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        font-size: var(--font-size-2xl) !important;
+        font-weight: 700 !important;
+        color: var(--primary-700) !important;
+    }
+    
+    [data-testid="stMetric"] {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-4);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+    }
+    
+    [data-testid="stMetric"]:hover {
+        border-color: var(--primary-500);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-size: var(--font-size-sm) !important;
+        font-weight: 600 !important;
+        color: var(--text-secondary) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: var(--spacing-2);
+    }
+    
+    [data-testid="stMetricDelta"] {
+        font-size: var(--font-size-sm) !important;
+        font-weight: 500 !important;
     }
     
     /* Checkboxes & Radio */
@@ -702,6 +755,7 @@ st.markdown("""
         [data-testid="stSidebar"] span,
         [data-testid="stSidebar"] div {
             color: hsl(210, 20%, 95%) !important;
+            font-size: 0.85rem !important;
         }
         
         /* Sidebar Headers */
@@ -709,20 +763,13 @@ st.markdown("""
         [data-testid="stSidebar"] h2,
         [data-testid="stSidebar"] h3 {
             color: hsl(174, 62%, 75%) !important;
+            font-size: 1rem !important;
         }
         
-        /* Sidebar Inputs */
-        [data-testid="stSidebar"] input,
-        [data-testid="stSidebar"] select,
-        [data-testid="stSidebar"] textarea {
-            background: hsl(220, 35%, 18%) !important;
-            border: 1px solid hsl(220, 30%, 28%) !important;
-            color: hsl(210, 20%, 95%) !important;
-        }
-        
-        /* Sidebar Checkboxes */
+        /* Sidebar Checkboxes - Smaller Text */
         [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
             color: hsl(210, 20%, 95%) !important;
+            font-size: 0.82rem !important;
         }
         
         /* Sidebar Radio Buttons */
@@ -747,6 +794,27 @@ st.markdown("""
         [data-testid="stTable"] {
             background: var(--surface) !important;
             color: var(--text-primary) !important;
+        }
+        
+        /* Metric Cards - Dark Mode */
+        [data-testid="stMetric"] {
+            background: var(--surface-elevated) !important;
+            border: 1px solid var(--border) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        [data-testid="stMetric"]:hover {
+            border-color: var(--primary-600) !important;
+            box-shadow: 0 4px 12px rgba(23, 162, 184, 0.2) !important;
+        }
+        
+        [data-testid="stMetricValue"] {
+            color: hsl(174, 62%, 70%) !important;
+            background: transparent !important;
+        }
+        
+        [data-testid="stMetricLabel"] {
+            color: var(--text-secondary) !important;
         }
         
         /* Text Elements */
