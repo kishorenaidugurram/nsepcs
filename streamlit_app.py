@@ -5314,9 +5314,21 @@ def create_main_scanner_tab(config):
                             st.markdown("#### 📊 Delivery Volume Analysis")
                             ecol1, ecol2 = st.columns(2)
                             with ecol1:
-                                st.metric("Estimated Delivery", f"{delivery.get('delivery_percentage', 0):.1f}%")
+                                delivery_pct = delivery.get('delivery_percentage', 0)
+                                st.markdown(f"""
+                                <div style='background: #1a1a1a; border-left: 3px solid #ff6b00; padding: 16px; border-radius: 4px;'>
+                                    <div style='color: #999; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;'>ESTIMATED DELIVERY</div>
+                                    <div style='color: #fff; font-size: 28px; font-weight: 700; font-family: monospace;'>{delivery_pct:.1f}%</div>
+                                </div>
+                                """, unsafe_allow_html=True)
                             with ecol2:
-                                st.metric("Confidence", delivery.get('confidence', 'Low'))
+                                confidence = delivery.get('confidence', 'Low')
+                                st.markdown(f"""
+                                <div style='background: #1a1a1a; border-left: 3px solid #ff6b00; padding: 16px; border-radius: 4px;'>
+                                    <div style='color: #999; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;'>CONFIDENCE</div>
+                                    <div style='color: #fff; font-size: 28px; font-weight: 700; font-family: monospace;'>{confidence}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
                             st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'N/A')}")
                         
                     # F&O Consolidation
@@ -5325,9 +5337,21 @@ def create_main_scanner_tab(config):
                         st.markdown("#### 🔄 F&O Consolidation")
                         ecol1, ecol2 = st.columns(2)
                         with ecol1:
-                            st.metric("Status", "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected")
+                            status = "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected"
+                            st.markdown(f"""
+                            <div style='background: #1a1a1a; border-left: 3px solid #ff6b00; padding: 16px; border-radius: 4px;'>
+                                <div style='color: #999; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;'>STATUS</div>
+                                <div style='color: #fff; font-size: 24px; font-weight: 700; font-family: monospace;'>{status}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
                         with ecol2:
-                            st.metric("Strength", f"{consolidation.get('consolidation_strength', 0)}/100")
+                            strength = consolidation.get('consolidation_strength', 0)
+                            st.markdown(f"""
+                            <div style='background: #1a1a1a; border-left: 3px solid #ff6b00; padding: 16px; border-radius: 4px;'>
+                                <div style='color: #999; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;'>STRENGTH</div>
+                                <div style='color: #fff; font-size: 28px; font-weight: 700; font-family: monospace;'>{strength}/100</div>
+                            </div>
+                            """, unsafe_allow_html=True)
                         st.write(f"**Analysis:** {consolidation.get('analysis', 'N/A')}")
                         
                     # Breakout-Pullback
