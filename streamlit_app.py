@@ -25,7 +25,7 @@ st.set_page_config(
     page_title="NSE F&O PCS Professional Scanner", 
     page_icon="📈", 
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"  # Collapsible on mobile, expanded on desktop
 )
 
 # ENHANCED PROFESSIONAL UI SYSTEM - Tailwind-Inspired CSS
@@ -185,6 +185,47 @@ st.markdown("""
     [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
         color: var(--text-secondary) !important;
         font-size: var(--font-size-xs) !important;
+    }
+    
+    /* === SIDEBAR COLLAPSE BUTTON - Always Visible & Styled === */
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(255, 107, 0, 0.15) !important;
+        border: 2px solid var(--bloomberg-orange) !important;
+        border-radius: 0 12px 12px 0 !important;
+        padding: 12px 8px !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    [data-testid="collapsedControl"]:hover {
+        background: var(--bloomberg-orange) !important;
+        border-color: var(--bloomberg-orange-hover) !important;
+        box-shadow: 2px 2px 12px rgba(255, 107, 0, 0.5) !important;
+    }
+    
+    [data-testid="collapsedControl"] svg {
+        fill: var(--bloomberg-orange) !important;
+        stroke: var(--bloomberg-orange) !important;
+    }
+    
+    [data-testid="collapsedControl"]:hover svg {
+        fill: white !important;
+        stroke: white !important;
+    }
+    
+    /* Sidebar collapsed state */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        display: none !important;
+    }
+    
+    /* Main content adjustment when sidebar collapsed */
+    .main[data-sidebar-collapsed="true"] {
+        margin-left: 0 !important;
+        max-width: 100% !important;
     }
     
     /* === INPUT FIELDS - Bloomberg Style === */
@@ -723,22 +764,89 @@ st.markdown("""
         animation: fadeIn 0.5s ease-out;
     }
     
-    /* Responsive Typography */
+    /* Responsive Design - Mobile & Tablet */
     @media (max-width: 768px) {
+        /* Typography adjustments */
         h1 {
-            font-size: var(--font-size-3xl);
+            font-size: 1.5rem;
         }
         
         h2 {
-            font-size: var(--font-size-xl);
+            font-size: 1.2rem;
+        }
+        
+        h3 {
+            font-size: 1rem;
+        }
+        
+        /* Main content padding */
+        .main {
+            padding: var(--spacing-3) var(--spacing-2);
+        }
+        
+        /* Card padding reduction */
+        .card {
+            padding: var(--spacing-3);
+        }
+        
+        /* Sidebar responsive */
+        [data-testid="stSidebar"] {
+            min-width: 280px !important;
+            max-width: 280px !important;
+        }
+        
+        /* Collapsible sidebar button always visible */
+        [data-testid="collapsedControl"] {
+            display: block !important;
+            background: var(--bloomberg-orange) !important;
+            color: white !important;
+            border-radius: 0 8px 8px 0 !important;
+            padding: 8px !important;
+        }
+        
+        /* Table/DataFrame responsive */
+        [data-testid="stDataFrame"],
+        [data-testid="stTable"] {
+            font-size: 0.75rem !important;
+            overflow-x: auto !important;
+        }
+        
+        /* Metric cards stack better */
+        [data-testid="stMetric"] {
+            margin-bottom: 8px !important;
+        }
+        
+        /* Chart height adjustment */
+        .plotly {
+            height: 400px !important;
+        }
+    }
+    
+    /* Tablet specific (768px - 1024px) */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        [data-testid="stSidebar"] {
+            min-width: 320px !important;
+            max-width: 320px !important;
         }
         
         .main {
-            padding: var(--spacing-4);
+            padding: var(--spacing-5);
+        }
+    }
+    
+    /* Desktop - Sidebar collapse control */
+    @media (min-width: 1025px) {
+        /* Show collapse button on desktop too for flexibility */
+        [data-testid="collapsedControl"] {
+            display: block !important;
+            background: rgba(255, 107, 0, 0.1) !important;
+            border: 1px solid var(--bloomberg-orange) !important;
+            transition: all 0.3s ease !important;
         }
         
-        .card {
-            padding: var(--spacing-4);
+        [data-testid="collapsedControl"]:hover {
+            background: var(--bloomberg-orange) !important;
+            color: white !important;
         }
     }
     
