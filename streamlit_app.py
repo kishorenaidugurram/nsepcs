@@ -16,36 +16,26 @@ from bs4 import BeautifulSoup
 import re
 from io import BytesIO
 import openpyxl
-import logging
-from typing import Dict, List, Tuple, Optional
-from scipy.signal import find_peaks
-from sklearn.cluster import KMeans
-import math
 warnings.filterwarnings('ignore')
-
-# Configure logging for production
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # Set page config
 st.set_page_config(
-    page_title="NSE F&O Options Scanner Pro v9.0 - Enhanced S/R", 
+    page_title="NSE F&O Options Strategy Scanner", 
     page_icon="⚡", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# PRODUCTION-READY THEME SYSTEM
-def get_theme_css(strategy_type: str) -> Tuple[str, str]:
-    """Get CSS theme based on strategy type with production styling"""
+# PROFESSIONAL UI SYSTEM - Dynamic Theme Based on Strategy
+def get_theme_css(strategy_type):
+    """Get CSS theme based on strategy type"""
     if strategy_type == "Put Credit Spreads":
         primary_hue = "174"  # Teal
+        primary_name = "teal"
         icon = "📈"
     else:  # Call Credit Spreads
         primary_hue = "0"    # Red
+        primary_name = "red"
         icon = "📉"
     
     return f"""
@@ -53,34 +43,90 @@ def get_theme_css(strategy_type: str) -> Tuple[str, str]:
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     
     :root {{
+        /* === DYNAMIC THEME SYSTEM === */
         --primary-50: hsl({primary_hue}, 62%, 98%);
         --primary-100: hsl({primary_hue}, 62%, 95%);
+        --primary-200: hsl({primary_hue}, 62%, 90%);
+        --primary-300: hsl({primary_hue}, 62%, 75%);
+        --primary-400: hsl({primary_hue}, 62%, 60%);
         --primary-500: hsl({primary_hue}, 62%, 47%);
         --primary-600: hsl({primary_hue}, 62%, 40%);
         --primary-700: hsl({primary_hue}, 62%, 33%);
         --primary-800: hsl({primary_hue}, 62%, 27%);
+        --primary-900: hsl({primary_hue}, 62%, 20%);
+        
+        /* Neutral Palette */
         --neutral-50: hsl(210, 20%, 98%);
         --neutral-100: hsl(210, 20%, 96%);
+        --neutral-200: hsl(210, 16%, 93%);
+        --neutral-300: hsl(210, 14%, 89%);
         --neutral-400: hsl(210, 12%, 71%);
+        --neutral-500: hsl(210, 10%, 53%);
         --neutral-600: hsl(210, 12%, 43%);
+        --neutral-700: hsl(210, 15%, 33%);
         --neutral-800: hsl(210, 18%, 23%);
+        --neutral-900: hsl(210, 20%, 15%);
+        
+        /* Semantic Colors */
+        --success-bg: hsl(142, 76%, 96%);
+        --success-text: hsl(142, 76%, 30%);
+        --warning-bg: hsl(38, 92%, 95%);
+        --warning-text: hsl(38, 92%, 35%);
+        --error-bg: hsl(0, 86%, 97%);
+        --error-text: hsl(0, 86%, 40%);
+        
+        /* Background System */
+        --background: hsl(210, 20%, 98%);
         --surface: hsl(0, 0%, 100%);
         --border: hsl(210, 14%, 89%);
         --text-primary: hsl(210, 20%, 15%);
         --text-secondary: hsl(210, 12%, 43%);
+        
+        /* Shadows */
         --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
         --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
     }}
     
-    * {{ font-family: 'Inter', sans-serif; }}
-    .main {{ background: var(--neutral-50); padding: 1.5rem 2rem; }}
+    /* Global Styles */
+    * {{
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }}
     
+    .main {{
+        background: var(--background);
+        padding: 1.5rem 2rem;
+    }}
+    
+    /* Headers */
+    h1, h2, h3 {{
+        color: var(--text-primary);
+        font-weight: 700;
+        line-height: 1.2;
+    }}
+    
+    h1 {{
+        background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }}
+    
+    /* Sidebar Styling */
     [data-testid="stSidebar"] {{
         background: linear-gradient(180deg, var(--primary-50) 0%, var(--primary-100) 100%);
-        border-right: 1px solid var(--primary-500);
+        border-right: 1px solid var(--primary-300);
         box-shadow: var(--shadow-md);
     }}
     
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {{
+        color: var(--primary-700);
+    }}
+    
+    /* Buttons */
     .stButton > button {{
         background: var(--primary-600);
         color: white;
@@ -98,1137 +144,1560 @@ def get_theme_css(strategy_type: str) -> Tuple[str, str]:
         transform: translateY(-1px);
     }}
     
-    .quality-card {{
+    /* Cards */
+    .metric-card {{
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+        height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }}
+    
+    .metric-card:hover {{
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }}
+    
+    .pattern-card {{
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 0.75rem;
-        padding: 1.5rem;
+        padding: 1.25rem;
         margin: 1rem 0;
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-sm);
         transition: all 0.2s ease;
     }}
     
-    .quality-card:hover {{
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
+    .pattern-card:hover {{
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-500);
     }}
     
-    .metric-container {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 0.5rem 0;
-    }}
-    
-    .metric-value {{
-        font-weight: 700;
-        font-size: 1.25rem;
-        color: var(--primary-700);
-    }}
-    
-    .metric-label {{
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }}
-    
-    /* Premium badge styles */
-    .premium-badge {{
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }}
-    
-    .high-badge {{
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }}
-    
-    .risk-low {{ color: #059669; font-weight: 600; }}
-    .risk-medium {{ color: #d97706; font-weight: 600; }}
-    .risk-high {{ color: #dc2626; font-weight: 600; }}
-    
-    /* S/R Level Display */
-    .sr-levels-card {{
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        border: 2px solid var(--primary-500);
+    /* Professional Header */
+    .professional-header {{
+        text-align: center;
+        padding: 2rem 0;
+        background: linear-gradient(135deg, var(--primary-50), var(--neutral-50));
         border-radius: 1rem;
-        padding: 1rem;
-        margin: 0.5rem 0;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border);
     }}
     
-    .sr-level-item {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem;
-        margin: 0.25rem 0;
-        background: white;
+    .strategy-badge {{
+        background: var(--primary-600);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }}
+    
+    /* Status Indicators */
+    .status-success {{
+        background: var(--success-bg);
+        color: var(--success-text);
+        padding: 0.25rem 0.75rem;
         border-radius: 0.5rem;
-        border-left: 4px solid;
         font-weight: 600;
     }}
     
-    .support-s1 {{ border-left-color: #10b981; }}
-    .support-s2 {{ border-left-color: #059669; }}
-    .support-s3 {{ border-left-color: #047857; }}
-    .resistance-r1 {{ border-left-color: #ef4444; }}
-    .resistance-r2 {{ border-left-color: #dc2626; }}
-    .resistance-r3 {{ border-left-color: #b91c1c; }}
+    .status-warning {{
+        background: var(--warning-bg);
+        color: var(--warning-text);
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+    }}
+    
+    .status-error {{
+        background: var(--error-bg);
+        color: var(--error-text);
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+    }}
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {{
+        .main {{ padding: 1rem; }}
+        .professional-header {{ padding: 1.5rem 1rem; }}
+    }}
 </style>
 """, icon
 
-# ADVANCED SUPPORT & RESISTANCE CALCULATION SYSTEM
-class ScientificSRCalculator:
-    """
-    Scientific Support & Resistance Calculator using multiple methods:
-    1. Pivot Point Analysis
-    2. Volume Profile/Weighted Levels
-    3. Fibonacci Retracements 
-    4. Statistical Clustering
-    5. Peak/Valley Detection
-    """
-    
-    def __init__(self, data: pd.DataFrame, lookback_period: int = 50):
-        self.data = data
-        self.lookback_period = lookback_period
-        self.current_price = data['Close'].iloc[-1]
+# CACHING SYSTEM FOR PERFORMANCE OPTIMIZATION
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
+def get_nse_fno_stocks_cached():
+    """Cached NSE F&O stock list retrieval"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Connection': 'keep-alive',
+            'Referer': 'https://www.nseindia.com/'
+        }
         
-    def calculate_pivot_levels(self) -> Dict[str, float]:
-        """Calculate traditional pivot point levels"""
-        try:
-            high = self.data['High'].iloc[-1]
-            low = self.data['Low'].iloc[-1]
-            close = self.data['Close'].iloc[-2]  # Previous close
-            
-            pivot = (high + low + close) / 3
-            
-            # Support levels
-            s1 = (2 * pivot) - high
-            s2 = pivot - (high - low)
-            s3 = s1 - (high - low)
-            
-            # Resistance levels  
-            r1 = (2 * pivot) - low
-            r2 = pivot + (high - low)
-            r3 = r1 + (high - low)
-            
-            return {
-                'pivot': pivot,
-                's1': s1, 's2': s2, 's3': s3,
-                'r1': r1, 'r2': r2, 'r3': r3
-            }
-        except Exception as e:
-            logger.warning(f"Pivot calculation error: {e}")
-            return {}
-    
-    def calculate_volume_weighted_levels(self) -> Dict[str, List[float]]:
-        """Calculate volume-weighted support/resistance levels"""
-        try:
-            recent_data = self.data.tail(self.lookback_period).copy()
-            
-            # Create price-volume density
-            price_levels = []
-            volumes = []
-            
-            for _, row in recent_data.iterrows():
-                # Use OHLC average weighted by volume
-                avg_price = (row['Open'] + row['High'] + row['Low'] + row['Close']) / 4
-                price_levels.append(avg_price)
-                volumes.append(row['Volume'])
-            
-            # Cluster prices by volume
-            if len(price_levels) > 10:
-                prices_array = np.array(price_levels).reshape(-1, 1)
-                volumes_array = np.array(volumes)
-                
-                # Use KMeans to find 6 main price clusters
-                kmeans = KMeans(n_clusters=6, random_state=42)
-                clusters = kmeans.fit_predict(prices_array)
-                
-                cluster_levels = []
-                for i in range(6):
-                    cluster_mask = clusters == i
-                    if np.any(cluster_mask):
-                        cluster_prices = prices_array[cluster_mask].flatten()
-                        cluster_volumes = volumes_array[cluster_mask]
-                        # Volume-weighted average price for cluster
-                        vwap = np.average(cluster_prices, weights=cluster_volumes)
-                        cluster_levels.append(vwap)
-                
-                cluster_levels.sort()
-                
-                # Split into support and resistance based on current price
-                supports = [level for level in cluster_levels if level < self.current_price]
-                resistances = [level for level in cluster_levels if level > self.current_price]
-                
-                return {
-                    'volume_supports': supports[-3:] if len(supports) >= 3 else supports,
-                    'volume_resistances': resistances[:3] if len(resistances) >= 3 else resistances
-                }
-        except Exception as e:
-            logger.warning(f"Volume weighted levels error: {e}")
+        session = requests.Session()
+        session.headers.update(headers)
         
-        return {'volume_supports': [], 'volume_resistances': []}
-    
-    def detect_swing_levels(self) -> Dict[str, List[float]]:
-        """Detect swing highs and lows using peak detection"""
-        try:
-            recent_data = self.data.tail(self.lookback_period)
-            
-            # Find peaks and valleys
-            highs = recent_data['High'].values
-            lows = recent_data['Low'].values
-            
-            # Detect swing highs
-            high_peaks, _ = find_peaks(highs, distance=5, prominence=np.std(highs) * 0.5)
-            swing_highs = highs[high_peaks]
-            
-            # Detect swing lows (invert data for peak detection)
-            low_peaks, _ = find_peaks(-lows, distance=5, prominence=np.std(lows) * 0.5)
-            swing_lows = lows[low_peaks]
-            
-            # Filter based on current price
-            resistance_levels = [level for level in swing_highs if level > self.current_price]
-            support_levels = [level for level in swing_lows if level < self.current_price]
-            
-            # Sort and take top 3
-            resistance_levels.sort()
-            support_levels.sort(reverse=True)
-            
-            return {
-                'swing_supports': support_levels[:3],
-                'swing_resistances': resistance_levels[:3]
-            }
-        except Exception as e:
-            logger.warning(f"Swing levels error: {e}")
+        # Get main NSE page first
+        session.get('https://www.nseindia.com/', timeout=10)
         
-        return {'swing_supports': [], 'swing_resistances': []}
+        response = session.get('https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20500', timeout=15)
+        
+        if response.status_code == 200:
+            data = response.json().get('data', [])
+            stocks = [item['symbol'] + '.NS' for item in data if 'symbol' in item][:219]
+            return stocks
+            
+    except Exception as e:
+        st.warning(f"API fetch failed, using backup list: {str(e)}")
     
-    def get_comprehensive_levels(self) -> Dict[str, Dict[str, float]]:
-        """Get comprehensive S/R levels using all methods"""
-        try:
-            # Get all level calculations
-            pivot_levels = self.calculate_pivot_levels()
-            volume_levels = self.calculate_volume_weighted_levels()
-            swing_levels = self.detect_swing_levels()
-            
-            # Combine all support levels
-            all_supports = []
-            if pivot_levels:
-                all_supports.extend([pivot_levels.get('s1', 0), pivot_levels.get('s2', 0), pivot_levels.get('s3', 0)])
-            all_supports.extend(volume_levels.get('volume_supports', []))
-            all_supports.extend(swing_levels.get('swing_supports', []))
-            
-            # Combine all resistance levels
-            all_resistances = []
-            if pivot_levels:
-                all_resistances.extend([pivot_levels.get('r1', 0), pivot_levels.get('r2', 0), pivot_levels.get('r3', 0)])
-            all_resistances.extend(volume_levels.get('volume_resistances', []))
-            all_resistances.extend(swing_levels.get('swing_resistances', []))
-            
-            # Filter and clean
-            all_supports = [s for s in all_supports if s > 0 and s < self.current_price]
-            all_resistances = [r for r in all_resistances if r > 0 and r > self.current_price]
-            
-            # Use clustering to find most significant levels
-            def get_clustered_levels(levels, n_levels=3):
-                if len(levels) < n_levels:
-                    return sorted(levels, reverse=True) if levels else []
-                
-                # Use KMeans to cluster similar levels
-                levels_array = np.array(levels).reshape(-1, 1)
-                kmeans = KMeans(n_clusters=min(n_levels, len(levels)), random_state=42)
-                clusters = kmeans.fit_predict(levels_array)
-                
-                # Get cluster centers
-                cluster_levels = []
-                for i in range(min(n_levels, len(levels))):
-                    cluster_mask = clusters == i
-                    if np.any(cluster_mask):
-                        cluster_center = np.mean(levels_array[cluster_mask])
-                        cluster_levels.append(cluster_center)
-                
-                return sorted(cluster_levels, reverse=True)
-            
-            # Get final S1, S2, S3 and R1, R2, R3
-            final_supports = get_clustered_levels(all_supports, 3)
-            final_resistances = get_clustered_levels(all_resistances, 3)
-            final_resistances.sort()  # For resistances, we want ascending order
-            
-            # Ensure we have 3 levels (pad with calculated values if needed)
-            while len(final_supports) < 3:
-                if final_supports:
-                    final_supports.append(final_supports[-1] * 0.98)  # 2% below last support
-                else:
-                    final_supports.append(self.current_price * 0.95)  # 5% below current
-            
-            while len(final_resistances) < 3:
-                if final_resistances:
-                    final_resistances.append(final_resistances[-1] * 1.02)  # 2% above last resistance
-                else:
-                    final_resistances.append(self.current_price * 1.05)  # 5% above current
-            
-            return {
-                'supports': {
-                    's1': final_supports[0],
-                    's2': final_supports[1],
-                    's3': final_supports[2]
-                },
-                'resistances': {
-                    'r1': final_resistances[0],
-                    'r2': final_resistances[1], 
-                    'r3': final_resistances[2]
-                },
-                'pivot': pivot_levels.get('pivot', self.current_price),
-                'current_price': self.current_price
-            }
-            
-        except Exception as e:
-            logger.error(f"Comprehensive levels calculation error: {e}")
-            # Return basic levels as fallback
-            return {
-                'supports': {
-                    's1': self.current_price * 0.98,
-                    's2': self.current_price * 0.95,
-                    's3': self.current_price * 0.92
-                },
-                'resistances': {
-                    'r1': self.current_price * 1.02,
-                    'r2': self.current_price * 1.05,
-                    'r3': self.current_price * 1.08
-                },
-                'pivot': self.current_price,
-                'current_price': self.current_price
-            }
+    # Comprehensive backup list
+    return [
+        '3MINDIA.NS', 'ABB.NS', 'ACC.NS', 'AIAENG.NS', 'APLAPOLLO.NS', 'AUBANK.NS',
+        'AAVAS.NS', 'ABBOTINDIA.NS', 'ABCAPITAL.NS', 'ABFRL.NS', 'AJANTPHARM.NS',
+        'APOLLOHOSP.NS', 'APOLLOTYRE.NS', 'ASHOKLEY.NS', 'ASIANPAINT.NS', 'ASTRAL.NS',
+        'ATUL.NS', 'AUROPHARMA.NS', 'AXISBANK.NS', 'BAJAJ-AUTO.NS', 'BAJAJFINSV.NS',
+        'BAJFINANCE.NS', 'BALKRISIND.NS', 'BALRAMCHIN.NS', 'BANDHANBNK.NS', 'BANKBARODA.NS',
+        'BATAINDIA.NS', 'BEL.NS', 'BERGEPAINT.NS', 'BHARATFORG.NS', 'BHARTIARTL.NS',
+        'BHEL.NS', 'BIOCON.NS', 'BOSCHLTD.NS', 'BPCL.NS', 'BRITANNIA.NS',
+        'BSOFT.NS', 'CANFINHOME.NS', 'CANBK.NS', 'CHOLAFIN.NS', 'CIPLA.NS',
+        'COALINDIA.NS', 'COFORGE.NS', 'COLPAL.NS', 'CONCOR.NS', 'COROMANDEL.NS',
+        'CROMPTON.NS', 'CUB.NS', 'CUMMINSIND.NS', 'DABUR.NS', 'DALBHARAT.NS',
+        'DEEPAKNTR.NS', 'DIVISLAB.NS', 'DLF.NS', 'DRREDDY.NS', 'EICHERMOT.NS',
+        'ESCORTS.NS', 'EXIDEIND.NS', 'FEDERALBNK.NS', 'GAIL.NS', 'GLENMARK.NS',
+        'GMRINFRA.NS', 'GNFC.NS', 'GODREJCP.NS', 'GODREJPROP.NS', 'GRANULES.NS',
+        'GRASIM.NS', 'GUJGASLTD.NS', 'HAL.NS', 'HAVELLS.NS', 'HCLTECH.NS',
+        'HDFCAMC.NS', 'HDFCBANK.NS', 'HDFCLIFE.NS', 'HEROMOTOCO.NS', 'HINDALCO.NS',
+        'HINDCOPPER.NS', 'HINDPETRO.NS', 'HINDUNILVR.NS', 'ICICIBANK.NS', 'ICICIGI.NS',
+        'ICICIPRULI.NS', 'IDEA.NS', 'IDFCFIRSTB.NS', 'IEX.NS', 'IGL.NS',
+        'INDHOTEL.NS', 'INDIACEM.NS', 'INDIAMART.NS', 'INDIGO.NS', 'INDUSINDBK.NS',
+        'INDUSTOWER.NS', 'INFY.NS', 'IOC.NS', 'IPCALAB.NS', 'IRB.NS',
+        'IRCTC.NS', 'ITC.NS', 'JINDALSTEL.NS', 'JKCEMENT.NS', 'JSWSTEEL.NS',
+        'JUBLFOOD.NS', 'KOTAKBANK.NS', 'LALPATHLAB.NS', 'LAURUSLABS.NS', 'LICHSGFIN.NS',
+        'LT.NS', 'LTIM.NS', 'LTTS.NS', 'LUPIN.NS', 'M&M.NS',
+        'M&MFIN.NS', 'MANAPPURAM.NS', 'MARICO.NS', 'MARUTI.NS', 'MCX.NS',
+        'METROPOLIS.NS', 'MGL.NS', 'MOTHERSON.NS', 'MPHASIS.NS', 'MRF.NS',
+        'MUTHOOTFIN.NS', 'NATIONALUM.NS', 'NAUKRI.NS', 'NAVINFLUOR.NS', 'NESTLEIND.NS',
+        'NMDC.NS', 'NTPC.NS', 'OBEROIRLTY.NS', 'OFSS.NS', 'ONGC.NS',
+        'PAGEIND.NS', 'PEL.NS', 'PERSISTENT.NS', 'PETRONET.NS', 'PFC.NS',
+        'PIDILITIND.NS', 'PIIND.NS', 'PNB.NS', 'POLYCAB.NS', 'POWERGRID.NS',
+        'RAMCOCEM.NS', 'RBLBANK.NS', 'RECLTD.NS', 'RELIANCE.NS', 'SAIL.NS',
+        'SBICARD.NS', 'SBILIFE.NS', 'SBIN.NS', 'SHREECEM.NS', 'SIEMENS.NS',
+        'SRF.NS', 'SUNPHARMA.NS', 'SUNTV.NS', 'SUPREMEIND.NS', 'SYNGENE.NS',
+        'TATACHEM.NS', 'TATACOMM.NS', 'TATACONSUM.NS', 'TATAMOTORS.NS', 'TATAPOWER.NS',
+        'TATASTEEL.NS', 'TCS.NS', 'TECHM.NS', 'TITAN.NS', 'TORNTPHARM.NS',
+        'TRENT.NS', 'TVSMOTOR.NS', 'UBL.NS', 'ULTRACEMCO.NS', 'UPL.NS',
+        'VEDL.NS', 'VOLTAS.NS', 'WIPRO.NS', 'ZEEL.NS', 'ZYDUSLIFE.NS'
+    ]
 
-# ENHANCED QUALITY FILTERS WITH S/R INTEGRATION
-class AdvancedQualityFilters:
-    """Advanced quality filtering system with S/R level integration"""
-    
-    @staticmethod
-    def check_liquidity_quality(data: pd.DataFrame) -> Dict[str, any]:
-        """Check liquidity quality metrics"""
-        try:
-            recent_data = data.tail(20)
-            avg_volume = recent_data['Volume'].mean()
-            volume_std = recent_data['Volume'].std()
-            current_volume = data['Volume'].iloc[-1]
+@st.cache_data(ttl=900, show_spinner=False)  # Cache for 15 minutes
+def get_stock_data_cached(symbol, period="3mo"):
+    """Cached stock data retrieval with technical indicators"""
+    try:
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(period=period)
+        
+        if data.empty or len(data) < 30:
+            return None
             
-            volume_score = min(100, (avg_volume / 100000) * 20) if avg_volume > 0 else 0
-            volume_consistency = max(0, 100 - (volume_std / avg_volume * 100)) if avg_volume > 0 else 0
-            volume_surge = (current_volume / avg_volume) if avg_volume > 0 else 1
+        # Ensure volume data exists
+        if 'Volume' not in data.columns or data['Volume'].isna().all():
+            return None
             
-            return {
-                'avg_volume': avg_volume,
-                'volume_score': volume_score,
-                'volume_consistency': volume_consistency,
-                'volume_surge': volume_surge,
-                'liquidity_grade': 'HIGH' if volume_score >= 60 else 'MEDIUM' if volume_score >= 30 else 'LOW'
-            }
-        except:
-            return {'avg_volume': 0, 'volume_score': 0, 'volume_consistency': 0, 'volume_surge': 1, 'liquidity_grade': 'LOW'}
-    
-    @staticmethod
-    def analyze_multi_timeframe_alignment(symbol: str, strategy_type: str) -> Dict[str, any]:
-        """Analyze multi-timeframe trend alignment"""
-        try:
-            # Get different timeframe data
-            stock = yf.Ticker(symbol + ".NS")
-            
-            # Daily trend
-            daily_data = stock.history(period="3mo", interval="1d")
-            if len(daily_data) < 20:
-                return {'alignment_score': 50, 'trend_strength': 'WEAK', 'timeframe_consensus': 'MIXED'}
-            
-            # Calculate trend scores
-            daily_sma_20 = ta.trend.sma_indicator(daily_data['Close'], window=20).iloc[-1]
-            daily_sma_50 = ta.trend.sma_indicator(daily_data['Close'], window=50).iloc[-1] if len(daily_data) >= 50 else daily_sma_20
-            current_price = daily_data['Close'].iloc[-1]
-            
-            # Trend alignment scoring
-            alignment_factors = []
-            
-            if strategy_type == "Put Credit Spreads":
-                # Bullish alignment needed
-                alignment_factors.extend([
-                    100 if current_price > daily_sma_20 else 0,
-                    100 if daily_sma_20 > daily_sma_50 else 0,
-                ])
-            else:
-                # Bearish alignment needed  
-                alignment_factors.extend([
-                    100 if current_price < daily_sma_20 else 0,
-                    100 if daily_sma_20 < daily_sma_50 else 0,
-                ])
-            
-            alignment_score = np.mean(alignment_factors)
-            
-            trend_strength = 'STRONG' if alignment_score >= 75 else 'MEDIUM' if alignment_score >= 50 else 'WEAK'
-            consensus = 'BULLISH' if alignment_score >= 66.7 else 'BEARISH' if alignment_score <= 33.3 else 'MIXED'
-            
-            return {
-                'alignment_score': alignment_score,
-                'trend_strength': trend_strength,
-                'timeframe_consensus': consensus,
-            }
-        except:
-            return {'alignment_score': 50, 'trend_strength': 'WEAK', 'timeframe_consensus': 'MIXED'}
-    
-    @staticmethod
-    def assess_sr_proximity_risk(current_price: float, sr_levels: Dict) -> Dict[str, any]:
-        """Assess risk based on proximity to S/R levels"""
-        try:
-            supports = sr_levels.get('supports', {})
-            resistances = sr_levels.get('resistances', {})
-            
-            # Distance to nearest support/resistance
-            support_distances = []
-            resistance_distances = []
-            
-            for level in supports.values():
-                if level > 0:
-                    distance_pct = ((current_price - level) / current_price) * 100
-                    support_distances.append(distance_pct)
-            
-            for level in resistances.values():
-                if level > 0:
-                    distance_pct = ((level - current_price) / current_price) * 100
-                    resistance_distances.append(distance_pct)
-            
-            nearest_support_dist = min(support_distances) if support_distances else 10
-            nearest_resistance_dist = min(resistance_distances) if resistance_distances else 10
-            
-            # Risk assessment
-            support_risk = 'HIGH' if nearest_support_dist < 2 else 'MEDIUM' if nearest_support_dist < 5 else 'LOW'
-            resistance_risk = 'HIGH' if nearest_resistance_dist < 2 else 'MEDIUM' if nearest_resistance_dist < 5 else 'LOW'
-            
-            # Overall position quality
-            if nearest_support_dist >= 3 and nearest_resistance_dist >= 3:
-                position_quality = 'OPTIMAL'
-            elif nearest_support_dist >= 2 and nearest_resistance_dist >= 2:
-                position_quality = 'GOOD'
-            else:
-                position_quality = 'RISKY'
-            
-            return {
-                'nearest_support_distance': nearest_support_dist,
-                'nearest_resistance_distance': nearest_resistance_dist,
-                'support_risk': support_risk,
-                'resistance_risk': resistance_risk,
-                'position_quality': position_quality,
-                'sr_score': min(100, (nearest_support_dist + nearest_resistance_dist) * 5)
-            }
-        except Exception as e:
-            logger.warning(f"S/R proximity assessment error: {e}")
-            return {
-                'nearest_support_distance': 5,
-                'nearest_resistance_distance': 5,
-                'support_risk': 'MEDIUM',
-                'resistance_risk': 'MEDIUM', 
-                'position_quality': 'GOOD',
-                'sr_score': 50
-            }
+        # Add technical indicators
+        data['SMA_20'] = ta.trend.sma_indicator(data['Close'], window=20)
+        data['SMA_50'] = ta.trend.sma_indicator(data['Close'], window=50)
+        data['EMA_12'] = ta.trend.ema_indicator(data['Close'], window=12)
+        data['EMA_26'] = ta.trend.ema_indicator(data['Close'], window=26)
+        data['RSI'] = ta.momentum.rsi(data['Close'], window=14)
+        data['MACD'] = ta.trend.macd_diff(data['Close'])
+        data['BB_upper'] = ta.volatility.bollinger_hband(data['Close'])
+        data['BB_lower'] = ta.volatility.bollinger_lband(data['Close'])
+        data['Volume_SMA'] = ta.trend.sma_indicator(data['Volume'], window=20)
+        
+        return data
+        
+    except Exception:
+        return None
 
-# MAIN SCANNER CLASS WITH S/R INTEGRATION
-class ProductionOptionsScanner:
-    """Production-ready options scanner with advanced S/R integration"""
+@st.cache_data(ttl=900, show_spinner=False)  # Cache for 15 minutes
+def get_weekly_stock_data_cached(symbol, period="6mo"):
+    """Cached weekly stock data for trend analysis"""
+    try:
+        ticker = yf.Ticker(symbol)
+        daily_data = ticker.history(period=period)
+        
+        if daily_data.empty:
+            return None
+        
+        # Resample to weekly
+        weekly_data = daily_data.resample('W').agg({
+            'Open': 'first',
+            'High': 'max', 
+            'Low': 'min',
+            'Close': 'last',
+            'Volume': 'sum'
+        }).dropna()
+        
+        if len(weekly_data) < 10:
+            return None
+        
+        # Add weekly indicators
+        weekly_data['SMA_10'] = ta.trend.sma_indicator(weekly_data['Close'], window=10)
+        weekly_data['SMA_20'] = ta.trend.sma_indicator(weekly_data['Close'], window=20)
+        weekly_data['RSI'] = ta.momentum.rsi(weekly_data['Close'], window=14)
+        weekly_data['Volume_SMA'] = ta.trend.sma_indicator(weekly_data['Volume'], window=10)
+        
+        return weekly_data
+        
+    except Exception:
+        return None
+
+@st.cache_data(ttl=1800, show_spinner=False)  # Cache for 30 minutes
+def get_market_sentiment_cached():
+    """Cached market sentiment indicators"""
+    sentiment_data = {}
+    
+    try:
+        # Get Nifty 50 data
+        nifty = yf.Ticker('^NSEI')
+        nifty_data = nifty.history(period='5d')
+        
+        if not nifty_data.empty and len(nifty_data) >= 2:
+            nifty_change = ((nifty_data['Close'].iloc[-1] - nifty_data['Close'].iloc[-2]) / nifty_data['Close'].iloc[-2]) * 100
+            sentiment_data['nifty'] = {
+                'change_pct': nifty_change,
+                'level': nifty_data['Close'].iloc[-1]
+            }
+        
+        # Get Bank Nifty data
+        bank_nifty = yf.Ticker('^NSEBANK')
+        bank_data = bank_nifty.history(period='5d')
+        
+        if not bank_data.empty and len(bank_data) >= 2:
+            bank_change = ((bank_data['Close'].iloc[-1] - bank_data['Close'].iloc[-2]) / bank_data['Close'].iloc[-2]) * 100
+            sentiment_data['bank_nifty'] = {
+                'change_pct': bank_change,
+                'level': bank_data['Close'].iloc[-1]
+            }
+        
+        return sentiment_data
+        
+    except Exception:
+        return {}
+
+def create_excel_export(results, strategy_type):
+    """Create Excel file with results"""
+    output = BytesIO()
+    strategy_short = "PCS" if strategy_type == "Put Credit Spreads" else "CCS"
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # Main Results
+        df_main = pd.DataFrame([
+            {
+                'Stock': result['symbol'],
+                'Pattern': result['pattern'],
+                'Strength': f"{result['strength']}%",
+                'Success Rate': f"{result['success_rate']}%",
+                f'{strategy_short} Suitability': f"{result['suitability']}%",
+                'Volume Ratio': f"{result.get('volume_ratio', 'N/A')}x",
+                'Current Price': result.get('current_price', 'N/A')
+            }
+            for result in results
+        ])
+        df_main.to_excel(writer, sheet_name=f'{strategy_short}_Opportunities', index=False)
+        
+        # Pattern Summary
+        pattern_counts = {}
+        for result in results:
+            pattern = result['pattern']
+            pattern_counts[pattern] = pattern_counts.get(pattern, 0) + 1
+        
+        df_summary = pd.DataFrame([
+            {'Pattern': pattern, 'Count': count}
+            for pattern, count in sorted(pattern_counts.items(), key=lambda x: x[1], reverse=True)
+        ])
+        df_summary.to_excel(writer, sheet_name='Pattern_Summary', index=False)
+    
+    output.seek(0)
+    return output
+
+class UniversalOptionsScanner:
+    """Universal scanner for both PCS and CCS strategies"""
     
     def __init__(self):
-        self.nse_fno_stocks = self._load_nse_fno_list()
+        self.ist = pytz.timezone('Asia/Kolkata')
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        })
+    
+    def analyze_market_sentiment(self, strategy_type):
+        """Analyze market sentiment for chosen strategy"""
+        sentiment_data = get_market_sentiment_cached()
         
-    @st.cache_data(ttl=3600)  # Cache for 1 hour
-    def _load_nse_fno_list(_self) -> List[str]:
-        """Load NSE F&O stock list with caching"""
-        try:
-            # Comprehensive NSE F&O stock list (top 50 most liquid)
-            stocks = [
-                "RELIANCE", "TCS", "HDFCBANK", "INFY", "HINDUNILVR", "ICICIBANK", "SBIN", "BHARTIARTL", "KOTAKBANK", "ITC",
-                "ASIANPAINT", "LT", "AXISBANK", "MARUTI", "SUNPHARMA", "TITAN", "ULTRACEMCO", "NESTLEIND", "WIPRO", "HCLTECH",
-                "BAJFINANCE", "POWERGRID", "NTPC", "TECHM", "ONGC", "TATAMOTORS", "COALINDIA", "BAJAJFINSV", "HDFCLIFE", "GRASIM",
-                "ADANIPORTS", "JSWSTEEL", "INDUSINDBK", "SBILIFE", "DIVISLAB", "BPCL", "DRREDDY", "EICHERMOT", "BRITANNIA", "CIPLA",
-                "TATACONSUM", "APOLLOHOSP", "BAJAJ-AUTO", "HEROMOTOCO", "SHREECEM", "IOC", "UPL", "HINDALCO", "TATASTEEL", "GODREJCP"
-            ]
-            
-            logger.info(f"Loaded {len(stocks)} NSE F&O stocks")
-            return stocks
-        except Exception as e:
-            logger.error(f"Error loading NSE F&O list: {e}")
-            return ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK"]  # Fallback
-    
-    @st.cache_data(ttl=300)  # Cache for 5 minutes  
-    def get_stock_data_cached(_self, symbol: str, period: str = "6mo") -> Optional[pd.DataFrame]:
-        """Get cached stock data"""
-        try:
-            stock = yf.Ticker(symbol + ".NS")
-            data = stock.history(period=period)
-            
-            if data.empty:
-                return None
-                
-            # Add technical indicators
-            data['RSI'] = ta.momentum.rsi(data['Close'], window=14)
-            data['SMA_20'] = ta.trend.sma_indicator(data['Close'], window=20)
-            data['SMA_50'] = ta.trend.sma_indicator(data['Close'], window=50)
-            data['BB_Upper'] = ta.volatility.bollinger_hband(data['Close'])
-            data['BB_Lower'] = ta.volatility.bollinger_lband(data['Close'])
-            
-            return data
-            
-        except Exception as e:
-            logger.warning(f"Error fetching data for {symbol}: {e}")
-            return None
-    
-    def analyze_stock_with_sr(self, symbol: str, strategy_type: str) -> Optional[Dict]:
-        """Analyze stock with comprehensive S/R integration"""
-        try:
-            data = self.get_stock_data_cached(symbol)
-            if data is None or len(data) < 50:
-                return None
-            
-            # Calculate comprehensive S/R levels
-            sr_calculator = ScientificSRCalculator(data)
-            sr_levels = sr_calculator.get_comprehensive_levels()
-            
-            current_price = data['Close'].iloc[-1]
-            
-            # Get quality filters with S/R integration
-            liquidity = AdvancedQualityFilters.check_liquidity_quality(data)
-            mtf_alignment = AdvancedQualityFilters.analyze_multi_timeframe_alignment(symbol, strategy_type)
-            sr_proximity = AdvancedQualityFilters.assess_sr_proximity_risk(current_price, sr_levels)
-            
-            # Calculate comprehensive quality score
-            quality_factors = {
-                'liquidity_score': liquidity['volume_score'] * 0.3,
-                'mtf_alignment': mtf_alignment['alignment_score'] * 0.4, 
-                'sr_positioning': sr_proximity['sr_score'] * 0.3,
-            }
-            
-            total_quality_score = sum(quality_factors.values())
-            
-            # Quality grade
-            if total_quality_score >= 85:
-                quality_grade = "PREMIUM"
-            elif total_quality_score >= 70:
-                quality_grade = "HIGH"
-            elif total_quality_score >= 55:
-                quality_grade = "MEDIUM"
-            else:
-                quality_grade = "STANDARD"
-            
-            # Strategy-specific adjustments
-            base_suitability = 70
-            if strategy_type == "Put Credit Spreads":
-                suitability = base_suitability + (mtf_alignment['alignment_score'] - 50) * 0.4
-                recommendation = self._get_pcs_recommendation(total_quality_score, sr_proximity)
-            else:
-                suitability = base_suitability + (50 - mtf_alignment['alignment_score']) * 0.4  # Inverted for CCS
-                recommendation = self._get_ccs_recommendation(total_quality_score, sr_proximity)
-            
-            suitability = max(0, min(100, suitability))
-            
+        if not sentiment_data:
             return {
-                'symbol': symbol,
-                'current_price': current_price,
-                'sr_levels': sr_levels,
-                'quality_score': round(total_quality_score, 1),
-                'quality_grade': quality_grade,
-                'suitability': round(suitability, 1),
-                'recommendation': recommendation,
-                'liquidity': liquidity,
-                'mtf_alignment': mtf_alignment,
-                'sr_proximity': sr_proximity,
-                'risk_assessment': self._assess_risk_level(total_quality_score, sr_proximity),
-                'data': data  # Include for charting
+                'overall': {
+                    'sentiment': 'UNKNOWN',
+                    'recommendation': 'Data unavailable - trade with caution',
+                    'risk_level': 'HIGH'
+                }
             }
-            
-        except Exception as e:
-            logger.error(f"Error analyzing {symbol}: {e}")
-            return None
-    
-    def _get_pcs_recommendation(self, quality_score: float, sr_proximity: Dict) -> str:
-        """Get PCS-specific recommendation"""
-        if quality_score >= 85 and sr_proximity['position_quality'] == 'OPTIMAL':
-            return "EXCELLENT for Put Credit Spreads - Premium setup with optimal S/R positioning"
-        elif quality_score >= 70 and sr_proximity['position_quality'] in ['OPTIMAL', 'GOOD']:
-            return "STRONG for Put Credit Spreads - High quality with good support buffer"
-        elif quality_score >= 55:
-            return "MODERATE for Put Credit Spreads - Acceptable quality, monitor support levels"
+        
+        # Calculate sentiment scores
+        sentiment_scores = {
+            "BEARISH_STRONG": 4 if strategy_type == "Call Credit Spreads" else 0,
+            "BEARISH": 3 if strategy_type == "Call Credit Spreads" else 1,
+            "NEUTRAL": 2,
+            "BULLISH": 1 if strategy_type == "Call Credit Spreads" else 3,
+            "BULLISH_STRONG": 0 if strategy_type == "Call Credit Spreads" else 4
+        }
+        
+        # Determine sentiment levels
+        def get_sentiment_level(change_pct):
+            if change_pct <= -1.5:
+                return "BEARISH_STRONG"
+            elif change_pct <= -0.5:
+                return "BEARISH"
+            elif change_pct <= 0.5:
+                return "NEUTRAL"
+            elif change_pct <= 1.5:
+                return "BULLISH"
+            else:
+                return "BULLISH_STRONG"
+        
+        nifty_sentiment = "NEUTRAL"
+        bank_sentiment = "NEUTRAL"
+        
+        if 'nifty' in sentiment_data:
+            nifty_sentiment = get_sentiment_level(sentiment_data['nifty']['change_pct'])
+            sentiment_data['nifty']['sentiment'] = nifty_sentiment
+        
+        if 'bank_nifty' in sentiment_data:
+            bank_sentiment = get_sentiment_level(sentiment_data['bank_nifty']['change_pct'])
+            sentiment_data['bank_nifty']['sentiment'] = bank_sentiment
+        
+        # Overall assessment
+        nifty_score = sentiment_scores.get(nifty_sentiment, 2)
+        bank_score = sentiment_scores.get(bank_sentiment, 2)
+        overall_score = (nifty_score * 0.6) + (bank_score * 0.4)
+        
+        if overall_score >= 3.2:
+            overall_sentiment = "BULLISH" if strategy_type == "Put Credit Spreads" else "BEARISH"
+            recommendation = f"Excellent for {strategy_type}"
+            risk_level = "LOW"
+        elif overall_score >= 2.2:
+            overall_sentiment = "NEUTRAL"
+            recommendation = f"Moderate {strategy_type.split()[0]} opportunities"
+            risk_level = "MEDIUM"
         else:
-            return "AVOID Put Credit Spreads - Low quality or risky S/R positioning"
+            overall_sentiment = "BEARISH" if strategy_type == "Put Credit Spreads" else "BULLISH"
+            opposite_strategy = "Call Credit Spreads" if strategy_type == "Put Credit Spreads" else "Put Credit Spreads"
+            recommendation = f"Avoid {strategy_type.split()[0]}, consider {opposite_strategy}"
+            risk_level = "HIGH"
+        
+        sentiment_data['overall'] = {
+            'sentiment': overall_sentiment,
+            'score': overall_score,
+            'recommendation': recommendation,
+            'risk_level': risk_level
+        }
+        
+        return sentiment_data
     
-    def _get_ccs_recommendation(self, quality_score: float, sr_proximity: Dict) -> str:
-        """Get CCS-specific recommendation"""
-        if quality_score >= 85 and sr_proximity['position_quality'] == 'OPTIMAL':
-            return "EXCELLENT for Call Credit Spreads - Premium setup with optimal S/R positioning"
-        elif quality_score >= 70 and sr_proximity['position_quality'] in ['OPTIMAL', 'GOOD']:
-            return "STRONG for Call Credit Spreads - High quality with good resistance buffer"
-        elif quality_score >= 55:
-            return "MODERATE for Call Credit Spreads - Acceptable quality, monitor resistance levels"
+    def detect_patterns(self, data, symbol, strategy_type, filters):
+        """Unified pattern detection for both strategies"""
+        if data is None or len(data) < 30:
+            return []
+        
+        patterns_found = []
+        
+        if strategy_type == "Put Credit Spreads":
+            # Bullish patterns for PCS
+            pattern_methods = [
+                ('Cup and Handle', self._detect_cup_and_handle),
+                ('Ascending Triangle', self._detect_ascending_triangle),
+                ('Bull Flag', self._detect_bull_flag),
+                ('Double Bottom', self._detect_double_bottom),
+                ('Inverse Head and Shoulders', self._detect_inverse_head_shoulders),
+                ('Bullish Engulfing', self._detect_bullish_engulfing),
+                ('Morning Star', self._detect_morning_star),
+                ('Hammer', self._detect_hammer)
+            ]
         else:
-            return "AVOID Call Credit Spreads - Low quality or risky S/R positioning"
+            # Bearish patterns for CCS
+            pattern_methods = [
+                ('Head and Shoulders', self._detect_head_shoulders),
+                ('Descending Triangle', self._detect_descending_triangle),
+                ('Bear Flag', self._detect_bear_flag),
+                ('Double Top', self._detect_double_top),
+                ('Rising Wedge', self._detect_rising_wedge),
+                ('Bearish Engulfing', self._detect_bearish_engulfing),
+                ('Evening Star', self._detect_evening_star),
+                ('Shooting Star', self._detect_shooting_star)
+            ]
+        
+        for pattern_name, detect_method in pattern_methods:
+            try:
+                detected, strength = detect_method(data)
+                
+                if detected and strength >= filters.get('min_strength', 70):
+                    # Volume validation
+                    volume_valid, volume_ratio = self._check_volume_criteria(data, filters.get('volume_ratio', 1.0))
+                    
+                    # Get pattern-specific data
+                    pattern_info = self._get_pattern_data(pattern_name, strategy_type)
+                    
+                    # Breakout/breakdown confirmation
+                    direction_confirmed, direction_details = self._detect_current_day_direction(
+                        data, strategy_type, filters.get('lookback_days', 20)
+                    )
+                    
+                    final_strength = strength
+                    if direction_confirmed:
+                        final_strength = min(98, strength + 15)
+                    if volume_valid and volume_ratio >= 1.5:
+                        final_strength = min(98, final_strength + 10)
+                    
+                    pattern_result = {
+                        'symbol': symbol,
+                        'pattern': pattern_name,
+                        'strength': final_strength,
+                        'success_rate': pattern_info['success_rate'],
+                        'suitability': pattern_info['suitability'],
+                        'current_price': data['Close'].iloc[-1],
+                        'direction_confirmed': direction_confirmed,
+                        'volume_confirmed': volume_valid,
+                        'volume_ratio': volume_ratio,
+                        'direction_details': direction_details,
+                        'pattern_details': pattern_info.get('details', {}),
+                        'daily_strength': strength
+                    }
+                    
+                    patterns_found.append(pattern_result)
+                    
+            except Exception:
+                continue
+        
+        return patterns_found
     
-    def _assess_risk_level(self, quality_score: float, sr_proximity: Dict) -> str:
-        """Assess overall risk level"""
-        if quality_score >= 75 and sr_proximity['position_quality'] == 'OPTIMAL':
-            return "LOW"
-        elif quality_score >= 60 and sr_proximity['position_quality'] in ['OPTIMAL', 'GOOD']:
-            return "MEDIUM"
-        else:
-            return "HIGH"
-    
-    def create_enhanced_sr_chart(self, stock_data: Dict, strategy_type: str) -> go.Figure:
-        """Create enhanced chart with prominent S/R levels and clear price labels"""
+    def _detect_current_day_direction(self, data, strategy_type, lookback_days=20):
+        """Detect breakout (PCS) or breakdown (CCS) based on strategy"""
         try:
-            data = stock_data['data']
-            sr_levels = stock_data['sr_levels']
-            symbol = stock_data['symbol']
-            current_price = stock_data['current_price']
+            if len(data) < lookback_days + 5:
+                return False, {}
             
-            # Create subplots
-            fig = make_subplots(
-                rows=3, cols=1,
-                subplot_titles=(
-                    f'{symbol} - {strategy_type} Analysis with Scientific S/R Levels',
-                    'RSI (14)',
-                    'Volume Profile'
-                ),
-                vertical_spacing=0.08,
-                row_heights=[0.65, 0.2, 0.15]
+            current_close = data['Close'].iloc[-1]
+            current_high = data['High'].iloc[-1]
+            current_low = data['Low'].iloc[-1]
+            current_volume = data['Volume'].iloc[-1]
+            current_open = data['Open'].iloc[-1]
+            
+            lookback_data = data.iloc[-(lookback_days+1):-1]
+            recent_high = lookback_data['High'].max()
+            recent_low = lookback_data['Low'].min()
+            avg_volume = lookback_data['Volume'].mean()
+            
+            if strategy_type == "Put Credit Spreads":
+                # Look for breakout above resistance
+                breakout_occurred = current_high > recent_high * 1.01
+                bullish_close = current_close > current_open
+                close_strength = ((current_close - current_low) / (current_high - current_low)) * 100 if current_high != current_low else 50
+                direction_friendly = close_strength >= 60  # Closed in upper 40% of range
+                move_percentage = ((current_high - recent_high) / recent_high) * 100 if breakout_occurred else 0
+            else:
+                # Look for breakdown below support
+                breakout_occurred = current_low < recent_low * 0.99
+                bullish_close = current_close < current_open  # Bearish close
+                close_strength = ((current_close - current_low) / (current_high - current_low)) * 100 if current_high != current_low else 50
+                direction_friendly = close_strength <= 40  # Closed in lower 40% of range
+                move_percentage = ((recent_low - current_low) / recent_low) * 100 if breakout_occurred else 0
+            
+            volume_confirmed = current_volume >= (avg_volume * 1.5)
+            
+            direction_confirmed = (
+                breakout_occurred and
+                volume_confirmed and
+                (bullish_close if strategy_type == "Put Credit Spreads" else not bullish_close) and
+                direction_friendly
             )
             
-            # Main price chart - Candlestick
-            fig.add_trace(
-                go.Candlestick(
-                    x=data.index,
-                    open=data['Open'],
-                    high=data['High'],
-                    low=data['Low'],
-                    close=data['Close'],
-                    name='Price',
-                    increasing_line_color='#10b981',
-                    decreasing_line_color='#ef4444',
-                    increasing_fillcolor='rgba(16, 185, 129, 0.3)',
-                    decreasing_fillcolor='rgba(239, 68, 68, 0.3)'
-                ),
-                row=1, col=1
-            )
-            
-            # Define S/R colors and styles
-            sr_colors = {
-                's1': {'color': '#10b981', 'name': 'S1 (Strong Support)', 'width': 3},
-                's2': {'color': '#059669', 'name': 'S2 (Medium Support)', 'width': 2},  
-                's3': {'color': '#047857', 'name': 'S3 (Weak Support)', 'width': 2},
-                'r1': {'color': '#ef4444', 'name': 'R1 (Strong Resistance)', 'width': 3},
-                'r2': {'color': '#dc2626', 'name': 'R2 (Medium Resistance)', 'width': 2},
-                'r3': {'color': '#b91c1c', 'name': 'R3 (Weak Resistance)', 'width': 2}
+            details = {
+                'breakout_occurred': breakout_occurred,
+                'volume_confirmed': volume_confirmed,
+                'direction_close': bullish_close if strategy_type == "Put Credit Spreads" else not bullish_close,
+                'move_percentage': move_percentage,
+                'volume_ratio': current_volume / avg_volume if avg_volume > 0 else 0,
+                'close_strength': close_strength,
+                'recent_level': recent_high if strategy_type == "Put Credit Spreads" else recent_low,
+                'current_level': current_high if strategy_type == "Put Credit Spreads" else current_low
             }
             
-            # Add S/R levels based on strategy type
-            if strategy_type == "Put Credit Spreads":
-                # Show all support levels for PCS (risk management)
-                for level_name, level_value in sr_levels['supports'].items():
-                    if level_value > 0:
-                        style = sr_colors[level_name]
-                        distance_pct = ((current_price - level_value) / current_price) * 100
-                        
-                        # Add horizontal line
-                        fig.add_hline(
-                            y=level_value,
-                            line=dict(
-                                color=style['color'], 
-                                width=style['width'], 
-                                dash='solid'
-                            ),
-                            annotation=dict(
-                                text=f"<b>{level_name.upper()}: ₹{level_value:.2f}</b><br>Distance: {distance_pct:.1f}%",
-                                x=0.02,
-                                xref='paper',
-                                bgcolor='rgba(255,255,255,0.9)',
-                                bordercolor=style['color'],
-                                borderwidth=2,
-                                font=dict(size=11, color=style['color'])
-                            ),
-                            row=1, col=1
-                        )
-                        
-                        # Add a subtle fill area below each support
-                        fig.add_hrect(
-                            y0=level_value * 0.998,
-                            y1=level_value,
-                            fillcolor=style['color'],
-                            opacity=0.1,
-                            line_width=0,
-                            row=1, col=1
-                        )
+            return direction_confirmed, details
+            
+        except Exception:
+            return False, {}
+    
+    def _check_volume_criteria(self, data, min_ratio=1.0):
+        """Check volume criteria"""
+        try:
+            if len(data) < 20:
+                return False, 0
+            
+            current_volume = data['Volume'].iloc[-1]
+            avg_volume = data['Volume_SMA'].iloc[-1]
+            
+            if pd.isna(avg_volume) or avg_volume == 0:
+                avg_volume = data['Volume'].rolling(20).mean().iloc[-1]
+                if pd.isna(avg_volume) or avg_volume == 0:
+                    return False, 0
+            
+            volume_ratio = current_volume / avg_volume
+            return volume_ratio >= min_ratio, volume_ratio
+            
+        except Exception:
+            return False, 0
+    
+    def _get_pattern_data(self, pattern_name, strategy_type):
+        """Get pattern data based on strategy type"""
+        
+        # Pattern database for PCS (bullish patterns)
+        pcs_patterns = {
+            'Cup and Handle': {'success_rate': 89, 'suitability': 95},
+            'Ascending Triangle': {'success_rate': 85, 'suitability': 92},
+            'Bull Flag': {'success_rate': 87, 'suitability': 90},
+            'Double Bottom': {'success_rate': 82, 'suitability': 88},
+            'Inverse Head and Shoulders': {'success_rate': 84, 'suitability': 94},
+            'Bullish Engulfing': {'success_rate': 78, 'suitability': 85},
+            'Morning Star': {'success_rate': 81, 'suitability': 87},
+            'Hammer': {'success_rate': 75, 'suitability': 83}
+        }
+        
+        # Pattern database for CCS (bearish patterns)
+        ccs_patterns = {
+            'Head and Shoulders': {'success_rate': 85, 'suitability': 98},
+            'Descending Triangle': {'success_rate': 81, 'suitability': 93},
+            'Bear Flag': {'success_rate': 84, 'suitability': 90},
+            'Double Top': {'success_rate': 79, 'suitability': 92},
+            'Rising Wedge': {'success_rate': 76, 'suitability': 88},
+            'Bearish Engulfing': {'success_rate': 77, 'suitability': 88},
+            'Evening Star': {'success_rate': 78, 'suitability': 91},
+            'Shooting Star': {'success_rate': 73, 'suitability': 85}
+        }
+        
+        patterns_db = pcs_patterns if strategy_type == "Put Credit Spreads" else ccs_patterns
+        
+        return patterns_db.get(pattern_name, {'success_rate': 75, 'suitability': 85})
+    
+    # SIMPLIFIED PATTERN DETECTION METHODS
+    def _detect_cup_and_handle(self, data):
+        """Simplified cup and handle detection"""
+        if len(data) < 30:
+            return False, 0
+        
+        recent_data = data.tail(25)
+        
+        # Look for U-shaped recovery
+        mid_point = len(recent_data) // 2
+        early_high = recent_data['High'].iloc[:5].max()
+        mid_low = recent_data['Low'].iloc[mid_point-3:mid_point+3].min()
+        late_high = recent_data['High'].iloc[-5:].max()
+        
+        # Cup formation
+        cup_depth = ((early_high - mid_low) / early_high) * 100
+        if cup_depth < 10 or cup_depth > 40:
+            return False, 0
+        
+        # Handle (small pullback)
+        handle_pullback = ((late_high - recent_data['Close'].iloc[-1]) / late_high) * 100
+        if handle_pullback > 0 and handle_pullback < 8:
+            return True, 88
+        
+        return False, 0
+    
+    def _detect_ascending_triangle(self, data):
+        """Simplified ascending triangle detection"""
+        if len(data) < 20:
+            return False, 0
+        
+        recent_data = data.tail(15)
+        resistance_level = recent_data['High'].max()
+        
+        # Check if highs are relatively flat (resistance)
+        high_variance = recent_data['High'].std() / recent_data['High'].mean()
+        flat_resistance = high_variance < 0.02
+        
+        # Check for rising lows
+        early_lows = recent_data['Low'].iloc[:5].mean()
+        late_lows = recent_data['Low'].iloc[-5:].mean()
+        rising_support = late_lows > early_lows
+        
+        # Breakout above resistance
+        current_price = data['Close'].iloc[-1]
+        resistance_broken = current_price > resistance_level * 1.005
+        
+        if flat_resistance and rising_support and resistance_broken:
+            return True, 85
+        
+        return False, 0
+    
+    def _detect_bull_flag(self, data):
+        """Simplified bull flag detection"""
+        if len(data) < 15:
+            return False, 0
+        
+        # Prior bullish move
+        price_10_ago = data['Close'].iloc[-11]
+        current_price = data['Close'].iloc[-1]
+        prior_rally = ((current_price - price_10_ago) / price_10_ago) > 0.02
+        
+        # Small consolidation (flag)
+        recent_data = data.tail(8)
+        consolidation_range = (recent_data['High'].max() - recent_data['Low'].min()) / recent_data['Low'].min()
+        small_range = consolidation_range < 0.05
+        
+        # Breakout from flag
+        flag_high = recent_data['High'].max()
+        breakout = current_price > flag_high * 1.005
+        
+        if prior_rally and small_range and breakout:
+            return True, 87
+        
+        return False, 0
+    
+    def _detect_double_bottom(self, data):
+        """Simplified double bottom detection"""
+        if len(data) < 20:
+            return False, 0
+        
+        recent_data = data.tail(15)
+        
+        # Find two valleys of similar depth
+        valleys = []
+        lows = recent_data['Low']
+        
+        for i in range(1, len(lows)-1):
+            if lows.iloc[i] < lows.iloc[i-1] and lows.iloc[i] < lows.iloc[i+1]:
+                valleys.append(lows.iloc[i])
+        
+        if len(valleys) >= 2:
+            first_valley, second_valley = valleys[0], valleys[1]
+            
+            # Valleys should be similar (within 3%)
+            if abs(first_valley - second_valley) / min(first_valley, second_valley) <= 0.03:
+                current_price = data['Close'].iloc[-1]
+                peak = recent_data['High'].max()
                 
-                # Show R1 for reference
-                r1_value = sr_levels['resistances']['r1']
-                if r1_value > current_price:
-                    r1_distance = ((r1_value - current_price) / current_price) * 100
-                    fig.add_hline(
-                        y=r1_value,
-                        line=dict(color='#ef4444', width=1, dash='dot'),
-                        annotation=dict(
-                            text=f"<b>R1: ₹{r1_value:.2f}</b> (+{r1_distance:.1f}%)",
-                            x=0.98,
-                            xref='paper',
-                            bgcolor='rgba(255,255,255,0.8)',
-                            bordercolor='#ef4444',
-                            font=dict(size=10, color='#ef4444')
-                        ),
-                        row=1, col=1
-                    )
-                        
-            else:  # Call Credit Spreads
-                # Show all resistance levels for CCS (risk management)
-                for level_name, level_value in sr_levels['resistances'].items():
-                    if level_value > current_price:
-                        style = sr_colors[level_name]
-                        distance_pct = ((level_value - current_price) / current_price) * 100
-                        
-                        # Add horizontal line
-                        fig.add_hline(
-                            y=level_value,
-                            line=dict(
-                                color=style['color'], 
-                                width=style['width'], 
-                                dash='solid'
-                            ),
-                            annotation=dict(
-                                text=f"<b>{level_name.upper()}: ₹{level_value:.2f}</b><br>Distance: {distance_pct:.1f}%",
-                                x=0.02,
-                                xref='paper',
-                                bgcolor='rgba(255,255,255,0.9)',
-                                bordercolor=style['color'],
-                                borderwidth=2,
-                                font=dict(size=11, color=style['color'])
-                            ),
-                            row=1, col=1
-                        )
-                        
-                        # Add a subtle fill area above each resistance
-                        fig.add_hrect(
-                            y0=level_value,
-                            y1=level_value * 1.002,
-                            fillcolor=style['color'],
-                            opacity=0.1,
-                            line_width=0,
-                            row=1, col=1
-                        )
+                # Check for breakout above peak
+                peak_broken = current_price > peak * 1.01
                 
-                # Show S1 for reference
-                s1_value = sr_levels['supports']['s1']
-                if s1_value < current_price:
-                    s1_distance = ((current_price - s1_value) / current_price) * 100
-                    fig.add_hline(
-                        y=s1_value,
-                        line=dict(color='#10b981', width=1, dash='dot'),
-                        annotation=dict(
-                            text=f"<b>S1: ₹{s1_value:.2f}</b> (-{s1_distance:.1f}%)",
-                            x=0.98,
-                            xref='paper',
-                            bgcolor='rgba(255,255,255,0.8)',
-                            bordercolor='#10b981',
-                            font=dict(size=10, color='#10b981')
-                        ),
-                        row=1, col=1
-                    )
+                if peak_broken:
+                    return True, 83
+        
+        return False, 0
+    
+    def _detect_inverse_head_shoulders(self, data):
+        """Simplified inverse head and shoulders"""
+        if len(data) < 25:
+            return False, 0
+        
+        recent_data = data.tail(20)
+        lows = recent_data['Low']
+        
+        # Find potential shoulders and head
+        valleys = []
+        for i in range(2, len(lows)-2):
+            if (lows.iloc[i] < lows.iloc[i-1] and lows.iloc[i] < lows.iloc[i+1] and
+                lows.iloc[i] < lows.iloc[i-2] and lows.iloc[i] < lows.iloc[i+2]):
+                valleys.append((i, lows.iloc[i]))
+        
+        if len(valleys) >= 3:
+            # Sort by depth (lowest first)
+            valleys.sort(key=lambda x: x[1])
+            head_idx, head_price = valleys[0]
             
-            # Current price line
-            fig.add_hline(
-                y=current_price,
-                line=dict(color='#1f2937', width=2, dash='dashdot'),
-                annotation=dict(
-                    text=f"<b>Current: ₹{current_price:.2f}</b>",
-                    x=0.5,
-                    xref='paper',
-                    bgcolor='#1f2937',
-                    font=dict(size=12, color='white')
-                ),
-                row=1, col=1
-            )
+            # Find shoulders
+            left_shoulders = [v for v in valleys[1:] if v[0] < head_idx]
+            right_shoulders = [v for v in valleys[1:] if v[0] > head_idx]
             
-            # Add moving averages with labels
-            fig.add_trace(
-                go.Scatter(
-                    x=data.index,
-                    y=data['SMA_20'],
-                    name='SMA 20',
-                    line=dict(color='#f59e0b', width=1.5),
-                    opacity=0.8
-                ),
-                row=1, col=1
-            )
+            if left_shoulders and right_shoulders:
+                current_price = data['Close'].iloc[-1]
+                neckline = recent_data['High'].max()
+                
+                # Check for neckline break (bullish confirmation)
+                neckline_broken = current_price > neckline * 1.02
+                
+                if neckline_broken:
+                    return True, 91
+        
+        return False, 0
+    
+    def _detect_bullish_engulfing(self, data):
+        """Simplified bullish engulfing pattern"""
+        if len(data) < 2:
+            return False, 0
+        
+        candle1 = data.iloc[-2]  # Bearish candle
+        candle2 = data.iloc[-1]  # Bullish candle
+        
+        # First candle: bearish
+        bearish_1 = candle1['Close'] < candle1['Open']
+        
+        # Second candle: bullish and engulfs first
+        bullish_2 = candle2['Close'] > candle2['Open']
+        engulfs = (candle2['Open'] < candle1['Close'] and 
+                  candle2['Close'] > candle1['Open'])
+        
+        # Volume confirmation
+        volume_increase = data['Volume'].iloc[-1] > data['Volume'].iloc[-2]
+        
+        if bearish_1 and bullish_2 and engulfs:
+            strength = 79
+            if volume_increase: strength += 6
+            return True, min(strength, 85)
+        
+        return False, 0
+    
+    def _detect_morning_star(self, data):
+        """Simplified morning star pattern"""
+        if len(data) < 3:
+            return False, 0
+        
+        candle1 = data.iloc[-3]  # Bearish candle
+        candle2 = data.iloc[-2]  # Star (small body)
+        candle3 = data.iloc[-1]  # Bullish candle
+        
+        # First candle: bearish
+        bearish_1 = candle1['Close'] < candle1['Open']
+        large_body_1 = abs(candle1['Close'] - candle1['Open']) > (candle1['High'] - candle1['Low']) * 0.6
+        
+        # Second candle: small body (star)
+        small_body_2 = abs(candle2['Close'] - candle2['Open']) < (candle2['High'] - candle2['Low']) * 0.3
+        
+        # Third candle: bullish
+        bullish_3 = candle3['Close'] > candle3['Open']
+        large_body_3 = abs(candle3['Close'] - candle3['Open']) > (candle3['High'] - candle3['Low']) * 0.6
+        
+        if bearish_1 and large_body_1 and small_body_2 and bullish_3 and large_body_3:
+            return True, 82
+        
+        return False, 0
+    
+    def _detect_hammer(self, data):
+        """Simplified hammer pattern"""
+        if len(data) < 1:
+            return False, 0
+        
+        candle = data.iloc[-1]
+        
+        # Small body at top of range
+        body_size = abs(candle['Close'] - candle['Open'])
+        total_range = candle['High'] - candle['Low']
+        
+        if total_range == 0:
+            return False, 0
+        
+        small_body = body_size < total_range * 0.25
+        
+        # Long lower shadow
+        lower_shadow = min(candle['Open'], candle['Close']) - candle['Low']
+        long_lower_shadow = lower_shadow > body_size * 2
+        
+        # Small upper shadow
+        upper_shadow = candle['High'] - max(candle['Open'], candle['Close'])
+        small_upper_shadow = upper_shadow < body_size * 0.5
+        
+        if small_body and long_lower_shadow and small_upper_shadow:
+            return True, 76
+        
+        return False, 0
+    
+    # BEARISH PATTERNS FOR CCS
+    def _detect_head_shoulders(self, data):
+        """Simplified head and shoulders pattern"""
+        if len(data) < 25:
+            return False, 0
+        
+        recent_data = data.tail(20)
+        highs = recent_data['High']
+        
+        # Find potential head and shoulders
+        peaks = []
+        for i in range(2, len(highs)-2):
+            if (highs.iloc[i] > highs.iloc[i-1] and highs.iloc[i] > highs.iloc[i+1] and
+                highs.iloc[i] > highs.iloc[i-2] and highs.iloc[i] > highs.iloc[i+2]):
+                peaks.append((i, highs.iloc[i]))
+        
+        if len(peaks) >= 3:
+            # Check if middle peak is highest (head)
+            peaks.sort(key=lambda x: x[1], reverse=True)
+            head_idx, head_price = peaks[0]
             
-            fig.add_trace(
-                go.Scatter(
-                    x=data.index,
-                    y=data['SMA_50'],
-                    name='SMA 50', 
-                    line=dict(color='#8b5cf6', width=1.5),
-                    opacity=0.8
-                ),
-                row=1, col=1
-            )
+            # Find left and right shoulders
+            left_shoulders = [p for p in peaks[1:] if p[0] < head_idx]
+            right_shoulders = [p for p in peaks[1:] if p[0] > head_idx]
             
-            # RSI subplot with clear levels
-            fig.add_trace(
-                go.Scatter(
-                    x=data.index,
-                    y=data['RSI'],
-                    name='RSI',
-                    line=dict(color='#3b82f6', width=2),
-                    fill='tonexty' if strategy_type == "Put Credit Spreads" else None,
-                    fillcolor='rgba(59, 130, 246, 0.1)'
-                ),
-                row=2, col=1
-            )
+            if left_shoulders and right_shoulders:
+                current_price = data['Close'].iloc[-1]
+                neckline = recent_data['Low'].min()
+                
+                # Check for neckline break (bearish confirmation)
+                neckline_broken = current_price < neckline * 1.02
+                
+                if neckline_broken:
+                    return True, 89
+        
+        return False, 0
+    
+    def _detect_descending_triangle(self, data):
+        """Simplified descending triangle"""
+        if len(data) < 20:
+            return False, 0
+        
+        recent_data = data.tail(15)
+        support_level = recent_data['Low'].min()
+        
+        # Check if lows are relatively flat
+        low_variance = recent_data['Low'].std() / recent_data['Low'].mean()
+        flat_support = low_variance < 0.02
+        
+        # Check for declining highs
+        early_highs = recent_data['High'].iloc[:5].mean()
+        late_highs = recent_data['High'].iloc[-5:].mean()
+        declining_resistance = late_highs < early_highs
+        
+        # Breakdown below support
+        current_price = data['Close'].iloc[-1]
+        support_broken = current_price < support_level * 0.995
+        
+        if flat_support and declining_resistance and support_broken:
+            return True, 86
+        
+        return False, 0
+    
+    def _detect_bear_flag(self, data):
+        """Simplified bear flag pattern"""
+        if len(data) < 15:
+            return False, 0
+        
+        # Prior bearish move
+        price_10_ago = data['Close'].iloc[-11]
+        current_price = data['Close'].iloc[-1]
+        prior_decline = ((current_price - price_10_ago) / price_10_ago) < -0.02
+        
+        # Small consolidation (flag)
+        recent_data = data.tail(8)
+        consolidation_range = (recent_data['High'].max() - recent_data['Low'].min()) / recent_data['Low'].min()
+        small_range = consolidation_range < 0.05
+        
+        # Breakdown from flag
+        flag_low = recent_data['Low'].min()
+        breakdown = current_price < flag_low * 1.005
+        
+        if prior_decline and small_range and breakdown:
+            return True, 84
+        
+        return False, 0
+    
+    def _detect_double_top(self, data):
+        """Simplified double top pattern"""
+        if len(data) < 20:
+            return False, 0
+        
+        recent_data = data.tail(15)
+        
+        # Find two peaks of similar height
+        peaks = []
+        highs = recent_data['High']
+        
+        for i in range(1, len(highs)-1):
+            if highs.iloc[i] > highs.iloc[i-1] and highs.iloc[i] > highs.iloc[i+1]:
+                peaks.append(highs.iloc[i])
+        
+        if len(peaks) >= 2:
+            first_peak, second_peak = peaks[0], peaks[1]
             
-            # RSI reference lines
-            fig.add_hline(y=70, line=dict(color='red', width=1, dash='dash'), 
-                         annotation_text="Overbought (70)", row=2, col=1)
-            fig.add_hline(y=30, line=dict(color='green', width=1, dash='dash'), 
-                         annotation_text="Oversold (30)", row=2, col=1)
-            fig.add_hline(y=50, line=dict(color='gray', width=1, dash='dot'), 
-                         annotation_text="Neutral", row=2, col=1)
-            
-            # Volume with color coding
-            volume_colors = []
-            for i in range(len(data)):
-                if data['Close'].iloc[i] >= data['Open'].iloc[i]:
-                    volume_colors.append('#10b981')  # Green for up days
-                else:
-                    volume_colors.append('#ef4444')  # Red for down days
-            
-            fig.add_trace(
-                go.Bar(
-                    x=data.index,
-                    y=data['Volume'],
-                    name='Volume',
-                    marker_color=volume_colors,
-                    opacity=0.7
-                ),
-                row=3, col=1
-            )
-            
-            # Layout customization
-            fig.update_layout(
-                title=dict(
-                    text=f"<b>{symbol} - {strategy_type} Risk Management Chart</b><br>"
-                         f"<span style='font-size:14px;'>Quality Score: {stock_data['quality_score']}/100 | "
-                         f"Risk: {stock_data['risk_assessment']} | "
-                         f"Position Quality: {stock_data['sr_proximity']['position_quality']}</span>",
-                    x=0.5,
-                    font=dict(size=16)
-                ),
-                height=900,
-                showlegend=True,
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="right", 
-                    x=1
-                ),
-                xaxis_rangeslider_visible=False,
-                template='plotly_white',
-                font=dict(family='Inter, sans-serif')
-            )
-            
-            # Update axes
-            fig.update_xaxes(title_text="Date", row=3, col=1)
-            fig.update_yaxes(title_text="Price (₹)", row=1, col=1)
-            fig.update_yaxes(title_text="RSI", row=2, col=1, range=[0, 100])
-            fig.update_yaxes(title_text="Volume", row=3, col=1)
-            
-            return fig
-            
-        except Exception as e:
-            logger.error(f"Error creating enhanced S/R chart: {e}")
-            # Return simple fallback chart
-            fig = go.Figure()
-            fig.add_annotation(
-                text=f"Chart Error: {str(e)}",
-                x=0.5, y=0.5,
-                showarrow=False,
-                font=dict(size=20, color="red")
-            )
-            return fig
+            # Peaks should be similar (within 3%)
+            if abs(first_peak - second_peak) / max(first_peak, second_peak) <= 0.03:
+                current_price = data['Close'].iloc[-1]
+                valley = recent_data['Low'].min()
+                
+                # Check for valley break (bearish)
+                valley_broken = current_price < valley * 1.01
+                
+                if valley_broken:
+                    return True, 81
+        
+        return False, 0
+    
+    def _detect_rising_wedge(self, data):
+        """Simplified rising wedge pattern"""
+        if len(data) < 20:
+            return False, 0
+        
+        recent_data = data.tail(15)
+        
+        # Check for converging trend lines with upward bias
+        highs = recent_data['High']
+        lows = recent_data['Low']
+        
+        # Rising wedge: both highs and lows trending up but converging
+        recent_high_trend = (highs.iloc[-1] - highs.iloc[-10]) > 0
+        recent_low_trend = (lows.iloc[-1] - lows.iloc[-10]) > 0
+        
+        # Check for breakdown
+        current_price = data['Close'].iloc[-1]
+        recent_low = recent_data['Low'].min()
+        
+        breakdown = current_price < recent_low * 1.005
+        
+        if recent_high_trend and recent_low_trend and breakdown:
+            return True, 78
+        
+        return False, 0
+    
+    def _detect_bearish_engulfing(self, data):
+        """Simplified bearish engulfing pattern"""
+        if len(data) < 2:
+            return False, 0
+        
+        candle1 = data.iloc[-2]  # Bullish candle
+        candle2 = data.iloc[-1]  # Bearish candle
+        
+        # First candle: bullish
+        bullish_1 = candle1['Close'] > candle1['Open']
+        
+        # Second candle: bearish and engulfs first
+        bearish_2 = candle2['Close'] < candle2['Open']
+        engulfs = (candle2['Open'] > candle1['Close'] and 
+                  candle2['Close'] < candle1['Open'])
+        
+        # Volume confirmation
+        volume_increase = data['Volume'].iloc[-1] > data['Volume'].iloc[-2]
+        
+        if bullish_1 and bearish_2 and engulfs:
+            strength = 82
+            if volume_increase: strength += 5
+            return True, min(strength, 87)
+        
+        return False, 0
+    
+    def _detect_evening_star(self, data):
+        """Simplified evening star pattern"""
+        if len(data) < 3:
+            return False, 0
+        
+        candle1 = data.iloc[-3]  # Bullish candle
+        candle2 = data.iloc[-2]  # Star (small body)
+        candle3 = data.iloc[-1]  # Bearish candle
+        
+        # First candle: bullish
+        bullish_1 = candle1['Close'] > candle1['Open']
+        large_body_1 = abs(candle1['Close'] - candle1['Open']) > (candle1['High'] - candle1['Low']) * 0.6
+        
+        # Second candle: small body (star)
+        small_body_2 = abs(candle2['Close'] - candle2['Open']) < (candle2['High'] - candle2['Low']) * 0.3
+        
+        # Third candle: bearish
+        bearish_3 = candle3['Close'] < candle3['Open']
+        large_body_3 = abs(candle3['Close'] - candle3['Open']) > (candle3['High'] - candle3['Low']) * 0.6
+        
+        if bullish_1 and large_body_1 and small_body_2 and bearish_3 and large_body_3:
+            return True, 85
+        
+        return False, 0
+    
+    def _detect_shooting_star(self, data):
+        """Simplified shooting star pattern"""
+        if len(data) < 1:
+            return False, 0
+        
+        candle = data.iloc[-1]
+        
+        # Small body at bottom of range
+        body_size = abs(candle['Close'] - candle['Open'])
+        total_range = candle['High'] - candle['Low']
+        
+        if total_range == 0:
+            return False, 0
+        
+        small_body = body_size < total_range * 0.25
+        
+        # Long upper shadow
+        upper_shadow = candle['High'] - max(candle['Open'], candle['Close'])
+        long_upper_shadow = upper_shadow > body_size * 2
+        
+        # Small lower shadow
+        lower_shadow = min(candle['Open'], candle['Close']) - candle['Low']
+        small_lower_shadow = lower_shadow < body_size * 0.5
+        
+        if small_body and long_upper_shadow and small_lower_shadow:
+            return True, 77
+        
+        return False, 0
 
-# MAIN STREAMLIT APPLICATION
-def main():
-    """Main Streamlit application with enhanced S/R visualization"""
+def scan_stocks_optimized(stocks, filters, strategy_type, include_weekly=True, max_workers=20):
+    """Optimized parallel stock scanning with caching"""
     
-    # Sidebar configuration
-    st.sidebar.title("⚡ Options Scanner Pro v9.0")
-    st.sidebar.markdown("### 🎯 Enhanced with Scientific S/R Levels")
+    scanner = UniversalOptionsScanner()
+    all_results = []
     
-    # Strategy selection
-    strategy_type = st.sidebar.selectbox(
-        "📊 Select Strategy Type",
-        ["Put Credit Spreads", "Call Credit Spreads"],
-        help="Choose between bullish (PCS) or bearish (CCS) strategies"
-    )
+    def scan_single_stock(symbol):
+        """Scan a single stock with caching"""
+        try:
+            # Get cached daily data
+            daily_data = get_stock_data_cached(symbol)
+            if daily_data is None or len(daily_data) < 30:
+                return []
+            
+            # Get cached weekly data if requested
+            weekly_data = None
+            if include_weekly:
+                weekly_data = get_weekly_stock_data_cached(symbol)
+            
+            # Detect patterns
+            patterns = scanner.detect_patterns(daily_data, symbol, strategy_type, filters)
+            
+            # Add weekly validation if available
+            if include_weekly and weekly_data is not None:
+                for pattern in patterns:
+                    # Simple weekly trend check
+                    weekly_trend = "Unknown"
+                    if len(weekly_data) >= 5:
+                        weekly_close_5_ago = weekly_data['Close'].iloc[-5]
+                        weekly_close_current = weekly_data['Close'].iloc[-1]
+                        weekly_change = ((weekly_close_current - weekly_close_5_ago) / weekly_close_5_ago) * 100
+                        
+                        if strategy_type == "Put Credit Spreads":
+                            if weekly_change > 2:
+                                weekly_trend = "Strong Bullish"
+                                pattern['strength'] = min(98, pattern['strength'] + 10)
+                            elif weekly_change > 0:
+                                weekly_trend = "Bullish" 
+                                pattern['strength'] = min(98, pattern['strength'] + 5)
+                        else:
+                            if weekly_change < -2:
+                                weekly_trend = "Strong Bearish"
+                                pattern['strength'] = min(98, pattern['strength'] + 10)
+                            elif weekly_change < 0:
+                                weekly_trend = "Bearish"
+                                pattern['strength'] = min(98, pattern['strength'] + 5)
+                    
+                    pattern['weekly_trend'] = weekly_trend
+            
+            return patterns
+            
+        except Exception:
+            return []
     
-    # Get theme
-    theme_css, icon = get_theme_css(strategy_type)
+    # Use ThreadPoolExecutor for parallel processing
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_stock = {executor.submit(scan_single_stock, stock): stock for stock in stocks}
+        
+        for future in as_completed(future_to_stock):
+            try:
+                result = future.result(timeout=30)
+                if result:
+                    all_results.extend(result)
+            except Exception:
+                continue
+    
+    return all_results
+
+def create_professional_sidebar():
+    """Create optimized sidebar with strategy selection"""
+    with st.sidebar:
+        # Strategy Selection Header
+        st.markdown("""
+        <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, #6366f1, #4338ca); border-radius: 8px; margin-bottom: 20px;'>
+            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700;'>⚡ Options Strategy Scanner</h2>
+            <p style='color: #FFFFFF; margin: 5px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Professional v7.0</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # MAIN STRATEGY SELECTION
+        st.markdown("### 🎯 **Strategy Selection**")
+        strategy_type = st.radio(
+            "Choose your options strategy:",
+            ["Put Credit Spreads", "Call Credit Spreads"],
+            index=0,
+            help="Put Credit Spreads benefit from bullish patterns, Call Credit Spreads from bearish patterns"
+        )
+        
+        # Dynamic strategy info
+        if strategy_type == "Put Credit Spreads":
+            st.info("📈 **Put Credit Spreads** - Profit from bullish moves and time decay")
+        else:
+            st.info("📉 **Call Credit Spreads** - Profit from bearish moves and time decay")
+        
+        st.markdown("---")
+        
+        # SCAN CONFIGURATION
+        st.markdown("### ⚙️ **Scan Configuration**")
+        
+        # Minimum strength filter
+        min_strength = st.slider(
+            "Minimum Pattern Strength (%)",
+            min_value=60,
+            max_value=95,
+            value=75,
+            step=5,
+            help="Filter patterns by minimum strength threshold"
+        )
+        
+        # Volume criteria
+        min_volume_ratio = st.slider(
+            "Minimum Volume Ratio",
+            min_value=1.0,
+            max_value=3.0,
+            value=1.5,
+            step=0.1,
+            help="Current volume vs 20-day average"
+        )
+        
+        # Analysis mode
+        st.markdown("**Analysis Mode:**")
+        analysis_mode = st.radio(
+            "Choose analysis depth:",
+            ["Daily Only (Fast)", "Daily + Weekly (Comprehensive)"],
+            index=1,
+            help="Weekly analysis provides better confirmation but takes longer"
+        )
+        
+        # Advanced settings in expander
+        with st.expander("🔧 Advanced Settings", expanded=False):
+            lookback_days = st.slider(
+                "Lookback Period (Days)",
+                min_value=10,
+                max_value=30,
+                value=20,
+                step=5
+            )
+            
+            max_workers = st.slider(
+                "Parallel Workers",
+                min_value=10,
+                max_value=30,
+                value=20,
+                step=5,
+                help="Higher values = faster scanning but more CPU usage"
+            )
+        
+        # Cache status
+        st.markdown("---")
+        st.markdown("### 📊 **System Status**")
+        
+        # Cache info
+        cache_info = st.empty()
+        stocks_cached = len(get_nse_fno_stocks_cached())
+        cache_info.success(f"✅ {stocks_cached} F&O stocks cached")
+        
+        # Clear cache button
+        if st.button("🗑️ Clear Cache", help="Clear all cached data to fetch fresh information"):
+            st.cache_data.clear()
+            st.success("Cache cleared! Next scan will fetch fresh data.")
+            st.rerun()
+        
+        return {
+            'strategy_type': strategy_type,
+            'min_strength': min_strength,
+            'min_volume_ratio': min_volume_ratio,
+            'lookback_days': lookback_days,
+            'include_weekly': analysis_mode == "Daily + Weekly (Comprehensive)",
+            'max_workers': max_workers,
+            'stocks_to_scan': get_nse_fno_stocks_cached()
+        }
+
+def create_main_scanner_tab(config):
+    """Create optimized main scanner tab"""
+    strategy_type = config['strategy_type']
+    
+    # Dynamic theme application
+    theme_css, strategy_icon = get_theme_css(strategy_type)
     st.markdown(theme_css, unsafe_allow_html=True)
     
-    # Header
+    # Professional scan controls
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        scan_button = st.button(
+            f"{strategy_icon} **Start {strategy_type.split()[0]} Scan**", 
+            type="primary",
+            help=f"Begin comprehensive {strategy_type} pattern analysis"
+        )
+    
+    with col2:
+        analysis_type = "Weekly Enhanced" if config['include_weekly'] else "Daily Only"
+        st.markdown(f"**Mode:** {analysis_type}")
+    
+    with col3:
+        st.markdown(f"**Stocks:** {len(config['stocks_to_scan'])}")
+    
+    if scan_button:
+        scanner = UniversalOptionsScanner()
+        
+        # Progress tracking
+        progress_bar = st.progress(0)
+        status_container = st.empty()
+        
+        start_time = time.time()
+        
+        # Create filters dictionary
+        filters = {
+            'min_strength': config['min_strength'],
+            'volume_ratio': config['min_volume_ratio'],
+            'lookback_days': config['lookback_days']
+        }
+        
+        status_container.info(f"🔄 Scanning {len(config['stocks_to_scan'])} stocks with {config['max_workers']} parallel workers...")
+        progress_bar.progress(5)
+        
+        # Perform optimized scanning
+        try:
+            results = scan_stocks_optimized(
+                config['stocks_to_scan'], 
+                filters,
+                strategy_type,
+                include_weekly=config['include_weekly'],
+                max_workers=config['max_workers']
+            )
+            
+            progress_bar.progress(90)
+            status_container.info("🔄 Processing and ranking results...")
+            
+            # Sort by strength
+            results.sort(key=lambda x: x['strength'], reverse=True)
+            
+            progress_bar.progress(100)
+            end_time = time.time()
+            scan_duration = end_time - start_time
+            
+            status_container.success(f"✅ Scan completed in {scan_duration:.1f}s. Found {len(results)} {strategy_type.split()[0]} opportunities!")
+            
+            if results:
+                
+                # Summary metrics
+                st.markdown(f"### 📈 **{strategy_type} Results Summary**")
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("Total Opportunities", len(results))
+                
+                with col2:
+                    high_strength = sum(1 for r in results if r['strength'] >= 85)
+                    st.metric("High Strength (≥85%)", high_strength)
+                
+                with col3:
+                    direction_confirmed = sum(1 for r in results if r.get('direction_confirmed', False))
+                    st.metric("Movement Confirmed", direction_confirmed)
+                
+                with col4:
+                    avg_strength = sum(r['strength'] for r in results) / len(results)
+                    st.metric("Average Strength", f"{avg_strength:.1f}%")
+                
+                # Results tabs
+                result_tab1, result_tab2, result_tab3 = st.tabs([
+                    "🎯 **Top Opportunities**",
+                    "📊 **Complete Analysis**", 
+                    "📱 **Export Data**"
+                ])
+                
+                with result_tab1:
+                    st.markdown(f"### 🎯 **Premium {strategy_type} Opportunities**")
+                    
+                    # Show top 10 results
+                    top_results = results[:10]
+                    
+                    for i, pattern in enumerate(top_results, 1):
+                        strength_color = "#dc2626" if pattern['strength'] >= 90 else "#ea580c" if pattern['strength'] >= 80 else "#ca8a04"
+                        direction_status = "✅ Confirmed" if pattern.get('direction_confirmed', False) else "⏳ Pending"
+                        volume_status = "🔊 Strong" if pattern.get('volume_ratio', 0) >= 2.0 else "📈 Moderate"
+                        
+                        weekly_info = ""
+                        if 'weekly_trend' in pattern and pattern['weekly_trend'] != "Unknown":
+                            weekly_info = f"""
+                            <div style='background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 8px; margin: 8px 0; border-radius: 4px;'>
+                                <strong>📅 Weekly Trend:</strong> {pattern['weekly_trend']}
+                            </div>
+                            """
+                        
+                        st.markdown(f"""
+                        <div class="pattern-card">
+                            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;'>
+                                <h3 style='margin: 0; color: var(--primary-700); font-size: 1.4rem;'>#{i} {pattern['symbol'].replace('.NS', '')} - {pattern['pattern']}</h3>
+                                <span style='background: {strength_color}; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold;'>
+                                    {pattern['strength']:.0f}%
+                                </span>
+                            </div>
+                            
+                            <div style='display: flex; justify-content: space-between; margin: 8px 0; color: #4b5563;'>
+                                <span><strong>Price:</strong> ₹{pattern['current_price']:.2f}</span>
+                                <span><strong>Movement:</strong> {direction_status}</span>
+                                <span><strong>Volume:</strong> {volume_status}</span>
+                            </div>
+                            
+                            <div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0;'>
+                                <div style='text-align: center; padding: 8px; background: var(--neutral-50); border-radius: 8px;'>
+                                    <div style='font-size: 0.85rem; color: #6b7280;'>Success Rate</div>
+                                    <div style='font-size: 1.1rem; font-weight: bold; color: #16a34a;'>{pattern['success_rate']}%</div>
+                                </div>
+                                <div style='text-align: center; padding: 8px; background: var(--neutral-50); border-radius: 8px;'>
+                                    <div style='font-size: 0.85rem; color: #6b7280;'>Suitability</div>
+                                    <div style='font-size: 1.1rem; font-weight: bold; color: var(--primary-600);'>{pattern['suitability']}%</div>
+                                </div>
+                                <div style='text-align: center; padding: 8px; background: var(--neutral-50); border-radius: 8px;'>
+                                    <div style='font-size: 0.85rem; color: #6b7280;'>Volume Ratio</div>
+                                    <div style='font-size: 1.1rem; font-weight: bold; color: #0891b2;'>{pattern.get('volume_ratio', 0):.1f}x</div>
+                                </div>
+                            </div>
+                            
+                            {weekly_info}
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                with result_tab2:
+                    st.markdown(f"### 📊 **Complete {strategy_type} Analysis**")
+                    
+                    # Show all results with details
+                    for i, pattern in enumerate(results, 1):
+                        with st.expander(f"#{i} {pattern['symbol'].replace('.NS', '')} - {pattern['pattern']} ({pattern['strength']:.0f}%)", expanded=i<=3):
+                            
+                            col1, col2 = st.columns(2)
+                            
+                            with col1:
+                                st.markdown("#### Pattern Details")
+                                st.write(f"**Symbol:** {pattern['symbol'].replace('.NS', '')}")
+                                st.write(f"**Pattern:** {pattern['pattern']}")
+                                st.write(f"**Current Price:** ₹{pattern['current_price']:.2f}")
+                                st.write(f"**Strength:** {pattern['strength']}%")
+                                st.write(f"**Success Rate:** {pattern['success_rate']}%")
+                                st.write(f"**Suitability:** {pattern['suitability']}%")
+                            
+                            with col2:
+                                st.markdown("#### Movement Analysis")
+                                direction_details = pattern.get('direction_details', {})
+                                if direction_details:
+                                    movement_type = "Breakout" if strategy_type == "Put Credit Spreads" else "Breakdown"
+                                    st.write(f"**{movement_type}:** {'✅ Yes' if direction_details.get('breakout_occurred', False) else '❌ No'}")
+                                    st.write(f"**Volume Confirmed:** {'✅ Yes' if direction_details.get('volume_confirmed', False) else '❌ No'}")
+                                    st.write(f"**Move %:** {direction_details.get('move_percentage', 0):.2f}%")
+                                    st.write(f"**Volume Ratio:** {direction_details.get('volume_ratio', 0):.1f}x")
+                                
+                                # Weekly trend if available
+                                if 'weekly_trend' in pattern:
+                                    st.write(f"**Weekly Trend:** {pattern['weekly_trend']}")
+                
+                with result_tab3:
+                    st.markdown("### 📱 **Export & Share Results**")
+                    
+                    # Create Excel export
+                    excel_data = create_excel_export(results, strategy_type)
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        strategy_short = "PCS" if strategy_type == "Put Credit Spreads" else "CCS"
+                        st.download_button(
+                            label="📊 **Download Excel Report**",
+                            data=excel_data,
+                            file_name=f"{strategy_short}_Opportunities_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                    
+                    with col2:
+                        # Pattern distribution
+                        pattern_summary = {}
+                        for result in results:
+                            pattern = result['pattern']
+                            pattern_summary[pattern] = pattern_summary.get(pattern, 0) + 1
+                        
+                        st.markdown("**Pattern Distribution:**")
+                        for pattern, count in sorted(pattern_summary.items(), key=lambda x: x[1], reverse=True):
+                            st.write(f"• {pattern}: {count}")
+            
+            else:
+                st.warning(f"🔍 No {strategy_type.split()[0]} patterns found. Try adjusting the filters or check market conditions.")
+                
+                # Dynamic suggestions
+                opposite_strategy = "Call Credit Spreads" if strategy_type == "Put Credit Spreads" else "Put Credit Spreads"
+                st.markdown(f"""
+                ### 💡 **Suggestions:**
+                - Lower the minimum strength threshold
+                - Reduce the minimum volume ratio
+                - Market conditions might favor **{opposite_strategy}** instead
+                - Try scanning during different market hours
+                """)
+        
+        except Exception as e:
+            st.error(f"❌ Scanning error: {str(e)}")
+            progress_bar.empty()
+            status_container.empty()
+
+def main():
+    # Get configuration first to determine theme
+    config = create_professional_sidebar()
+    strategy_type = config['strategy_type']
+    
+    # Apply dynamic theme
+    theme_css, strategy_icon = get_theme_css(strategy_type)
+    st.markdown(theme_css, unsafe_allow_html=True)
+    
+    # Dynamic header
+    strategy_color = "#14b8a6" if strategy_type == "Put Credit Spreads" else "#dc2626"
     st.markdown(f"""
-    <div style="text-align: center; padding: 2rem 0;">
-        <h1>{icon} NSE F&O Options Strategy Scanner Pro v9.0</h1>
-        <h3 style="color: var(--primary-700);">
-            {strategy_type} with Scientific S1/S2/S3 & R1/R2/R3 Levels
-        </h3>
-        <p style="color: var(--text-secondary); font-size: 1.1rem;">
-            Risk Management with Visual S/R Level Analysis
-        </p>
+    <div class="professional-header">
+        <div class="strategy-badge">{strategy_icon} {strategy_type}</div>
+        <h1>NSE F&O Options Strategy Scanner</h1>
+        <p class="subtitle">Real-time Pattern Analysis • 219 F&O Universe • Professional Trading Insights</p>
+        <p class="description">Optimized with caching and parallel processing for maximum performance</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Configuration sidebar
-    st.sidebar.markdown("### 🔧 Scanner Configuration")
+    # Create main tabs
+    tab1, tab2 = st.tabs([
+        "🎯 Pattern Scanner",
+        "📊 Market Intelligence"
+    ])
     
-    scan_count = st.sidebar.slider(
-        "Stocks to Scan",
-        min_value=5,
-        max_value=50,
-        value=15,
-        step=5,
-        help="Number of stocks to analyze (optimized for performance)"
-    )
+    with tab1:
+        create_main_scanner_tab(config)
     
-    quality_filter = st.sidebar.selectbox(
-        "Quality Filter",
-        ["All Quality", "HIGH+ Only", "PREMIUM Only"],
-        help="Filter by minimum quality grade"
-    )
-    
-    # Enhanced S/R explanation
-    st.sidebar.markdown("### 🎯 S/R Level Guide")
-    if strategy_type == "Put Credit Spreads":
-        st.sidebar.markdown("""
-        **Support Levels (Risk Management):**
-        - **S1**: Strong support - Key level to watch
-        - **S2**: Medium support - Secondary safety
-        - **S3**: Weak support - Final safety net
+    with tab2:
+        st.markdown("### 📊 Market Intelligence Dashboard")
         
-        **Best PCS Setup:**
-        - Price well above S1 (>3%)
-        - Strong volume at support levels
-        - Bullish trend alignment
-        """)
-    else:
-        st.sidebar.markdown("""
-        **Resistance Levels (Risk Management):**
-        - **R1**: Strong resistance - Key level to watch  
-        - **R2**: Medium resistance - Secondary target
-        - **R3**: Weak resistance - Extended target
+        # Get cached market sentiment
+        scanner = UniversalOptionsScanner()
+        sentiment_data = scanner.analyze_market_sentiment(strategy_type)
         
-        **Best CCS Setup:**
-        - Price well below R1 (>3%)
-        - High volume at resistance levels
-        - Bearish trend alignment
-        """)
-    
-    # Scan button
-    if st.sidebar.button("🚀 Start Enhanced S/R Scan", type="primary"):
-        scanner = ProductionOptionsScanner()
+        # Market Overview
+        col1, col2, col3 = st.columns(3)
         
-        with st.spinner(f"Scanning {scan_count} stocks with advanced S/R analysis..."):
-            progress_bar = st.progress(0)
-            
-            # Parallel scanning
-            with ThreadPoolExecutor(max_workers=5) as executor:
-                stocks_to_scan = scanner.nse_fno_stocks[:scan_count]
-                
-                # Submit all tasks
-                future_to_stock = {
-                    executor.submit(scanner.analyze_stock_with_sr, stock, strategy_type): stock 
-                    for stock in stocks_to_scan
-                }
-                
-                results = []
-                completed = 0
-                
-                for future in as_completed(future_to_stock):
-                    stock = future_to_stock[future]
-                    try:
-                        result = future.result()
-                        if result:
-                            results.append(result)
-                    except Exception as e:
-                        logger.error(f"Error processing {stock}: {e}")
-                    
-                    completed += 1
-                    progress_bar.progress(completed / len(stocks_to_scan))
-            
-            # Filter results
-            if quality_filter == "HIGH+ Only":
-                results = [r for r in results if r['quality_grade'] in ['HIGH', 'PREMIUM']]
-            elif quality_filter == "PREMIUM Only":
-                results = [r for r in results if r['quality_grade'] == 'PREMIUM']
-            
-            # Sort by quality score
-            results.sort(key=lambda x: x['quality_score'], reverse=True)
-            
-            # Display results
-            st.markdown(f"### 📊 Enhanced S/R Scan Results - {len(results)} Opportunities")
-            
-            if results:
-                # Summary metrics
-                col1, col2, col3, col4 = st.columns(4)
-                
-                premium_count = len([r for r in results if r['quality_grade'] == 'PREMIUM'])
-                high_count = len([r for r in results if r['quality_grade'] == 'HIGH'])
-                avg_quality = np.mean([r['quality_score'] for r in results])
-                optimal_positioning = len([r for r in results if r['sr_proximity']['position_quality'] == 'OPTIMAL'])
-                
-                col1.metric("Premium Setups", premium_count, delta=f"{premium_count/len(results)*100:.0f}%")
-                col2.metric("High Quality", high_count, delta=f"{high_count/len(results)*100:.0f}%")
-                col3.metric("Avg Quality Score", f"{avg_quality:.0f}", delta="out of 100")
-                col4.metric("Optimal S/R Position", optimal_positioning, delta=f"{optimal_positioning/len(results)*100:.0f}%")
-                
-                # Detailed results with enhanced visualization
-                for i, stock_data in enumerate(results[:10]):  # Show top 10
-                    with st.expander(
-                        f"#{i+1} {stock_data['symbol']} - {stock_data['quality_grade']} Quality "
-                        f"(Score: {stock_data['quality_score']}) - S/R: {stock_data['sr_proximity']['position_quality']}", 
-                        expanded=i < 3
-                    ):
-                        # Two-column layout
-                        col1, col2 = st.columns([1, 2])
-                        
-                        with col1:
-                            # Key metrics card
-                            st.markdown(f"""
-                            <div class="quality-card">
-                                <h4>{stock_data['symbol']} Analysis</h4>
-                                <div class="metric-container">
-                                    <span class="metric-label">Current Price</span>
-                                    <span class="metric-value">₹{stock_data['current_price']:.2f}</span>
-                                </div>
-                                <div class="metric-container">
-                                    <span class="metric-label">Quality Score</span>
-                                    <span class="metric-value">{stock_data['quality_score']}/100</span>
-                                </div>
-                                <div class="metric-container">
-                                    <span class="metric-label">Suitability</span>
-                                    <span class="metric-value">{stock_data['suitability']}%</span>
-                                </div>
-                                <div class="metric-container">
-                                    <span class="metric-label">Risk Level</span>
-                                    <span class="risk-{stock_data['risk_assessment'].lower()}">{stock_data['risk_assessment']}</span>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # S/R Levels Display
-                            sr_levels = stock_data['sr_levels']
-                            
-                            if strategy_type == "Put Credit Spreads":
-                                st.markdown("""
-                                <div class="sr-levels-card">
-                                    <h4 style="text-align: center; margin-bottom: 1rem;">🛡️ Support Levels (Risk Management)</h4>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                
-                                # Support levels
-                                for level_key, level_name in [('s1', 'S1 - Strong Support'), ('s2', 'S2 - Medium Support'), ('s3', 'S3 - Weak Support')]:
-                                    level_value = sr_levels['supports'][level_key]
-                                    distance = ((stock_data['current_price'] - level_value) / stock_data['current_price']) * 100
-                                    
-                                    st.markdown(f"""
-                                    <div class="sr-level-item support-{level_key}">
-                                        <div>
-                                            <strong>{level_name}</strong><br>
-                                            <small>Distance: {distance:.1f}%</small>
-                                        </div>
-                                        <div>
-                                            <strong>₹{level_value:.2f}</strong>
-                                        </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                            else:
-                                st.markdown("""
-                                <div class="sr-levels-card">
-                                    <h4 style="text-align: center; margin-bottom: 1rem;">🎯 Resistance Levels (Risk Management)</h4>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                
-                                # Resistance levels
-                                for level_key, level_name in [('r1', 'R1 - Strong Resistance'), ('r2', 'R2 - Medium Resistance'), ('r3', 'R3 - Weak Resistance')]:
-                                    level_value = sr_levels['resistances'][level_key]
-                                    if level_value > stock_data['current_price']:
-                                        distance = ((level_value - stock_data['current_price']) / stock_data['current_price']) * 100
-                                        
-                                        st.markdown(f"""
-                                        <div class="sr-level-item resistance-{level_key}">
-                                            <div>
-                                                <strong>{level_name}</strong><br>
-                                                <small>Distance: {distance:.1f}%</small>
-                                            </div>
-                                            <div>
-                                                <strong>₹{level_value:.2f}</strong>
-                                            </div>
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                            
-                            # Quality breakdown
-                            st.markdown("#### 📈 Quality Breakdown")
-                            liquidity_emoji = "🟢" if stock_data['liquidity']['liquidity_grade'] == 'HIGH' else "🟡" if stock_data['liquidity']['liquidity_grade'] == 'MEDIUM' else "🔴"
-                            trend_emoji = "🟢" if stock_data['mtf_alignment']['trend_strength'] == 'STRONG' else "🟡" if stock_data['mtf_alignment']['trend_strength'] == 'MEDIUM' else "🔴"
-                            position_emoji = "🟢" if stock_data['sr_proximity']['position_quality'] == 'OPTIMAL' else "🟡" if stock_data['sr_proximity']['position_quality'] == 'GOOD' else "🔴"
-                            
-                            st.markdown(f"""
-                            - {liquidity_emoji} **Liquidity**: {stock_data['liquidity']['liquidity_grade']} (Vol: {stock_data['liquidity']['avg_volume']:,.0f})
-                            - {trend_emoji} **Trend Strength**: {stock_data['mtf_alignment']['trend_strength']} ({stock_data['mtf_alignment']['timeframe_consensus']})
-                            - {position_emoji} **S/R Position**: {stock_data['sr_proximity']['position_quality']}
-                            """)
-                        
-                        with col2:
-                            # Enhanced chart with S/R levels
-                            chart = scanner.create_enhanced_sr_chart(stock_data, strategy_type)
-                            st.plotly_chart(chart, use_container_width=True)
-                        
-                        # Recommendation
-                        st.markdown(f"""
-                        #### 💡 Strategy Recommendation
-                        **{stock_data['recommendation']}**
-                        
-                        **Key Risk Management Points:**
-                        """)
-                        
-                        if strategy_type == "Put Credit Spreads":
-                            s1_dist = stock_data['sr_proximity']['nearest_support_distance']
-                            st.markdown(f"""
-                            - Monitor S1 level at ₹{sr_levels['supports']['s1']:.2f} ({s1_dist:.1f}% below current price)
-                            - Consider position sizing based on distance to support levels
-                            - Exit strategy if price approaches S2 or below
-                            """)
-                        else:
-                            r1_dist = stock_data['sr_proximity']['nearest_resistance_distance']  
-                            st.markdown(f"""
-                            - Monitor R1 level at ₹{sr_levels['resistances']['r1']:.2f} ({r1_dist:.1f}% above current price)
-                            - Consider position sizing based on distance to resistance levels
-                            - Exit strategy if price approaches R2 or above
-                            """)
+        overall_sentiment = sentiment_data.get('overall', {})
+        
+        with col1:
+            sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
+            if strategy_type == "Put Credit Spreads":
+                sentiment_emoji = "🟢" if sentiment_level == 'BULLISH' else "🟡" if sentiment_level == 'NEUTRAL' else "🔴"
             else:
-                st.warning("No qualifying opportunities found with current filters. Try adjusting quality filters or increasing scan count.")
+                sentiment_emoji = "🔴" if sentiment_level == 'BEARISH' else "🟡" if sentiment_level == 'NEUTRAL' else "🟢"
+            
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>{sentiment_emoji} Market Sentiment</h3>
+                <h2 style="color: var(--primary-600);">{sentiment_level}</h2>
+                <p>{overall_sentiment.get('recommendation', 'Moderate opportunities')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            risk_level = overall_sentiment.get('risk_level', 'MEDIUM')
+            risk_color = "#16a34a" if risk_level == 'LOW' else "#ea580c" if risk_level == 'MEDIUM' else "#dc2626"
+            
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>⚠️ Risk Level</h3>
+                <h2 style="color: {risk_color};">{risk_level}</h2>
+                <p>Current {strategy_type.split()[0]} risk assessment</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            ist = pytz.timezone('Asia/Kolkata')
+            current_time = datetime.now(ist)
+            is_trading_hours = (9 <= current_time.hour <= 15) and current_time.weekday() < 5
+            market_status = "🟢 Active" if is_trading_hours else "🔴 Closed"
+            
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>🕐 Market Status</h3>
+                <h2 style="color: var(--primary-600);">{market_status}</h2>
+                <p>{current_time.strftime('%I:%M %p IST')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Detailed sentiment breakdown
+        if 'nifty' in sentiment_data or 'bank_nifty' in sentiment_data:
+            st.markdown("### 📈 **Index Analysis**")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if 'nifty' in sentiment_data:
+                    nifty = sentiment_data['nifty']
+                    st.markdown(f"""
+                    **🎯 Nifty 50**
+                    - Level: {nifty['level']:.2f}
+                    - Change: {nifty['change_pct']:+.2f}%
+                    - Sentiment: {nifty.get('sentiment', 'Unknown')}
+                    """)
+            
+            with col2:
+                if 'bank_nifty' in sentiment_data:
+                    bank = sentiment_data['bank_nifty']
+                    st.markdown(f"""
+                    **🏦 Bank Nifty**
+                    - Level: {bank['level']:.2f}
+                    - Change: {bank['change_pct']:+.2f}%
+                    - Sentiment: {bank.get('sentiment', 'Unknown')}
+                    """)
+        
+        # Strategy recommendations
+        st.markdown(f"### 📋 **{strategy_type} Strategy Guide**")
+        
+        recommendation = overall_sentiment.get('recommendation', 'Moderate opportunities')
+        
+        if "Excellent" in recommendation:
+            st.success(f"✅ **{recommendation}**")
+            if strategy_type == "Put Credit Spreads":
+                st.markdown("""
+                **Optimal Conditions for Put Credit Spreads:**
+                - Bullish market sentiment supports upward moves
+                - Look for high-quality bullish reversal patterns
+                - Target oversold stocks with strong fundamentals
+                - Consider strikes below current support levels
+                """)
+            else:
+                st.markdown("""
+                **Optimal Conditions for Call Credit Spreads:**
+                - Bearish market sentiment supports downward moves
+                - Focus on high-quality bearish reversal patterns
+                - Target overbought stocks at resistance levels
+                - Consider strikes above current resistance levels
+                """)
+        
+        elif "Moderate" in recommendation:
+            st.warning(f"⚠️ **{recommendation}**")
+            st.markdown("""
+            **Selective Approach Recommended:**
+            - Wait for high-strength patterns (>85%)
+            - Ensure strong volume confirmation
+            - Consider smaller position sizes
+            - Monitor market sentiment closely
+            """)
+        
+        else:
+            st.error(f"❌ **{recommendation}**")
+            opposite = "Put Credit Spreads" if strategy_type == "Call Credit Spreads" else "Call Credit Spreads"
+            st.markdown(f"""
+            **Current Market Not Favorable:**
+            - Consider switching to **{opposite}**
+            - Wait for sentiment to improve
+            - Focus on risk management
+            - Avoid new positions in current strategy
+            """)
 
 if __name__ == "__main__":
     main()
