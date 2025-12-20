@@ -4732,21 +4732,6 @@ def create_professional_sidebar():
         ist = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(ist)
         st.markdown(f"**Updated:** {current_time.strftime('%H:%M IST')}")
-        
-        # === ENHANCEMENTS SECTION ===
-        st.markdown("---")
-        
-        # Enhancement toggles
-        enhancement_options = {
-            'delivery_volume': st.checkbox("📊 Delivery Volume Analysis", value=True, 
-                                         help="Analyze delivery percentage and institutional participation"),
-            'fno_consolidation': st.checkbox("🔄 F&O Consolidation Detection", value=True,
-                                           help="Detect consolidation patterns near resistance levels"),
-            'breakout_pullback': st.checkbox("📈 Breakout-Pullback Patterns", value=True,
-                                           help="Identify breakout-pullback-breakout patterns with strong green candles"),
-            'enhanced_sr': st.checkbox("🎯 Enhanced Support & Resistance", value=True,
-                                     help="Advanced multi-timeframe support and resistance analysis")
-        }
     
     return {
             'stocks_to_scan': stocks_to_scan[:stocks_limit],
