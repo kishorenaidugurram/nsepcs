@@ -281,26 +281,10 @@ st.markdown("""
     /* === METRICS - Bloomberg Style === */
     [data-testid="stMetric"] {
         background: var(--bg-secondary) !important;
-        padding: 12px 16px !important;
+        padding: 16px !important;
         border: 1px solid var(--border-primary) !important;
         border-left: 3px solid var(--bloomberg-orange) !important;
         border-radius: 0 !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        min-height: 80px !important;
-    }
-    
-    /* Force all child elements to be visible */
-    [data-testid="stMetric"] * {
-        visibility: visible !important;
-        opacity: 1 !important;
-        display: inline-block !important;
-    }
-    
-    [data-testid="stMetric"] > div {
-        display: block !important;
-        width: 100% !important;
     }
     
     [data-testid="stMetric"]:hover {
@@ -308,35 +292,23 @@ st.markdown("""
         border-left-color: var(--bloomberg-orange-hover) !important;
     }
     
-    [data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
-        font-weight: 700 !important;
-        color: #ffffff !important;
-        font-family: var(--font-mono) !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        line-height: 1.2 !important;
-        margin: 8px 0 !important;
-    }
-    
     [data-testid="stMetricLabel"] {
         color: #999999 !important;
         text-transform: uppercase !important;
-        font-size: 0.7rem !important;
+        font-size: 11px !important;
         letter-spacing: 0.5px !important;
         font-weight: 600 !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        margin-bottom: 4px !important;
+    }
+    
+    [data-testid="stMetricValue"] {
+        font-size: 28px !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        font-family: 'Roboto Mono', monospace !important;
     }
     
     [data-testid="stMetricDelta"] {
-        font-family: var(--font-mono) !important;
-        display: inline-block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        font-family: 'Roboto Mono', monospace !important;
     }
     
     /* Positive/Negative Delta Color Coding */
