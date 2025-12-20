@@ -3147,25 +3147,8 @@ class ProfessionalPCSScanner:
                         row=1, col=1
                     )
         
-        # Add Current Price line (prominent)
-        current_price = sr_levels['current_price']
-        fig.add_hline(
-            y=current_price,
-            line_dash="solid",
-            line_color="#ff6b00",  # Bloomberg orange
-            line_width=4,
-            row=1, col=1,
-            annotation_text=f"CURRENT: ₹{current_price:.2f}",
-            annotation_position="left",
-            annotation=dict(
-                font=dict(size=12, color="white", family="Roboto Mono", weight="bold"),
-                bgcolor="#ff6b00",
-                bordercolor="#ff8533",
-                borderwidth=2
-            )
-        )
-        
         # Add Support Levels Info Box (Top-Right Corner)
+        current_price = sr_levels['current_price']
         s1_price = sr_levels['support'][0] if sr_levels['support'][0] > 0 else 'N/A'
         s2_price = sr_levels['support'][1] if sr_levels['support'][1] > 0 else 'N/A'
         s3_price = sr_levels['support'][2] if sr_levels['support'][2] > 0 else 'N/A'
