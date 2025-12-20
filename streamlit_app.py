@@ -3042,63 +3042,103 @@ class ProfessionalPCSScanner:
             row=1, col=1
         )
         
-        # === ADD SCIENTIFIC SUPPORT & RESISTANCE LEVELS ===
+        # === ADD SCIENTIFIC SUPPORT LEVELS (PCS FOCUSED) ===
         sr_levels = self.identify_support_resistance_levels(data, num_levels=3)
         
-        # Add Support Levels (S1, S2, S3) - Green horizontal lines
+        # Define distinct colors for each support level
+        support_colors = {
+            'S1': {'line': '#00d084', 'marker': '#00ff9f', 'bg': 'rgba(0, 208, 132, 0.15)'},  # Bright green
+            'S2': {'line': '#ffa500', 'marker': '#ffcc00', 'bg': 'rgba(255, 165, 0, 0.15)'},   # Orange (STOP-LOSS zone)
+            'S3': {'line': '#ff3b69', 'marker': '#ff6b8a', 'bg': 'rgba(255, 59, 105, 0.15)'}   # Red (danger zone)
+        }
+        
         support_labels = ['S1', 'S2', 'S3']
+        support_descriptions = [
+            'S1: First Support',
+            'S2: Critical Support (Stop-Loss Zone)',
+            'S3: Major Support (High Risk)'
+        ]
+        
+        # Add Support Levels with markers and hover info
         for i, support in enumerate(sr_levels['support']):
             if support > 0:
+                label = support_labels[i]
+                color_scheme = support_colors[label]
+                
+                # Add horizontal line
                 fig.add_hline(
                     y=support,
-                    line_dash="dot",
-                    line_color="#00d084",  # Bloomberg green
+                    line_dash="dash",
+                    line_color=color_scheme['line'],
                     line_width=2,
-                    opacity=0.7,
+                    opacity=0.8,
                     row=1, col=1,
-                    annotation_text=f"{support_labels[i]}: ₹{support:.2f}",
+                    annotation_text=f"{label}: ₹{support:.2f}",
                     annotation_position="right",
                     annotation=dict(
-                        font=dict(size=10, color="#00d084", family="Roboto Mono"),
-                        bgcolor="rgba(0, 208, 132, 0.1)",
-                        bordercolor="#00d084"
+                        font=dict(size=11, color=color_scheme['line'], family="Roboto Mono", weight="bold"),
+                        bgcolor=color_scheme['bg'],
+                        bordercolor=color_scheme['line'],
+                        borderwidth=2
                     )
                 )
-        
-        # Add Resistance Levels (R1, R2, R3) - Red horizontal lines
-        resistance_labels = ['R1', 'R2', 'R3']
-        for i, resistance in enumerate(sr_levels['resistance']):
-            if resistance > 0:
-                fig.add_hline(
-                    y=resistance,
-                    line_dash="dot",
-                    line_color="#ff3b69",  # Bloomberg red
-                    line_width=2,
-                    opacity=0.7,
-                    row=1, col=1,
-                    annotation_text=f"{resistance_labels[i]}: ₹{resistance:.2f}",
-                    annotation_position="right",
-                    annotation=dict(
-                        font=dict(size=10, color="#ff3b69", family="Roboto Mono"),
-                        bgcolor="rgba(255, 59, 105, 0.1)",
-                        bordercolor="#ff3b69"
-                    )
+                
+                # Add visible markers (scatter points) along the support line for easy identification
+                # Create markers at regular intervals across the chart
+                num_markers = 8
+                marker_x_positions = pd.date_range(start=data.index[0], end=data.index[-1], periods=num_markers)
+                marker_y_positions = [support] * num_markers
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=marker_x_positions,
+                        y=marker_y_positions,
+                        mode='markers',
+                        name=support_descriptions[i],
+                        marker=dict(
+                            size=12,
+                            color=color_scheme['marker'],
+                            symbol='diamond',
+                            line=dict(width=2, color=color_scheme['line'])
+                        ),
+                        hovertemplate=(
+                            f"<b>{label} - {support_descriptions[i].split(':')[1].strip()}</b><br>"
+                            f"Price: ₹{support:.2f}<br>"
+                            f"Distance from Current: {abs(support - sr_levels['current_price']):.2f} ({((support - sr_levels['current_price'])/sr_levels['current_price']*100):.2f}%)<br>"
+                            "<extra></extra>"
+                        ),
+                        showlegend=True
+                    ),
+                    row=1, col=1
                 )
+                
+                # Add shaded zone for S2 (critical stop-loss zone)
+                if label == 'S2':
+                    fig.add_hrect(
+                        y0=support * 0.995,
+                        y1=support * 1.005,
+                        fillcolor=color_scheme['line'],
+                        opacity=0.1,
+                        line_width=0,
+                        row=1, col=1,
+                        annotation_text="⚠️ STOP-LOSS ZONE",
+                        annotation_position="top left"
+                    )
         
-        # Add Current Price line
+        # Add Current Price line (prominent)
         current_price = sr_levels['current_price']
         fig.add_hline(
             y=current_price,
             line_dash="solid",
             line_color="#ff6b00",  # Bloomberg orange
-            line_width=3,
+            line_width=4,
             row=1, col=1,
             annotation_text=f"CURRENT: ₹{current_price:.2f}",
             annotation_position="left",
             annotation=dict(
-                font=dict(size=11, color="#ff6b00", family="Roboto Mono", weight="bold"),
-                bgcolor="rgba(255, 107, 0, 0.15)",
-                bordercolor="#ff6b00",
+                font=dict(size=12, color="white", family="Roboto Mono", weight="bold"),
+                bgcolor="#ff6b00",
+                bordercolor="#ff8533",
                 borderwidth=2
             )
         )
