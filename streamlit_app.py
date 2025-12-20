@@ -4591,7 +4591,7 @@ def create_professional_sidebar():
             with col1:
                 rsi_min = st.slider("RSI Min:", 20, 80, 30)
             with col2:
-                rsi_max = st.slider("RSI Max:", 20, 80, 80)
+                rsi_max = st.slider("RSI Max:", 20, 80, 75)
             
             adx_min = st.slider("ADX Minimum:", 10, 50, 20)
             
