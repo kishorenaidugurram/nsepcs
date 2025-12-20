@@ -178,8 +178,8 @@ st.markdown("""
     
     /* Sidebar Styling - Teal Gradient */
     [data-testid="stSidebar"] {
-        min-width: 360px !important;
-        max-width: 360px !important;
+        min-width: 342px !important;
+        max-width: 342px !important;
         background: transparent !important;
         border-right: 1px solid hsl(174, 62%, 75%);
         box-shadow: none !important;
@@ -752,8 +752,8 @@ st.markdown("""
         
         /* Dark Blue Sidebar */
         [data-testid="stSidebar"] {
-            min-width: 360px !important;
-            max-width: 360px !important;
+            min-width: 342px !important;
+            max-width: 342px !important;
             background: transparent !important;
             border-right: 1px solid hsl(220, 30%, 25%) !important;
             box-shadow: none !important;
@@ -1791,6 +1791,75 @@ class ProfessionalPCSScanner:
             return "NEUTRAL"
         else:
             return "BEARISH"
+    
+    def get_global_indices(self):
+        """Get global market indices data"""
+        indices_data = {}
+        
+        try:
+            # Nifty 50
+            nifty = yf.Ticker("^NSEI")
+            nifty_data = nifty.history(period="5d")
+            if len(nifty_data) >= 2:
+                current = nifty_data['Close'].iloc[-1]
+                prev = nifty_data['Close'].iloc[-2]
+                change_pct = ((current - prev) / prev) * 100
+                indices_data['Nifty 50'] = {
+                    'value': current,
+                    'change': change_pct,
+                    'symbol': '^NSEI'
+                }
+            
+            # US Indices
+            us_indices = {
+                'S&P 500': '^GSPC',
+                'Dow Jones': '^DJI',
+                'Nasdaq': '^IXIC'
+            }
+            
+            for name, symbol in us_indices.items():
+                try:
+                    ticker = yf.Ticker(symbol)
+                    data = ticker.history(period="5d")
+                    if len(data) >= 2:
+                        current = data['Close'].iloc[-1]
+                        prev = data['Close'].iloc[-2]
+                        change_pct = ((current - prev) / prev) * 100
+                        indices_data[name] = {
+                            'value': current,
+                            'change': change_pct,
+                            'symbol': symbol
+                        }
+                except:
+                    pass
+            
+            # Asia Indices
+            asia_indices = {
+                'Nikkei 225': '^N225',
+                'Hang Seng': '^HSI',
+                'Shanghai': '000001.SS'
+            }
+            
+            for name, symbol in asia_indices.items():
+                try:
+                    ticker = yf.Ticker(symbol)
+                    data = ticker.history(period="5d")
+                    if len(data) >= 2:
+                        current = data['Close'].iloc[-1]
+                        prev = data['Close'].iloc[-2]
+                        change_pct = ((current - prev) / prev) * 100
+                        indices_data[name] = {
+                            'value': current,
+                            'change': change_pct,
+                            'symbol': symbol
+                        }
+                except:
+                    pass
+                    
+        except Exception as e:
+            pass
+            
+        return indices_data
     
     def detect_patterns(self, data, symbol, filters):
         """
@@ -4789,20 +4858,9 @@ def create_main_scanner_tab(config):
     # Initialize scanner (needed for both scanning and chart display)
     scanner = ProfessionalPCSScanner()
     
-    # Action buttons
-    col1, col2, col3 = st.columns([2, 1, 1])
-    
-    with col1:
-        scan_button = st.button("🚀 Scan Multi-Timeframe Patterns", type="primary", key="main_scan")
-    
-    with col2:
-        if config['export_results']:
-            export_button = st.button("📊 Export", key="export")
-        else:
-            st.markdown("*Enable export*")
-    
-    with col3:
-        st.markdown(f"**Scanning: {len(config['stocks_to_scan'])} stocks**")
+    # Simple scan button
+    st.markdown(f"**Ready to scan {len(config['stocks_to_scan'])} stocks**")
+    scan_button = st.button("🚀 Start Scan", type="primary", key="main_scan", use_container_width=True)
     
     if scan_button:
         # Progress tracking
@@ -5166,81 +5224,66 @@ def main():
     # Get sidebar configuration
     config = create_professional_sidebar()
     
-    # Create main tabs
-    tab1, tab2 = st.tabs([
-        "🎯 Scanner",
-        "📊 Market Intelligence"
-    ])
+    # Global Market Indices KPI Cards at the top
+    scanner = ProfessionalPCSScanner()
+    indices_data = scanner.get_global_indices()
     
-    with tab1:
-        create_main_scanner_tab(config)
+    # Create 3 sections: Nifty, US Indices, Asia Indices
+    st.markdown("### 📊 Global Markets Overview")
     
-    with tab2:
-        st.markdown("### 📊 Market Intelligence Dashboard")
-        
-        # Get market data
-        scanner = ProfessionalPCSScanner()
-        sentiment_data = scanner.get_market_sentiment_indicators()
-        
-        # Market Overview
-        col1, col2, col3 = st.columns(3)
-        
-        overall_sentiment = sentiment_data.get('overall', {})
-        
-        with col1:
-            sentiment_level = overall_sentiment.get('sentiment', 'NEUTRAL')
-            sentiment_emoji = "🟢" if sentiment_level == 'BULLISH' else "🟡" if sentiment_level == 'NEUTRAL' else "🔴"
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>{sentiment_emoji} Market Sentiment</h3>
-                <h2 style="color: var(--primary-green);">{sentiment_level}</h2>
-                <p>{overall_sentiment.get('pcs_recommendation', 'Moderate opportunities')}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            risk_level = overall_sentiment.get('risk_level', 'MEDIUM')
-            risk_color = "var(--primary-green)" if risk_level == 'LOW' else "var(--primary-orange)" if risk_level == 'MEDIUM' else "var(--primary-red)"
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>⚠️ Risk Level</h3>
-                <h2 style="color: {risk_color};">{risk_level}</h2>
-                <p>Current PCS risk assessment</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            ist = pytz.timezone('Asia/Kolkata')
-            current_time = datetime.now(ist)
-            is_trading_day = current_time.weekday() < 5  # Monday=0, Friday=4
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>🕐 Market Status</h3>
-                <h2 style="color: var(--primary-blue);">{current_time.strftime('%H:%M')}</h2>
-                <p>{'Trading Day' if is_trading_day else 'Non-Trading Day'}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Detailed metrics
-        st.markdown("#### 📈 Current Day Market Data")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if 'nifty' in sentiment_data:
-                nifty_data = sentiment_data['nifty']
-                st.metric("Nifty 50", f"{nifty_data['current']:.0f}", f"{nifty_data['change_1d']:+.2f}%")
-        
-        with col2:
-            if 'bank_nifty' in sentiment_data:
-                bank_data = sentiment_data['bank_nifty']
-                st.metric("Bank Nifty", f"{bank_data['current']:.0f}", f"{bank_data['change_1d']:+.2f}%")
+    # Row 1: Nifty
+    if 'Nifty 50' in indices_data:
+        nifty = indices_data['Nifty 50']
+        change_color = "green" if nifty['change'] >= 0 else "red"
+        arrow = "↑" if nifty['change'] >= 0 else "↓"
+        st.markdown(f"""
+        <div style="background: var(--surface); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 1rem;">
+            <h4 style="margin: 0; color: var(--text-primary);">🇮🇳 Nifty 50</h4>
+            <h2 style="margin: 0.5rem 0; color: var(--text-primary);">{nifty['value']:.2f} <span style="color: {change_color}; font-size: 1.2rem;">{arrow} {abs(nifty['change']):.2f}%</span></h2>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # FIXED: Compact Footer
+    # Row 2: US Indices
+    col1, col2, col3 = st.columns(3)
+    us_indices = ['S&P 500', 'Dow Jones', 'Nasdaq']
+    
+    for col, index_name in zip([col1, col2, col3], us_indices):
+        with col:
+            if index_name in indices_data:
+                idx = indices_data[index_name]
+                change_color = "green" if idx['change'] >= 0 else "red"
+                arrow = "↑" if idx['change'] >= 0 else "↓"
+                st.markdown(f"""
+                <div style="background: var(--surface); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border); height: 100%;">
+                    <h5 style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">🇺🇸 {index_name}</h5>
+                    <h3 style="margin: 0.3rem 0; font-size: 1.3rem; color: var(--text-primary);">{idx['value']:.0f}</h3>
+                    <p style="margin: 0; color: {change_color}; font-weight: 600;">{arrow} {abs(idx['change']):.2f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Row 3: Asia Indices
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    asia_indices = ['Nikkei 225', 'Hang Seng', 'Shanghai']
+    
+    for col, index_name in zip([col1, col2, col3], asia_indices):
+        with col:
+            if index_name in indices_data:
+                idx = indices_data[index_name]
+                change_color = "green" if idx['change'] >= 0 else "red"
+                arrow = "↑" if idx['change'] >= 0 else "↓"
+                st.markdown(f"""
+                <div style="background: var(--surface); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border); height: 100%;">
+                    <h5 style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">🌏 {index_name}</h5>
+                    <h3 style="margin: 0.3rem 0; font-size: 1.3rem; color: var(--text-primary);">{idx['value']:.0f}</h3>
+                    <p style="margin: 0; color: {change_color}; font-weight: 600;">{arrow} {abs(idx['change']):.2f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
     st.markdown("---")
+    
+    # Main Scanner Content
+    create_main_scanner_tab(config)
 
 
 if __name__ == "__main__":
