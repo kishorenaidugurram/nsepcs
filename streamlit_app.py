@@ -5350,21 +5350,29 @@ def create_main_scanner_tab(config):
                 
             with detail_tabs[2]:  # Enhancements tab
                 enhancements = result.get('enhancements', {})
+                
+                # Debug: Show what we have
+                st.markdown("### 🚀 Enhancement Analysis")
+                with st.expander("🔍 Debug: Enhancement Data", expanded=False):
+                    st.json(enhancements)
                     
                 if enhancements:
-                    st.markdown("### 🚀 Enhancement Analysis")
-                        
                     # Delivery Volume
                     if 'delivery_volume' in enhancements:
                         delivery = enhancements['delivery_volume']
-                        if delivery.get('delivery_percentage') is not None:
-                            st.markdown("#### 📊 Delivery Volume Analysis")
-                            ecol1, ecol2 = st.columns(2)
-                            with ecol1:
-                                st.metric("Estimated Delivery", f"{delivery.get('delivery_percentage', 0):.1f}%")
-                            with ecol2:
-                                st.metric("Confidence", delivery.get('confidence', 'Low'))
-                            st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'N/A')}")
+                        st.markdown("#### 📊 Delivery Volume Analysis")
+                        ecol1, ecol2 = st.columns(2)
+                        with ecol1:
+                            delivery_pct = delivery.get('delivery_percentage')
+                            if delivery_pct is not None:
+                                st.metric("Estimated Delivery", f"{delivery_pct:.1f}%")
+                            else:
+                                st.metric("Estimated Delivery", "N/A")
+                        with ecol2:
+                            st.metric("Confidence", delivery.get('confidence', 'Low'))
+                        st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'Data unavailable')}")
+                    else:
+                        st.info("📊 Delivery Volume Analysis - Not enabled in settings")
                         
                     # F&O Consolidation
                     if 'fno_consolidation' in enhancements:
@@ -5376,6 +5384,8 @@ def create_main_scanner_tab(config):
                         with ecol2:
                             st.metric("Strength", f"{consolidation.get('consolidation_strength', 0)}/100")
                         st.write(f"**Analysis:** {consolidation.get('analysis', 'N/A')}")
+                    else:
+                        st.info("🔄 F&O Consolidation - Not enabled in settings")
                         
                     # Breakout-Pullback
                     if 'breakout_pullback' in enhancements:
