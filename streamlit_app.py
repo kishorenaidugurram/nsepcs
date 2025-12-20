@@ -4682,23 +4682,77 @@ def create_main_scanner_tab(config):
                 st.metric("🏆 High Confidence", high_confidence)
             
             # Display results
+            # Store results in session state for persistence
+            st.session_state['scan_results'] = results
+            
+            # Display results with dropdown interface
+            st.markdown("---")
+            st.markdown("### 📋 Scan Results - Select Stock for Analysis")
+            
+            # Build summary table
+            summary_data = []
             for result in results:
                 max_strength = max(p['strength'] for p in result['patterns'])
                 overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
-                
-                # Check for current day breakout
                 has_current_breakout = any('Current Day' in p['type'] for p in result['patterns'])
-                current_indicator = " 🔥 TODAY!" if has_current_breakout else ""
-                
-                # Check for news
                 has_news = result.get('news_data') and result['news_data']['news_count'] > 0
-                news_indicator = " 📰" if has_news else ""
+                stock_key = result['symbol'].replace('.NS', '').replace('^', '')
                 
-                with st.expander(
-                    f"📈 {result['symbol'].replace('.NS', '').replace('^', '')} - {overall_confidence}{current_indicator}{news_indicator}", 
-                    expanded=True
-                ):
-                    
+                summary_data.append({
+                    'Symbol': stock_key,
+                    'Confidence': overall_confidence,
+                    'Strength': f"{max_strength:.0f}%",
+                    'Price': f"₹{result['current_price']:.2f}",
+                    'Volume': f"{result['volume_ratio']:.1f}x",
+                    'RSI': f"{result['rsi']:.1f}",
+                    'ADX': f"{result['adx']:.1f}",
+                    'Today': '🔥' if has_current_breakout else '',
+                    'News': '📰' if has_news else '',
+                    'Patterns': len(result['patterns'])
+                })
+            
+            # Display summary table
+            if summary_data:
+                summary_df = pd.DataFrame(summary_data)
+                st.dataframe(
+                    summary_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=min(400, len(summary_df) * 35 + 38)
+                )
+                
+                st.markdown("---")
+                
+                # Stock selector dropdown
+                stock_options = [f"{row['Symbol']} - {row['Confidence']} ({row['Strength']})" for row in summary_data]
+                
+                # Initialize selection in session state
+                if 'selected_stock_idx' not in st.session_state:
+                    st.session_state['selected_stock_idx'] = 0
+                
+                selected_display = st.selectbox(
+                    "🔍 Select a stock to view detailed analysis:",
+                    options=stock_options,
+                    index=st.session_state['selected_stock_idx'],
+                    key='stock_selector'
+                )
+                
+                # Update selected index
+                st.session_state['selected_stock_idx'] = stock_options.index(selected_display)
+                result = results[st.session_state['selected_stock_idx']]
+                
+                # Display detailed analysis for selected stock
+                stock_key = result['symbol'].replace('.NS', '').replace('^', '')
+                max_strength = max(p['strength'] for p in result['patterns'])
+                overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
+                
+                st.markdown("---")
+                st.markdown(f"## 📊 Detailed Analysis: **{stock_key}**")
+                
+                # Create tabs for organized display
+                detail_tabs = st.tabs(["📈 Overview", "🎯 Patterns", "🚀 Enhancements", "📊 Charts"])
+                
+                with detail_tabs[0]:  # Overview tab
                     # Stock metrics
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
@@ -4722,225 +4776,98 @@ def create_main_scanner_tab(config):
                     """)
                     
                     # NEWS ANALYSIS
+                    has_news = result.get('news_data') and result['news_data']['news_count'] > 0
                     if has_news:
                         news_data = result['news_data']
                         sentiment_emoji = "🟢" if news_data['overall_sentiment'] == 'positive' else "🔴" if news_data['overall_sentiment'] == 'negative' else "🟡"
                         
-                        st.markdown(f"""
-                        <div class="news-card">
-                            <h4>{sentiment_emoji} Today's News - {news_data['overall_sentiment'].upper()} Sentiment</h4>
-                        """, unsafe_allow_html=True)
+                        st.markdown(f"### {sentiment_emoji} Today's News - {news_data['overall_sentiment'].upper()} Sentiment")
                         
                         for news_item in news_data['news_items'][:2]:
                             relevance_emoji = "🔥" if news_item['relevance'] == 'high' else "⚡" if news_item['relevance'] == 'medium' else "📄"
-                            st.markdown(f"**{relevance_emoji}** {news_item['headline'][:120]}...")
-                        
-                        st.markdown("</div>", unsafe_allow_html=True)
-                    
-                    # Pattern details
+                            st.info(f"**{relevance_emoji}** {news_item['headline']}")
+                
+                with detail_tabs[1]:  # Patterns tab
                     for pattern in result['patterns']:
                         confidence_emoji = "🟢" if pattern['confidence'] == 'HIGH' else "🟡" if pattern['confidence'] == 'MEDIUM' else "🔴"
                         
-                        if pattern.get('special') == 'CURRENT_DAY_BREAKOUT':
-                            details = pattern.get('details', {})
-                            weekly_val = pattern.get('weekly_validation', {})
-                            
-                            # NEW V6.1: Weekly validation display
-                            weekly_info = ""
-                            if weekly_val.get('weekly_validation', False):
-                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
-                                weekly_context = weekly_val.get('weekly_context', '')
-                                weekly_info = f"""
-                                <div style='background: rgba(25, 135, 84, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #198754;'>
-                                    <strong>📈 Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
-                                    <small>Weekly Trend: {weekly_val.get('weekly_trend', 'N/A')} | Weekly RSI: {weekly_val.get('weekly_rsi', 0):.1f}</small>
-                                </div>
-                                """
-                            elif weekly_val.get('weekly_strength_bonus', 0) > 0:
-                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
-                                weekly_context = weekly_val.get('weekly_context', '')
-                                weekly_info = f"""
-                                <div style='background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #ffc107;'>
-                                    <strong>📊 Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
-                                </div>
-                                """
-                            
-                            st.markdown(f"""
-                            <div class="consolidation-card">
-                                <h4>🔥 {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
-                                <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
-                                    <span><strong>Total Strength:</strong> {pattern['strength']}%</span>
-                                    <span><strong>Daily:</strong> {pattern.get('daily_strength', pattern['strength'])}%</span>
-                                    <span><strong>Weekly Bonus:</strong> +{weekly_val.get('weekly_strength_bonus', 0)}</span>
-                                </div>
-                                <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
-                                    <span><strong>Success Rate:</strong> {pattern['success_rate']}%</span>
-                                    <span><strong>PCS Fit:</strong> {pattern['pcs_suitability']}%</span>
-                                </div>
-                                <div style='display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.9rem;'>
-                                    <span><strong>Breakout:</strong> {details.get('breakout_percentage', 0):.2f}%</span>
-                                    <span><strong>Volume:</strong> {details.get('volume_ratio', 0):.1f}x</span>
-                                    <span><strong>Close Strength:</strong> {details.get('close_strength', 0):.0f}%</span>
-                                </div>
-                                {weekly_info}
-
-                                <p style="color: var(--primary-green); font-weight: 600;">⚡ CONFIRMED TODAY: Pattern validated with current trading day EOD data</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            confidence_class = f"{pattern['confidence'].lower()}-confidence"
-                            weekly_val = pattern.get('weekly_validation', {})
-                            
-                            # NEW V6.1: Weekly validation display for regular patterns
-                            weekly_info = ""
-                            if weekly_val.get('weekly_validation', False):
-                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
-                                weekly_context = weekly_val.get('weekly_context', '')
-                                weekly_signals = weekly_val.get('weekly_signals', [])
-                                signal_text = " | ".join(weekly_signals[:2])  # Show first 2 signals
-                                weekly_info = f"""
-                                <div style='background: rgba(25, 135, 84, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #198754;'>
-                                    <strong>📈 Weekly Confirmation (+{weekly_bonus} pts):</strong> {weekly_context}<br>
-                                    <small>{signal_text}</small>
-                                </div>
-                                """
-                            elif weekly_val.get('weekly_strength_bonus', 0) > 0:
-                                weekly_bonus = weekly_val.get('weekly_strength_bonus', 0)
-                                weekly_context = weekly_val.get('weekly_context', '')
-                                weekly_info = f"""
-                                <div style='background: rgba(255, 193, 7, 0.1); padding: 8px; border-radius: 4px; margin: 8px 0; border-left: 3px solid #ffc107;'>
-                                    <strong>📊 Weekly Support (+{weekly_bonus} pts):</strong> {weekly_context}
-                                </div>
-                                """
-                            
-                            st.markdown(f"""
-                            <div class="pattern-card {confidence_class}">
-                                <h4>{confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence</h4>
-                                <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
-                                    <span><strong>Total Strength:</strong> {pattern['strength']}%</span>
-                                    <span><strong>Daily:</strong> {pattern.get('daily_strength', pattern['strength'])}%</span>
-                                    <span><strong>Weekly Bonus:</strong> +{weekly_val.get('weekly_strength_bonus', 0)}</span>
-                                </div>
-                                <div style='display: flex; justify-content: space-between; margin: 8px 0;'>
-                                    <span><strong>Success Rate:</strong> {pattern['success_rate']}%</span>
-                                    <span><strong>PCS Fit:</strong> {pattern['pcs_suitability']}%</span>
-                                </div>
-                                {weekly_info}
-
-                            </div>
-                            """, unsafe_allow_html=True)
-                    
-                    # =================== DISPLAY ENHANCEMENTS ===================
+                        st.markdown(f"### {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence")
+                        
+                        # Pattern metrics
+                        pcol1, pcol2, pcol3 = st.columns(3)
+                        with pcol1:
+                            st.metric("Strength", f"{pattern['strength']}%")
+                        with pcol2:
+                            st.metric("Success Rate", f"{pattern['success_rate']}%")
+                        with pcol3:
+                            st.metric("PCS Fit", f"{pattern['pcs_suitability']}%")
+                        
+                        # Weekly validation if present
+                        weekly_val = pattern.get('weekly_validation', {})
+                        if weekly_val.get('weekly_validation', False):
+                            st.success(f"📈 Weekly Confirmation: {weekly_val.get('weekly_context', '')}")
+                        elif weekly_val.get('weekly_strength_bonus', 0) > 0:
+                            st.warning(f"📊 Weekly Support: {weekly_val.get('weekly_context', '')}")
+                        
+                        st.markdown("---")
+                
+                with detail_tabs[2]:  # Enhancements tab
                     enhancements = result.get('enhancements', {})
                     
                     if enhancements:
-                        st.markdown("### 🚀 **Enhancement Analysis**")
+                        st.markdown("### 🚀 Enhancement Analysis")
                         
-                        # Create columns for enhancements
-                        enh_cols = st.columns(2)
-                        
-                        # Enhancement 1: Delivery Volume Analysis
+                        # Delivery Volume
                         if 'delivery_volume' in enhancements:
-                            with enh_cols[0]:
-                                delivery = enhancements['delivery_volume']
-                                if delivery.get('delivery_percentage') is not None:
-                                    confidence_color = "var(--primary-green)" if delivery.get('confidence') == 'High' else "var(--primary-orange)" if delivery.get('confidence') == 'Medium' else "var(--primary-red)"
-                                    st.markdown(f"""
-                                    <div class="pattern-card" style="border-left-color: {confidence_color};">
-                                        <h4>📊 Delivery Volume Analysis</h4>
-                                        <p><strong>Estimated Delivery:</strong> {delivery.get('delivery_percentage', 0):.1f}%</p>
-                                        <p><strong>Analysis:</strong> {delivery.get('delivery_analysis', 'N/A')}</p>
-                                        <p><strong>Confidence:</strong> <span style="color: {confidence_color};">{delivery.get('confidence', 'Low')}</span></p>
-                                        <div style="font-size: 0.9rem; margin-top: 8px;">
-                                            {''.join(f'<div>• {signal}</div>' for signal in delivery.get('delivery_signals', []))}
-                                        </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                                else:
-                                    st.markdown(f"""
-                                    <div class="pattern-card" style="border-left-color: var(--primary-red);">
-                                        <h4>📊 Delivery Volume Analysis</h4>
-                                        <p style="color: var(--primary-red);">⚠️ {delivery.get('delivery_analysis', 'Analysis unavailable')}</p>
-                                    </div>
-                                    """, unsafe_allow_html=True)
+                            delivery = enhancements['delivery_volume']
+                            if delivery.get('delivery_percentage') is not None:
+                                st.markdown("#### 📊 Delivery Volume Analysis")
+                                ecol1, ecol2 = st.columns(2)
+                                with ecol1:
+                                    st.metric("Estimated Delivery", f"{delivery.get('delivery_percentage', 0):.1f}%")
+                                with ecol2:
+                                    st.metric("Confidence", delivery.get('confidence', 'Low'))
+                                st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'N/A')}")
                         
-                        # Enhancement 2: F&O Consolidation
+                        # F&O Consolidation
                         if 'fno_consolidation' in enhancements:
-                            with enh_cols[1]:
-                                consolidation = enhancements['fno_consolidation']
-                                status = "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected"
-                                status_color = "var(--primary-green)" if consolidation.get('consolidation_detected') else "var(--primary-orange)"
-                                strength = consolidation.get('consolidation_strength', 0)
-                                st.markdown(f"""
-                                <div class="consolidation-card">
-                                    <h4>🔄 F&O Consolidation</h4>
-                                    <p><strong>Status:</strong> <span style="color: {status_color};">{status}</span></p>
-                                    <p><strong>Strength:</strong> {strength}/100</p>
-                                    <p><strong>Analysis:</strong> {consolidation.get('analysis', 'N/A')}</p>
-                                    <div style="font-size: 0.9rem; margin-top: 8px;">
-                                        {''.join(f'<div>• {signal}</div>' for signal in consolidation.get('signals', []))}
-                                    </div>
-                                </div>
-                                """, unsafe_allow_html=True)
+                            consolidation = enhancements['fno_consolidation']
+                            st.markdown("#### 🔄 F&O Consolidation")
+                            ecol1, ecol2 = st.columns(2)
+                            with ecol1:
+                                st.metric("Status", "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected")
+                            with ecol2:
+                                st.metric("Strength", f"{consolidation.get('consolidation_strength', 0)}/100")
+                            st.write(f"**Analysis:** {consolidation.get('analysis', 'N/A')}")
                         
-                        # Create second row for remaining enhancements
-                        enh_cols2 = st.columns(2)
-                        
-                        # Enhancement 3: Breakout-Pullback
+                        # Breakout-Pullback
                         if 'breakout_pullback' in enhancements:
-                            with enh_cols2[0]:
-                                breakout = enhancements['breakout_pullback']
-                                status = "✅ Detected" if breakout.get('pattern_detected') else "❌ Not Detected"
-                                status_color = "var(--primary-green)" if breakout.get('pattern_detected') else "var(--primary-orange)"
-                                strength = breakout.get('pattern_strength', 0)
-                                st.markdown(f"""
-                                <div class="high-confidence">
-                                    <h4>📈 Breakout-Pullback Pattern</h4>
-                                    <p><strong>Status:</strong> <span style="color: {status_color};">{status}</span></p>
-                                    <p><strong>Strength:</strong> {strength}/100</p>
-                                    <p><strong>Analysis:</strong> {breakout.get('analysis', 'N/A')}</p>
-                                    <div style="font-size: 0.9rem; margin-top: 8px;">
-                                        {''.join(f'<div>• {signal}</div>' for signal in breakout.get('signals', []))}
-                                    </div>
-                                </div>
-                                """, unsafe_allow_html=True)
+                            breakout = enhancements['breakout_pullback']
+                            st.markdown("#### 📈 Breakout-Pullback")
+                            ecol1, ecol2 = st.columns(2)
+                            with ecol1:
+                                st.metric("Status", "✅ Detected" if breakout.get('pattern_detected') else "❌ Not Detected")
+                            with ecol2:
+                                st.metric("Strength", f"{breakout.get('pattern_strength', 0)}/100")
+                            st.write(f"**Analysis:** {breakout.get('analysis', 'N/A')}")
                         
-                        # Enhancement 4: Enhanced S&R
+                        # Enhanced S&R
                         if 'enhanced_sr' in enhancements:
-                            with enh_cols2[1]:
-                                sr = enhancements['enhanced_sr']
-                                if sr.get('analysis_available'):
-                                    key_levels = sr.get('key_levels', {})
-                                    support_count = len(sr.get('support_levels', []))
-                                    resistance_count = len(sr.get('resistance_levels', []))
-                                    position = sr.get('position_analysis', {}).get('position_strength', 'N/A')
-                                    breakout_prob = sr.get('breakout_analysis', {}).get('breakout_probability', 'N/A')
-                                    
-                                    st.markdown(f"""
-                                    <div class="news-card">
-                                        <h4>🎯 Enhanced Support & Resistance</h4>
-                                        <p><strong>Support Levels:</strong> {support_count}</p>
-                                        <p><strong>Resistance Levels:</strong> {resistance_count}</p>
-                                        <p><strong>Position:</strong> {position}</p>
-                                        <p><strong>Breakout Probability:</strong> <span style="color: var(--primary-green);">{breakout_prob}</span></p>
-                                        <div style="font-size: 0.9rem; margin-top: 8px;">
-                                            {''.join(f'<div>• {insight}</div>' for insight in sr.get('analysis_summary', {}).get('key_insights', []))}
-                                        </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                                else:
-                                    st.markdown(f"""
-                                    <div class="news-card">
-                                        <h4>🎯 Enhanced Support & Resistance</h4>
-                                        <p style="color: var(--primary-orange);">⚠️ {sr.get('message', 'Analysis not available')}</p>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                        
-                        st.markdown("---")
-                    
-                    # Chart with current day focus
+                            sr = enhancements['enhanced_sr']
+                            if sr.get('analysis_available'):
+                                st.markdown("#### 🎯 Enhanced Support & Resistance")
+                                ecol1, ecol2 = st.columns(2)
+                                with ecol1:
+                                    st.metric("Support Levels", len(sr.get('support_levels', [])))
+                                with ecol2:
+                                    st.metric("Resistance Levels", len(sr.get('resistance_levels', [])))
+                                st.write(f"**Position:** {sr.get('position_analysis', {}).get('position_strength', 'N/A')}")
+                    else:
+                        st.info("No enhancement analysis available for this stock")
+                
+                with detail_tabs[3]:  # Charts tab
                     if config['show_charts']:
-                        st.markdown("#### 📊 Current Day Chart Analysis")
+                        st.markdown("#### 📊 Technical Chart Analysis")
                         chart = scanner.create_tradingview_chart(
                             result['data'], 
                             result['symbol'], 
@@ -4948,26 +4875,9 @@ def create_main_scanner_tab(config):
                         )
                         if chart:
                             st.plotly_chart(chart, use_container_width=True)
-            
-            # Export to Excel button
-            st.markdown("---")
-            st.markdown("### 📥 Export Results")
-            
-            col1, col2, col3 = st.columns([1, 1, 2])
-            with col1:
-                # Create Excel file with stock symbols only
-                excel_data = create_excel_stock_list(results)
-                st.download_button(
-                    label="📊 Download Stock List (Excel)",
-                    data=excel_data,
-                    file_name=f"qualifying_stocks_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    type="primary"
-                )
-            
-            with col2:
-                st.info(f"📋 {len(results)} stocks will be exported")
-        
+                    else:
+                        st.info("📊 Charts are disabled. Enable in sidebar settings.")
+
         else:
             st.warning("🔍 No current day patterns found. Try adjusting filters.")
             
