@@ -1793,22 +1793,34 @@ class ProfessionalPCSScanner:
             return "BEARISH"
     
     def get_global_indices(self):
-        """Get global market indices data"""
+        """Get global market indices data including GIFT Nifty"""
         indices_data = {}
         
         try:
-            # Nifty 50
-            nifty = yf.Ticker("^NSEI")
-            nifty_data = nifty.history(period="5d")
-            if len(nifty_data) >= 2:
-                current = nifty_data['Close'].iloc[-1]
-                prev = nifty_data['Close'].iloc[-2]
-                change_pct = ((current - prev) / prev) * 100
-                indices_data['Nifty 50'] = {
-                    'value': current,
-                    'change': change_pct,
-                    'symbol': '^NSEI'
-                }
+            # Indian Indices
+            india_indices = {
+                'Nifty 50': '^NSEI',
+                'Bank Nifty': '^NSEBANK',
+                'GIFT Nifty': 'NIFTY_50.GI'  # GIFT Nifty symbol (may need adjustment)
+            }
+            
+            for name, symbol in india_indices.items():
+                try:
+                    ticker = yf.Ticker(symbol)
+                    data = ticker.history(period="5d")
+                    if len(data) >= 2:
+                        current = data['Close'].iloc[-1]
+                        prev = data['Close'].iloc[-2]
+                        change_pct = ((current - prev) / prev) * 100
+                        indices_data[name] = {
+                            'value': current,
+                            'change': change_pct,
+                            'symbol': symbol,
+                            'region': 'India'
+                        }
+                except:
+                    # If GIFT Nifty fails, skip it
+                    pass
             
             # US Indices
             us_indices = {
@@ -1828,7 +1840,8 @@ class ProfessionalPCSScanner:
                         indices_data[name] = {
                             'value': current,
                             'change': change_pct,
-                            'symbol': symbol
+                            'symbol': symbol,
+                            'region': 'US'
                         }
                 except:
                     pass
@@ -1851,7 +1864,8 @@ class ProfessionalPCSScanner:
                         indices_data[name] = {
                             'value': current,
                             'change': change_pct,
-                            'symbol': symbol
+                            'symbol': symbol,
+                            'region': 'Asia'
                         }
                 except:
                     pass
@@ -5224,66 +5238,197 @@ def main():
     # Get sidebar configuration
     config = create_professional_sidebar()
     
-    # Global Market Indices KPI Cards at the top
-    scanner = ProfessionalPCSScanner()
-    indices_data = scanner.get_global_indices()
+    # Create tabs
+    tab1, tab2 = st.tabs(["🎯 Scanner", "🌍 Market Overview"])
     
-    # Create 3 sections: Nifty, US Indices, Asia Indices
-    st.markdown("### 📊 Global Markets Overview")
+    with tab1:
+        # Main Scanner Tab
+        create_main_scanner_tab(config)
     
-    # Row 1: Nifty
-    if 'Nifty 50' in indices_data:
-        nifty = indices_data['Nifty 50']
-        change_color = "green" if nifty['change'] >= 0 else "red"
-        arrow = "↑" if nifty['change'] >= 0 else "↓"
-        st.markdown(f"""
-        <div style="background: var(--surface); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 1rem;">
-            <h4 style="margin: 0; color: var(--text-primary);">🇮🇳 Nifty 50</h4>
-            <h2 style="margin: 0.5rem 0; color: var(--text-primary);">{nifty['value']:.2f} <span style="color: {change_color}; font-size: 1.2rem;">{arrow} {abs(nifty['change']):.2f}%</span></h2>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Row 2: US Indices
-    col1, col2, col3 = st.columns(3)
-    us_indices = ['S&P 500', 'Dow Jones', 'Nasdaq']
-    
-    for col, index_name in zip([col1, col2, col3], us_indices):
-        with col:
-            if index_name in indices_data:
-                idx = indices_data[index_name]
-                change_color = "green" if idx['change'] >= 0 else "red"
-                arrow = "↑" if idx['change'] >= 0 else "↓"
-                st.markdown(f"""
-                <div style="background: var(--surface); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border); height: 100%;">
-                    <h5 style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">🇺🇸 {index_name}</h5>
-                    <h3 style="margin: 0.3rem 0; font-size: 1.3rem; color: var(--text-primary);">{idx['value']:.0f}</h3>
-                    <p style="margin: 0; color: {change_color}; font-weight: 600;">{arrow} {abs(idx['change']):.2f}%</p>
-                </div>
-                """, unsafe_allow_html=True)
-    
-    # Row 3: Asia Indices
-    st.markdown("<br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    asia_indices = ['Nikkei 225', 'Hang Seng', 'Shanghai']
-    
-    for col, index_name in zip([col1, col2, col3], asia_indices):
-        with col:
-            if index_name in indices_data:
-                idx = indices_data[index_name]
-                change_color = "green" if idx['change'] >= 0 else "red"
-                arrow = "↑" if idx['change'] >= 0 else "↓"
-                st.markdown(f"""
-                <div style="background: var(--surface); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border); height: 100%;">
-                    <h5 style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">🌏 {index_name}</h5>
-                    <h3 style="margin: 0.3rem 0; font-size: 1.3rem; color: var(--text-primary);">{idx['value']:.0f}</h3>
-                    <p style="margin: 0; color: {change_color}; font-weight: 600;">{arrow} {abs(idx['change']):.2f}%</p>
-                </div>
-                """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Main Scanner Content
-    create_main_scanner_tab(config)
+    with tab2:
+        # Market Overview Tab with KPI Cards
+        st.markdown("### 🌍 Global Market Indices")
+        
+        scanner = ProfessionalPCSScanner()
+        indices_data = scanner.get_global_indices()
+        
+        # Indian Indices Section
+        st.markdown("#### 🇮🇳 Indian Indices")
+        india_cols = st.columns(3)
+        india_indices = ['Nifty 50', 'Bank Nifty', 'GIFT Nifty']
+        
+        for col, index_name in zip(india_cols, india_indices):
+            with col:
+                if index_name in indices_data:
+                    idx = indices_data[index_name]
+                    change_pct = idx['change']
+                    
+                    # Color coding
+                    if change_pct >= 1.0:
+                        bg_color = "rgba(34, 197, 94, 0.1)"
+                        border_color = "rgb(34, 197, 94)"
+                        text_color = "rgb(34, 197, 94)"
+                        emoji = "📈"
+                    elif change_pct >= 0:
+                        bg_color = "rgba(34, 197, 94, 0.05)"
+                        border_color = "rgb(74, 222, 128)"
+                        text_color = "rgb(34, 197, 94)"
+                        emoji = "↗️"
+                    elif change_pct >= -1.0:
+                        bg_color = "rgba(239, 68, 68, 0.05)"
+                        border_color = "rgb(252, 165, 165)"
+                        text_color = "rgb(239, 68, 68)"
+                        emoji = "↘️"
+                    else:
+                        bg_color = "rgba(239, 68, 68, 0.1)"
+                        border_color = "rgb(239, 68, 68)"
+                        text_color = "rgb(239, 68, 68)"
+                        emoji = "📉"
+                    
+                    st.markdown(f"""
+                    <div style="
+                        background: {bg_color};
+                        border: 2px solid {border_color};
+                        border-radius: 12px;
+                        padding: 1.2rem;
+                        text-align: center;
+                        min-height: 150px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                    ">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">{emoji}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem;">
+                            {index_name}
+                        </div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">
+                            {idx['value']:,.2f}
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: {text_color};">
+                            {change_pct:+.2f}%
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # US Indices Section
+        st.markdown("#### 🇺🇸 US Indices")
+        us_cols = st.columns(3)
+        us_indices = ['S&P 500', 'Dow Jones', 'Nasdaq']
+        
+        for col, index_name in zip(us_cols, us_indices):
+            with col:
+                if index_name in indices_data:
+                    idx = indices_data[index_name]
+                    change_pct = idx['change']
+                    
+                    # Color coding
+                    if change_pct >= 1.0:
+                        bg_color = "rgba(34, 197, 94, 0.1)"
+                        border_color = "rgb(34, 197, 94)"
+                        text_color = "rgb(34, 197, 94)"
+                        emoji = "📈"
+                    elif change_pct >= 0:
+                        bg_color = "rgba(34, 197, 94, 0.05)"
+                        border_color = "rgb(74, 222, 128)"
+                        text_color = "rgb(34, 197, 94)"
+                        emoji = "↗️"
+                    elif change_pct >= -1.0:
+                        bg_color = "rgba(239, 68, 68, 0.05)"
+                        border_color = "rgb(252, 165, 165)"
+                        text_color = "rgb(239, 68, 68)"
+                        emoji = "↘️"
+                    else:
+                        bg_color = "rgba(239, 68, 68, 0.1)"
+                        border_color = "rgb(239, 68, 68)"
+                        text_color = "rgb(239, 68, 68)"
+                        emoji = "📉"
+                    
+                    st.markdown(f"""
+                    <div style="
+                        background: {bg_color};
+                        border: 2px solid {border_color};
+                        border-radius: 12px;
+                        padding: 1.2rem;
+                        text-align: center;
+                        min-height: 150px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                    ">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">{emoji}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem;">
+                            {index_name}
+                        </div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">
+                            {idx['value']:,.0f}
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: {text_color};">
+                            {change_pct:+.2f}%
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Asia Indices Section
+        st.markdown("#### 🌏 Asia Indices")
+        asia_cols = st.columns(3)
+        asia_indices = ['Nikkei 225', 'Hang Seng', 'Shanghai']
+        
+        for col, index_name in zip(asia_cols, asia_indices):
+            with col:
+                if index_name in indices_data:
+                    idx = indices_data[index_name]
+                    change_pct = idx['change']
+                    
+                    # Color coding
+                    if change_pct >= 1.0:
+                        bg_color = "rgba(34, 197, 94, 0.1)"
+                        border_color = "rgb(34, 197, 94)"
+                        text_color = "rgb(34, 197, 94)"
+                        emoji = "📈"
+                    elif change_pct >= 0:
+                        bg_color = "rgba(34, 197, 94, 0.05)"
+                        border_color = "rgb(74, 222, 128)"
+                        text_color = "rgb(34, 197, 94)"
+                        emoji = "↗️"
+                    elif change_pct >= -1.0:
+                        bg_color = "rgba(239, 68, 68, 0.05)"
+                        border_color = "rgb(252, 165, 165)"
+                        text_color = "rgb(239, 68, 68)"
+                        emoji = "↘️"
+                    else:
+                        bg_color = "rgba(239, 68, 68, 0.1)"
+                        border_color = "rgb(239, 68, 68)"
+                        text_color = "rgb(239, 68, 68)"
+                        emoji = "📉"
+                    
+                    st.markdown(f"""
+                    <div style="
+                        background: {bg_color};
+                        border: 2px solid {border_color};
+                        border-radius: 12px;
+                        padding: 1.2rem;
+                        text-align: center;
+                        min-height: 150px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                    ">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">{emoji}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem;">
+                            {index_name}
+                        </div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">
+                            {idx['value']:,.0f}
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: {text_color};">
+                            {change_pct:+.2f}%
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
