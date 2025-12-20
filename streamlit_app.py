@@ -926,6 +926,28 @@ def _get_comprehensive_backup_list():
         'LUXIND.NS', 'LYKALABS.NS', 'M&M.NS', 'M&MFIN.NS', 'MAANALU.NS', 'MACPOWER.NS'
     ]
 
+
+# Cached data fetching for better performance
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def fetch_stock_data_cached(symbol, period="3mo"):
+    """Cached stock data fetch to avoid repeated API calls"""
+    try:
+        stock = yf.Ticker(symbol)
+        data = stock.history(period=period, interval="1d")
+        return data if len(data) >= 20 else None
+    except:
+        return None
+
+@st.cache_data(ttl=300)
+def fetch_weekly_data_cached(symbol, period="6mo"):
+    """Cached weekly stock data fetch"""
+    try:
+        stock = yf.Ticker(symbol)
+        data = stock.history(period=period, interval="1wk")
+        return data if len(data) >= 8 else None
+    except:
+        return None
+
 class ProfessionalPCSScanner:
     def __init__(self):
         self.ist = pytz.timezone('Asia/Kolkata')
@@ -937,10 +959,10 @@ class ProfessionalPCSScanner:
     def get_stock_data(self, symbol, period="3mo"):
         """Get stock data with focus on recent data for current trading day analysis"""
         try:
-            stock = yf.Ticker(symbol)
-            data = stock.history(period=period, interval="1d")
+            # Use cached data fetch
+            data = fetch_stock_data_cached(symbol, period)
             
-            if len(data) < 20:
+            if data is None or len(data) < 20:
                 return None
             
             # Calculate technical indicators
@@ -966,11 +988,10 @@ class ProfessionalPCSScanner:
     def get_weekly_stock_data(self, symbol, period="6mo"):
         """Get weekly stock data for pattern validation"""
         try:
-            stock = yf.Ticker(symbol)
-            # Get more data for weekly analysis, then resample to weekly
-            daily_data = stock.history(period=period, interval="1d")
+            # Use cached data fetch for daily data
+            daily_data = fetch_stock_data_cached(symbol, period)
             
-            if len(daily_data) < 50:  # Need sufficient data for weekly analysis
+            if daily_data is None or len(daily_data) < 50:  # Need sufficient data for weekly analysis
                 return None
             
             # Resample daily data to weekly (Friday close)
@@ -4516,6 +4537,9 @@ def create_main_scanner_tab(config):
     st.markdown("### 🎯 Multi-Timeframe Pattern Scanner V6.1")
     st.info("💡 **Options**: Daily Only (Fast) | Weekly Only (Trends) | Daily + Weekly Combined (Best Accuracy)")
     
+    # Initialize scanner (needed for both scanning and chart display)
+    scanner = ProfessionalPCSScanner()
+    
     # Action buttons
     col1, col2, col3 = st.columns([2, 1, 1])
     
@@ -4532,8 +4556,6 @@ def create_main_scanner_tab(config):
         st.markdown(f"**Scanning: {len(config['stocks_to_scan'])} stocks**")
     
     if scan_button:
-        scanner = ProfessionalPCSScanner()
-        
         # Progress tracking
         progress_bar = st.progress(0)
         status_container = st.empty()
