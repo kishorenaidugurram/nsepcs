@@ -178,13 +178,24 @@ st.markdown("""
     
     /* Sidebar Styling - Teal Gradient */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, hsl(174, 62%, 98%) 0%, hsl(174, 62%, 95%) 100%);
+        min-width: 360px !important;
+        max-width: 360px !important;
+        background: transparent !important;
         border-right: 1px solid hsl(174, 62%, 75%);
-        box-shadow: var(--shadow-lg);
+        box-shadow: none !important;
     }
     
     [data-testid="stSidebar"] > div:first-child {
-        background: transparent;
+        background: transparent !important;
+    }
+    
+    /* Remove card backgrounds from sidebar elements */
+    [data-testid="stSidebar"] .element-container,
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
     
     /* Sidebar Text - Smaller for Better Fit */
@@ -741,8 +752,20 @@ st.markdown("""
         
         /* Dark Blue Sidebar */
         [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, hsl(220, 40%, 15%) 0%, hsl(220, 40%, 12%) 100%) !important;
+            min-width: 360px !important;
+            max-width: 360px !important;
+            background: transparent !important;
             border-right: 1px solid hsl(220, 30%, 25%) !important;
+            box-shadow: none !important;
+        }
+        
+        /* Remove card backgrounds from sidebar elements in dark mode */
+        [data-testid="stSidebar"] .element-container,
+        [data-testid="stSidebar"] .stMarkdown,
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         
         [data-testid="stSidebar"] > div:first-child {
@@ -4601,7 +4624,7 @@ def create_professional_sidebar():
                     'flat_base': st.checkbox("Flat Base Breakout", value=True, help="Mark Minervini pattern"),
                     'bump_and_run': st.checkbox("Bump-and-Run Reversal", value=True, help="Thomas Bulkowski pattern"),
                     'rectangle_bottom': st.checkbox("Rectangle Bottom", value=True, help="Classical rectangle breakout"),
-                    'rectangle_top': st.checkbox("Rectangle Top", value=False, help="Support test after rectangle"),
+                    'rectangle_top': st.checkbox("Rectangle Top", value=True, help="Support test after rectangle"),
                 }
             
             with col2:
@@ -4610,7 +4633,7 @@ def create_professional_sidebar():
                     'double_bottom': st.checkbox("Double Bottom (Eve & Eve)", value=True, help="Double bottom formation"),
                     'three_rising_valleys': st.checkbox("Three Rising Valleys", value=True, help="Progressive support levels"),
                     'rounding_bottom': st.checkbox("Rounding Bottom", value=True, help="Saucer/bowl pattern"),
-                    'rounding_top_upside': st.checkbox("Rounding Top (Upside Break)", value=False, help="Rare counter-trend pattern"),
+                    'rounding_top_upside': st.checkbox("Rounding Top (Upside Break)", value=True, help="Rare counter-trend pattern"),
                     'inverted_scallop': st.checkbox("Inverted Scallop", value=True, help="O'Neil CAN SLIM pattern"),
                 })
             
