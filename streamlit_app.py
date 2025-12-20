@@ -4286,13 +4286,6 @@ class ProfessionalPCSScanner:
 def create_professional_sidebar():
     """Create professional sidebar with Angel One styling"""
     with st.sidebar:
-        st.markdown("""
-        <div style='text-align: center; padding: 14px; background: linear-gradient(135deg, hsl(174, 62%, 47%), hsl(174, 62%, 40%)); border-radius: 8px; margin-bottom: 14px;'>
-            <h2 style='color: #FFFFFF; margin: 0; font-weight: 700; font-size: 1.3rem;'>📈 PCS Scanner V6.2</h2>
-            <p style='color: #FFFFFF; margin: 3px 0 0 0; opacity: 0.9; font-size: 0.85rem;'>Professional Teal Edition</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
         # Stock Universe Selection - SIMPLIFIED
         st.markdown("### 📊 Stock Universe")
         
@@ -4440,7 +4433,6 @@ def create_professional_sidebar():
         
         # === ENHANCEMENTS SECTION ===
         st.markdown("---")
-        st.markdown("### 🚀 Enhancements")
         
         # Enhancement toggles
         enhancement_options = {
@@ -4455,7 +4447,7 @@ def create_professional_sidebar():
         }
         
         # Market Sentiment
-        st.markdown("### 🌍 Market Sentiment")
+        st.markdown("---")
         
         scanner = ProfessionalPCSScanner()
         sentiment_data = scanner.get_market_sentiment_indicators()
@@ -4490,7 +4482,6 @@ def create_professional_sidebar():
     
     # === ENHANCEMENTS SECTION ===
     st.markdown("---")
-    st.markdown("### 🚀 Enhancements")
     
     # Enhancement toggles
     enhancement_options = {
@@ -4911,14 +4902,6 @@ def create_main_scanner_tab(config):
         st.markdown("- Check if markets traded today")
 
 def main():
-    # FIXED: Angel One Style Compact Header
-    st.markdown("""
-    <div class="professional-header">
-        <h1>📈 NSE F&O PCS Scanner</h1>
-        <p class="subtitle">Complete 219 Stock Universe</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
     # Get sidebar configuration
     config = create_professional_sidebar()
     
