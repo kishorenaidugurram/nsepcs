@@ -285,6 +285,9 @@ st.markdown("""
         border: 1px solid var(--border-primary) !important;
         border-left: 3px solid var(--bloomberg-orange) !important;
         border-radius: 0 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     [data-testid="stMetric"]:hover {
@@ -297,6 +300,9 @@ st.markdown("""
         font-weight: 700 !important;
         color: var(--text-primary) !important;
         font-family: var(--font-mono) !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     [data-testid="stMetricLabel"] {
@@ -305,10 +311,35 @@ st.markdown("""
         font-size: var(--font-size-xs) !important;
         letter-spacing: 0.5px !important;
         font-weight: 600 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     [data-testid="stMetricDelta"] {
         font-family: var(--font-mono) !important;
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Positive/Negative Delta Color Coding */
+    [data-testid="stMetricDelta"] svg[fill*="green"],
+    [data-testid="stMetricDelta"]:has(svg[fill*="green"]) {
+        color: var(--bloomberg-green) !important;
+    }
+    
+    [data-testid="stMetricDelta"] svg[fill*="red"],
+    [data-testid="stMetricDelta"]:has(svg[fill*="red"]) {
+        color: var(--bloomberg-red) !important;
+    }
+    
+    [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Up"] {
+        color: var(--bloomberg-green) !important;
+    }
+    
+    [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Down"] {
+        color: var(--bloomberg-red) !important;
     }
     
     /* === DATAFRAMES & TABLES - Bloomberg Terminal Style === */
