@@ -3047,9 +3047,9 @@ class ProfessionalPCSScanner:
         
         # Define distinct colors for each support level
         support_colors = {
-            'S1': {'line': '#00d084', 'marker': '#00ff9f', 'bg': 'rgba(0, 208, 132, 0.15)'},  # Bright green
-            'S2': {'line': '#ffa500', 'marker': '#ffcc00', 'bg': 'rgba(255, 165, 0, 0.15)'},   # Orange (STOP-LOSS zone)
-            'S3': {'line': '#ff3b69', 'marker': '#ff6b8a', 'bg': 'rgba(255, 59, 105, 0.15)'}   # Red (danger zone)
+            'S1': {'line': '#00d084', 'marker': '#00d084', 'bg': 'rgba(0, 208, 132, 0.12)'},  # Green
+            'S2': {'line': '#ffa500', 'marker': '#ffa500', 'bg': 'rgba(255, 165, 0, 0.12)'},   # Orange (STOP-LOSS zone)
+            'S3': {'line': '#ff3b69', 'marker': '#ff3b69', 'bg': 'rgba(255, 59, 105, 0.12)'}   # Red (danger zone)
         }
         
         support_labels = ['S1', 'S2', 'S3']
@@ -3059,7 +3059,7 @@ class ProfessionalPCSScanner:
             'S3: Major Support (High Risk)'
         ]
         
-        # Add Support Levels with markers and hover info
+        # Add Support Levels with professional triangle markers
         for i, support in enumerate(sr_levels['support']):
             if support > 0:
                 label = support_labels[i]
@@ -3071,7 +3071,7 @@ class ProfessionalPCSScanner:
                     line_dash="dash",
                     line_color=color_scheme['line'],
                     line_width=2,
-                    opacity=0.8,
+                    opacity=0.7,
                     row=1, col=1,
                     annotation_text=f"{label}: ₹{support:.2f}",
                     annotation_position="right",
@@ -3083,46 +3083,68 @@ class ProfessionalPCSScanner:
                     )
                 )
                 
-                # Add visible markers (scatter points) along the support line for easy identification
-                # Create markers at regular intervals across the chart
-                num_markers = 8
-                marker_x_positions = pd.date_range(start=data.index[0], end=data.index[-1], periods=num_markers)
-                marker_y_positions = [support] * num_markers
+                # Find price points that intersect or are near the support level
+                # Add triangular markers at these intersection points
+                intersections_x = []
+                intersections_y = []
                 
-                fig.add_trace(
-                    go.Scatter(
-                        x=marker_x_positions,
-                        y=marker_y_positions,
-                        mode='markers',
-                        name=support_descriptions[i],
-                        marker=dict(
-                            size=12,
-                            color=color_scheme['marker'],
-                            symbol='diamond',
-                            line=dict(width=2, color=color_scheme['line'])
+                for idx in range(len(data)):
+                    # Check if price touched or crossed the support level
+                    if data['Low'].iloc[idx] <= support <= data['High'].iloc[idx]:
+                        intersections_x.append(data.index[idx])
+                        intersections_y.append(support)
+                    # Also mark if close price is very near support (within 0.5%)
+                    elif abs(data['Close'].iloc[idx] - support) / support < 0.005:
+                        intersections_x.append(data.index[idx])
+                        intersections_y.append(support)
+                
+                # If no intersections found, add evenly spaced markers
+                if len(intersections_x) == 0:
+                    num_markers = min(5, len(data) // 10)
+                    if num_markers > 0:
+                        step = len(data) // (num_markers + 1)
+                        for j in range(1, num_markers + 1):
+                            idx = min(j * step, len(data) - 1)
+                            intersections_x.append(data.index[idx])
+                            intersections_y.append(support)
+                
+                # Add triangular markers at intersection points
+                if len(intersections_x) > 0:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=intersections_x,
+                            y=intersections_y,
+                            mode='markers',
+                            name=support_descriptions[i],
+                            marker=dict(
+                                size=10,
+                                color=color_scheme['marker'],
+                                symbol='triangle-up',
+                                line=dict(width=1, color='white'),
+                                opacity=0.9
+                            ),
+                            hovertemplate=(
+                                f"<b>{label} - {support_descriptions[i].split(':')[1].strip()}</b><br>"
+                                f"Price: ₹{support:.2f}<br>"
+                                f"Distance: ₹{abs(support - sr_levels['current_price']):.2f} "
+                                f"({((support - sr_levels['current_price'])/sr_levels['current_price']*100):.2f}%)<br>"
+                                "<extra></extra>"
+                            ),
+                            showlegend=True,
+                            legendgroup=label
                         ),
-                        hovertemplate=(
-                            f"<b>{label} - {support_descriptions[i].split(':')[1].strip()}</b><br>"
-                            f"Price: ₹{support:.2f}<br>"
-                            f"Distance from Current: {abs(support - sr_levels['current_price']):.2f} ({((support - sr_levels['current_price'])/sr_levels['current_price']*100):.2f}%)<br>"
-                            "<extra></extra>"
-                        ),
-                        showlegend=True
-                    ),
-                    row=1, col=1
-                )
+                        row=1, col=1
+                    )
                 
                 # Add shaded zone for S2 (critical stop-loss zone)
                 if label == 'S2':
                     fig.add_hrect(
-                        y0=support * 0.995,
-                        y1=support * 1.005,
+                        y0=support * 0.996,
+                        y1=support * 1.004,
                         fillcolor=color_scheme['line'],
-                        opacity=0.1,
+                        opacity=0.08,
                         line_width=0,
-                        row=1, col=1,
-                        annotation_text="⚠️ STOP-LOSS ZONE",
-                        annotation_position="top left"
+                        row=1, col=1
                     )
         
         # Add Current Price line (prominent)
