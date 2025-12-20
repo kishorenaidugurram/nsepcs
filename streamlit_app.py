@@ -5411,57 +5411,107 @@ def create_main_scanner_tab(config):
                 
             with detail_tabs[2]:  # Enhancements tab
                 enhancements = result.get('enhancements', {})
+                
+                # Debug toggle to see raw data
+                if st.checkbox("🔍 Show Enhancement Debug Info", key=f"debug_enh_{stock_key}"):
+                    st.json({
+                        "enhancement_keys": list(enhancements.keys()) if enhancements else [],
+                        "enhancement_data": enhancements
+                    })
                     
-                if enhancements:
+                if enhancements and len(enhancements) > 0:
                     st.markdown("### 🚀 Enhancement Analysis")
+                    
+                    has_any_enhancement = False
                         
                     # Delivery Volume
                     if 'delivery_volume' in enhancements:
                         delivery = enhancements['delivery_volume']
-                        if delivery.get('delivery_percentage') is not None:
+                        if isinstance(delivery, dict) and delivery.get('delivery_percentage') is not None:
+                            has_any_enhancement = True
                             st.markdown("#### 📊 Delivery Volume Analysis")
                             ecol1, ecol2 = st.columns(2)
                             with ecol1:
-                                st.metric("Estimated Delivery", f"{delivery.get('delivery_percentage', 0):.1f}%")
+                                try:
+                                    delivery_pct = float(delivery.get('delivery_percentage', 0))
+                                    st.metric("Estimated Delivery", f"{delivery_pct:.1f}%")
+                                except (ValueError, TypeError):
+                                    st.metric("Estimated Delivery", "N/A")
                             with ecol2:
-                                st.metric("Confidence", delivery.get('confidence', 'Low'))
-                            st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'N/A')}")
+                                conf = str(delivery.get('confidence', 'Low'))
+                                st.metric("Confidence", conf)
+                            
+                            analysis = delivery.get('delivery_analysis', 'No analysis available')
+                            st.write(f"**Analysis:** {analysis}")
+                            st.markdown("---")
                         
                     # F&O Consolidation
                     if 'fno_consolidation' in enhancements:
                         consolidation = enhancements['fno_consolidation']
-                        st.markdown("#### 🔄 F&O Consolidation")
-                        ecol1, ecol2 = st.columns(2)
-                        with ecol1:
-                            st.metric("Status", "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected")
-                        with ecol2:
-                            st.metric("Strength", f"{consolidation.get('consolidation_strength', 0)}/100")
-                        st.write(f"**Analysis:** {consolidation.get('analysis', 'N/A')}")
+                        if isinstance(consolidation, dict):
+                            has_any_enhancement = True
+                            st.markdown("#### 🔄 F&O Consolidation")
+                            ecol1, ecol2 = st.columns(2)
+                            with ecol1:
+                                detected = consolidation.get('consolidation_detected', False)
+                                st.metric("Status", "✅ Detected" if detected else "❌ Not Detected")
+                            with ecol2:
+                                strength = consolidation.get('consolidation_strength', 0)
+                                try:
+                                    strength_val = int(strength) if strength is not None else 0
+                                    st.metric("Strength", f"{strength_val}/100")
+                                except (ValueError, TypeError):
+                                    st.metric("Strength", "N/A")
+                            
+                            analysis = consolidation.get('analysis', 'No analysis available')
+                            st.write(f"**Analysis:** {analysis}")
+                            st.markdown("---")
                         
                     # Breakout-Pullback
                     if 'breakout_pullback' in enhancements:
                         breakout = enhancements['breakout_pullback']
-                        st.markdown("#### 📈 Breakout-Pullback")
-                        ecol1, ecol2 = st.columns(2)
-                        with ecol1:
-                            st.metric("Status", "✅ Detected" if breakout.get('pattern_detected') else "❌ Not Detected")
-                        with ecol2:
-                            st.metric("Strength", f"{breakout.get('pattern_strength', 0)}/100")
-                        st.write(f"**Analysis:** {breakout.get('analysis', 'N/A')}")
+                        if isinstance(breakout, dict):
+                            has_any_enhancement = True
+                            st.markdown("#### 📈 Breakout-Pullback")
+                            ecol1, ecol2 = st.columns(2)
+                            with ecol1:
+                                detected = breakout.get('pattern_detected', False)
+                                st.metric("Status", "✅ Detected" if detected else "❌ Not Detected")
+                            with ecol2:
+                                strength = breakout.get('pattern_strength', 0)
+                                try:
+                                    strength_val = int(strength) if strength is not None else 0
+                                    st.metric("Strength", f"{strength_val}/100")
+                                except (ValueError, TypeError):
+                                    st.metric("Strength", "N/A")
+                            
+                            analysis = breakout.get('analysis', 'No analysis available')
+                            st.write(f"**Analysis:** {analysis}")
+                            st.markdown("---")
                         
                     # Enhanced S&R
                     if 'enhanced_sr' in enhancements:
                         sr = enhancements['enhanced_sr']
-                        if sr.get('analysis_available'):
+                        if isinstance(sr, dict) and sr.get('analysis_available'):
+                            has_any_enhancement = True
                             st.markdown("#### 🎯 Enhanced Support & Resistance")
                             ecol1, ecol2 = st.columns(2)
                             with ecol1:
-                                st.metric("Support Levels", len(sr.get('support_levels', [])))
+                                support_count = len(sr.get('support_levels', []))
+                                st.metric("Support Levels", support_count)
                             with ecol2:
-                                st.metric("Resistance Levels", len(sr.get('resistance_levels', [])))
-                            st.write(f"**Position:** {sr.get('position_analysis', {}).get('position_strength', 'N/A')}")
+                                resistance_count = len(sr.get('resistance_levels', []))
+                                st.metric("Resistance Levels", resistance_count)
+                            
+                            position_analysis = sr.get('position_analysis', {})
+                            position_strength = position_analysis.get('position_strength', 'N/A') if isinstance(position_analysis, dict) else 'N/A'
+                            st.write(f"**Position:** {position_strength}")
+                            st.markdown("---")
+                    
+                    if not has_any_enhancement:
+                        st.info("ℹ️ Enhancement analysis is enabled but no significant patterns were detected for this stock.")
                 else:
-                    st.info("No enhancement analysis available for this stock")
+                    st.warning("⚠️ No enhancement data available. Make sure 'Enable PCS Enhancements' is checked in the scanner settings.")
                 
             with detail_tabs[3]:  # Charts tab
                 if config['show_charts']:
