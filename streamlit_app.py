@@ -4440,7 +4440,7 @@ def create_professional_sidebar():
         
         # === ENHANCEMENTS SECTION ===
         st.markdown("---")
-        st.markdown("### 🚀 **Advanced Enhancements**")
+        st.markdown("### 🚀 Enhancements")
         
         # Enhancement toggles
         enhancement_options = {
@@ -4490,7 +4490,7 @@ def create_professional_sidebar():
     
     # === ENHANCEMENTS SECTION ===
     st.markdown("---")
-    st.markdown("### 🚀 **Advanced Enhancements**")
+    st.markdown("### 🚀 Enhancements")
     
     # Enhancement toggles
     enhancement_options = {
@@ -4534,9 +4534,6 @@ def create_professional_sidebar():
 
 def create_main_scanner_tab(config):
     """Create main scanner tab with current day focus"""
-    st.markdown("### 🎯 Multi-Timeframe Pattern Scanner V6.1")
-    st.info("💡 **Options**: Daily Only (Fast) | Weekly Only (Trends) | Daily + Weekly Combined (Best Accuracy)")
-    
     # Initialize scanner (needed for both scanning and chart display)
     scanner = ProfessionalPCSScanner()
     
@@ -4918,8 +4915,7 @@ def main():
     st.markdown("""
     <div class="professional-header">
         <h1>📈 NSE F&O PCS Scanner</h1>
-        <p class="subtitle">Current Day EOD Analysis • Complete 219 Stock Universe • Angel One Style</p>
-        <p class="description">Real-time Pattern Confirmation with Latest Trading Day Data</p>
+        <p class="subtitle">Complete 219 Stock Universe</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -4928,7 +4924,7 @@ def main():
     
     # Create main tabs
     tab1, tab2 = st.tabs([
-        "🎯 Current Day Scanner",
+        "🎯 Scanner",
         "📊 Market Intelligence"
     ])
     
