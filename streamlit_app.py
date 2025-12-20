@@ -27,81 +27,52 @@ st.set_page_config(
 )
 
 # ENHANCED PROFESSIONAL UI SYSTEM - Tailwind-Inspired CSS
-# ENHANCED PROFESSIONAL UI SYSTEM - Tailwind + shadcn/ui Design
+# BLOOMBERG TERMINAL PROFESSIONAL UI SYSTEM
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
     
     :root {
-        /* === PROFESSIONAL FINANCE DESIGN SYSTEM === */
-        /* Modern Teal Theme - Professional Finance Design */
+        /* === BLOOMBERG TERMINAL DESIGN SYSTEM === */
+        /* Professional Financial Terminal Theme */
         
-        /* Primary Color Palette - Professional Finance Teal */
-        --primary-50: hsl(174, 62%, 98%);
-        --primary-100: hsl(174, 62%, 95%);
-        --primary-200: hsl(174, 62%, 90%);
-        --primary-300: hsl(174, 62%, 75%);
-        --primary-400: hsl(174, 62%, 60%);
-        --primary-500: hsl(174, 62%, 47%);   /* Main brand teal */
-        --primary-600: hsl(174, 62%, 40%);
-        --primary-700: hsl(174, 62%, 33%);
-        --primary-800: hsl(174, 62%, 27%);
-        --primary-900: hsl(174, 62%, 20%);
+        /* Bloomberg Signature Colors */
+        --bloomberg-orange: #ff6b00;
+        --bloomberg-orange-hover: #ff8533;
+        --bloomberg-orange-dark: #cc5500;
+        --bloomberg-green: #00d084;
+        --bloomberg-red: #ff3b69;
+        --bloomberg-blue: #00a3ff;
         
-        /* Neutral Palette - Professional Grays */
-        --neutral-50: hsl(210, 20%, 98%);
-        --neutral-100: hsl(210, 20%, 96%);
-        --neutral-200: hsl(210, 16%, 93%);
-        --neutral-300: hsl(210, 14%, 89%);
-        --neutral-400: hsl(210, 12%, 71%);
-        --neutral-500: hsl(210, 10%, 53%);
-        --neutral-600: hsl(210, 12%, 43%);
-        --neutral-700: hsl(210, 15%, 33%);
-        --neutral-800: hsl(210, 18%, 23%);
-        --neutral-900: hsl(210, 20%, 15%);
-        
-        /* Background System */
-        --background: hsl(210, 20%, 98%);
-        --background-secondary: hsl(210, 20%, 96%);
-        --surface: hsl(0, 0%, 100%);
-        --surface-elevated: hsl(0, 0%, 100%);
+        /* Dark Theme Palette */
+        --bg-primary: #0a0a0a;
+        --bg-secondary: #151515;
+        --bg-elevated: #1a1a1a;
+        --bg-hover: #202020;
         
         /* Border System */
-        --border: hsl(210, 14%, 89%);
-        --border-hover: hsl(210, 16%, 82%);
-        --border-focus: var(--primary-500);
+        --border-primary: #2a2a2a;
+        --border-secondary: #333333;
+        --border-accent: var(--bloomberg-orange);
         
         /* Text System */
-        --text-primary: hsl(210, 20%, 15%);
-        --text-secondary: hsl(210, 12%, 43%);
-        --text-tertiary: hsl(210, 10%, 53%);
-        --text-disabled: hsl(210, 12%, 71%);
+        --text-primary: #ffffff;
+        --text-secondary: #999999;
+        --text-tertiary: #666666;
+        --text-muted: #444444;
         
         /* Semantic Colors */
-        --success-bg: hsl(142, 76%, 96%);
-        --success-border: hsl(142, 76%, 86%);
-        --success-text: hsl(142, 76%, 30%);
+        --success: var(--bloomberg-green);
+        --error: var(--bloomberg-red);
+        --warning: #ffaa00;
+        --info: var(--bloomberg-blue);
         
-        --warning-bg: hsl(38, 92%, 95%);
-        --warning-border: hsl(38, 92%, 85%);
-        --warning-text: hsl(38, 92%, 35%);
+        /* Shadows */
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 4px 8px 0 rgba(0, 0, 0, 0.5);
         
-        --error-bg: hsl(0, 86%, 97%);
-        --error-border: hsl(0, 86%, 90%);
-        --error-text: hsl(0, 86%, 40%);
-        
-        --info-bg: var(--primary-50);
-        --info-border: var(--primary-200);
-        --info-text: var(--primary-700);
-        
-        /* Shadows - Professional Depth */
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-        
-        /* Spacing Scale */
+        /* Spacing (keeping existing) */
         --spacing-1: 0.25rem;
         --spacing-2: 0.5rem;
         --spacing-3: 0.75rem;
@@ -109,80 +80,73 @@ st.markdown("""
         --spacing-5: 1.25rem;
         --spacing-6: 1.5rem;
         --spacing-8: 2rem;
-        --spacing-10: 2.5rem;
-        --spacing-12: 3rem;
         
-        /* Border Radius */
-        --radius-sm: 0.25rem;
-        --radius: 0.5rem;
-        --radius-md: 0.75rem;
-        --radius-lg: 1rem;
-        --radius-xl: 1.5rem;
-        
-        /* Typography Scale */
-        --font-size-xs: 0.75rem;
-        --font-size-sm: 0.875rem;
-        --font-size-base: 1rem;
-        --font-size-lg: 1.125rem;
-        --font-size-xl: 1.25rem;
+        /* Typography */
+        --font-mono: 'Roboto Mono', 'Courier New', monospace;
+        --font-size-xs: 0.7rem;
+        --font-size-sm: 0.8rem;
+        --font-size-base: 0.9rem;
+        --font-size-lg: 1rem;
+        --font-size-xl: 1.2rem;
         --font-size-2xl: 1.5rem;
-        --font-size-3xl: 1.875rem;
-        --font-size-4xl: 2.25rem;
     }
     
-    /* === GLOBAL RESETS === */
+    /* === BLOOMBERG GLOBAL STYLES === */
     * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: var(--font-mono);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
     
-    /* Main App Container */
+    /* Main App Container - Bloomberg Dark */
     .main {
-        background: var(--background);
+        background: var(--bg-primary) !important;
+        color: var(--text-primary) !important;
         padding: var(--spacing-6) var(--spacing-8);
     }
     
-    /* === STREAMLIT COMPONENT OVERRIDES === */
+    .stApp {
+        background: var(--bg-primary) !important;
+    }
     
-    /* Headers with Professional Styling */
+    /* === HEADERS - Bloomberg Style === */
     h1, h2, h3, h4, h5, h6 {
-        color: var(--text-primary);
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
+        color: var(--text-primary) !important;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        font-family: var(--font-mono) !important;
     }
     
     h1 {
-        font-size: var(--font-size-4xl);
-        margin-bottom: var(--spacing-6);
-        background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        font-size: var(--font-size-2xl);
+        margin-bottom: var(--spacing-4);
+        color: var(--bloomberg-orange) !important;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--border-primary);
+        padding-bottom: var(--spacing-2);
     }
     
     h2 {
-        font-size: var(--font-size-2xl);
-        margin-bottom: var(--spacing-4);
-        color: var(--text-primary);
-        border-bottom: 2px solid var(--border);
-        padding-bottom: var(--spacing-3);
+        font-size: var(--font-size-xl);
+        margin-bottom: var(--spacing-3);
+        color: var(--bloomberg-orange) !important;
     }
     
     h3 {
-        font-size: var(--font-size-xl);
-        margin-bottom: var(--spacing-3);
-        color: var(--primary-700);
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-2);
+        color: var(--text-secondary) !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     
-    /* Sidebar Styling - Teal Gradient */
+    /* === SIDEBAR - Bloomberg Terminal Style === */
     [data-testid="stSidebar"] {
         min-width: 342px !important;
         max-width: 342px !important;
-        background: transparent !important;
-        border-right: 1px solid hsl(174, 62%, 75%);
-        box-shadow: none !important;
+        background: var(--bg-secondary) !important;
+        border-right: 3px solid var(--bloomberg-orange) !important;
+        box-shadow: var(--shadow-lg) !important;
     }
     
     [data-testid="stSidebar"] > div:first-child {
@@ -198,99 +162,243 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Sidebar Text - Smaller for Better Fit */
+    /* Sidebar Text */
     [data-testid="stSidebar"] label,
     [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] span {
-        font-size: 0.85rem;
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div {
+        color: var(--text-primary) !important;
+        font-size: var(--font-size-sm) !important;
     }
     
     /* Sidebar Headers */
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3 {
-        color: var(--primary-700);
-        font-weight: 700;
-        padding: var(--spacing-4) 0;
-        font-size: 1rem;
+        color: var(--bloomberg-orange) !important;
+        font-size: var(--font-size-base) !important;
     }
     
-    /* Sidebar Checkboxes - Smaller Text */
+    /* Sidebar Checkboxes */
     [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
-        font-size: 0.82rem;
+        color: var(--text-secondary) !important;
+        font-size: var(--font-size-xs) !important;
     }
     
-    /* Input Fields */
+    /* === INPUT FIELDS - Bloomberg Style === */
     .stTextInput > div > div > input,
     .stNumberInput > div > div > input,
-    .stSelectbox > div > div > select {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--spacing-3) var(--spacing-4);
-        font-size: var(--font-size-sm);
-        color: var(--text-primary);
-        transition: all 0.2s ease;
+    .stSelectbox > div > div > select,
+    .stSlider > div > div > div > div {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-radius: 2px !important;
+        color: var(--text-primary) !important;
+        font-size: var(--font-size-sm) !important;
+        font-family: var(--font-mono) !important;
     }
     
     .stTextInput > div > div > input:focus,
     .stNumberInput > div > div > input:focus,
     .stSelectbox > div > div > select:focus {
-        border-color: var(--border-focus);
-        outline: none;
-        box-shadow: 0 0 0 3px hsla(210, 100%, 60%, 0.1);
+        border-color: var(--bloomberg-orange) !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2) !important;
     }
     
-    /* Buttons - shadcn/ui Style */
+    /* === BUTTONS - Bloomberg Terminal Style === */
     .stButton > button {
-        background: var(--primary-600);
-        color: white;
-        border: none;
-        border-radius: var(--radius);
-        padding: var(--spacing-3) var(--spacing-6);
-        font-weight: 600;
-        font-size: var(--font-size-sm);
-        transition: all 0.2s ease;
-        box-shadow: var(--shadow-sm);
-        cursor: pointer;
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--bloomberg-orange) !important;
+        border-radius: 2px !important;
+        padding: 8px 20px !important;
+        font-weight: 600 !important;
+        font-size: var(--font-size-sm) !important;
+        font-family: var(--font-mono) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
     }
     
     .stButton > button:hover {
-        background: var(--primary-700);
-        box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
+        background: var(--bloomberg-orange) !important;
+        color: var(--bg-primary) !important;
+        border-color: var(--bloomberg-orange-hover) !important;
+        transform: translateY(-1px) !important;
     }
     
-    .stButton > button:active {
-        transform: translateY(0);
-        box-shadow: var(--shadow-sm);
+    /* Primary Button */
+    .stButton > button[kind="primary"] {
+        background: var(--bloomberg-orange) !important;
+        color: var(--bg-primary) !important;
+        border-color: var(--bloomberg-orange) !important;
     }
     
-    /* Download Button */
-    .stDownloadButton > button {
-        background: var(--success-text);
-        color: white;
-        border: none;
-        border-radius: var(--radius);
-        padding: var(--spacing-3) var(--spacing-6);
-        font-weight: 600;
-        transition: all 0.2s ease;
+    .stButton > button[kind="primary"]:hover {
+        background: var(--bloomberg-orange-hover) !important;
+        border-color: var(--bloomberg-orange-hover) !important;
     }
     
-    .stDownloadButton > button:hover {
-        background: hsl(142, 76%, 25%);
-        box-shadow: var(--shadow-md);
+    /* === TABS - Bloomberg Style === */
+    .stTabs [data-baseweb="tab-list"] {
+        background: var(--bg-secondary) !important;
+        border-bottom: 2px solid var(--border-primary) !important;
+        gap: 0 !important;
     }
     
-    /* === METRIC CARDS - PROPER STYLING === */
+    .stTabs [data-baseweb="tab"] {
+        background: transparent !important;
+        border: none !important;
+        color: var(--text-secondary) !important;
+        font-family: var(--font-mono) !important;
+        font-size: var(--font-size-sm) !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        padding: 12px 24px !important;
+        border-bottom: 3px solid transparent !important;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: var(--bg-hover) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background: transparent !important;
+        color: var(--bloomberg-orange) !important;
+        border-bottom-color: var(--bloomberg-orange) !important;
+    }
+    
+    .stTabs [data-baseweb="tab-panel"] {
+        background: transparent !important;
+    }
+    
+    /* === METRICS - Bloomberg Style === */
+    [data-testid="stMetric"] {
+        background: var(--bg-secondary) !important;
+        padding: 12px 16px !important;
+        border: 1px solid var(--border-primary) !important;
+        border-left: 3px solid var(--bloomberg-orange) !important;
+        border-radius: 0 !important;
+    }
+    
+    [data-testid="stMetric"]:hover {
+        background: var(--bg-hover) !important;
+        border-left-color: var(--bloomberg-orange-hover) !important;
+    }
+    
     [data-testid="stMetricValue"] {
-        background: var(--surface);
-        padding: var(--spacing-4);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border);
-        font-size: var(--font-size-2xl) !important;
+        font-size: 1.8rem !important;
         font-weight: 700 !important;
-        color: var(--primary-700) !important;
+        color: var(--text-primary) !important;
+        font-family: var(--font-mono) !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--text-secondary) !important;
+        text-transform: uppercase !important;
+        font-size: var(--font-size-xs) !important;
+        letter-spacing: 0.5px !important;
+        font-weight: 600 !important;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        font-family: var(--font-mono) !important;
+    }
+    
+    /* === DATAFRAMES & TABLES - Bloomberg Terminal Style === */
+    [data-testid="stDataFrame"],
+    [data-testid="stTable"],
+    .dataframe {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-radius: 0 !important;
+        font-family: var(--font-mono) !important;
+        font-size: var(--font-size-xs) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    .dataframe thead th {
+        background: var(--bg-primary) !important;
+        color: var(--bloomberg-orange) !important;
+        font-weight: 700 !important;
+        padding: 10px 12px !important;
+        text-align: left !important;
+        border-bottom: 2px solid var(--bloomberg-orange) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        font-size: var(--font-size-xs) !important;
+    }
+    
+    .dataframe tbody td {
+        padding: 8px 12px !important;
+        border-bottom: 1px solid var(--border-primary) !important;
+        color: var(--text-primary) !important;
+        background: var(--bg-secondary) !important;
+    }
+    
+    .dataframe tbody tr:hover {
+        background: var(--bg-hover) !important;
+    }
+    
+    .dataframe tbody tr:nth-child(even) {
+        background: var(--bg-secondary) !important;
+    }
+    
+    .dataframe tbody tr:nth-child(odd) {
+        background: var(--bg-primary) !important;
+    }
+    
+    /* === TEXT & PARAGRAPHS === */
+    p, span {
+        color: var(--text-primary) !important;
+        font-family: var(--font-mono) !important;
+    }
+    
+    /* === PROGRESS BARS === */
+    .stProgress > div > div > div {
+        background: var(--bloomberg-orange) !important;
+    }
+    
+    /* === INFO/SUCCESS/WARNING/ERROR MESSAGES === */
+    [data-baseweb="notification"] {
+        border-radius: 0 !important;
+        border-left: 3px solid !important;
+        background: var(--bg-secondary) !important;
+        font-family: var(--font-mono) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    /* === SCROLLBARS === */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-secondary);
+        border-radius: 0;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--bloomberg-orange);
+    }
+    
+    /* === LINKS === */
+    a {
+        color: var(--bloomberg-blue) !important;
+        text-decoration: none !important;
+    }
+    
+    a:hover {
+        color: var(--bloomberg-orange) !important;
     }
     
     [data-testid="stMetric"] {
@@ -720,219 +828,6 @@ st.markdown("""
         letter-spacing: 0.05em;
     }
     
-    /* === DARK MODE STYLING === */
-    @media (prefers-color-scheme: dark) {
-        :root {
-            /* Dark Mode Color Overrides */
-            --background: hsl(210, 20%, 12%);
-            --background-secondary: hsl(210, 20%, 15%);
-            --surface: hsl(210, 18%, 18%);
-            --surface-elevated: hsl(210, 18%, 20%);
-            
-            /* Dark Mode Borders */
-            --border: hsl(210, 14%, 25%);
-            --border-hover: hsl(210, 16%, 35%);
-            
-            /* Dark Mode Text - High Contrast */
-            --text-primary: hsl(210, 20%, 98%);
-            --text-secondary: hsl(210, 15%, 75%);
-            --text-tertiary: hsl(210, 12%, 60%);
-            --text-disabled: hsl(210, 10%, 45%);
-            
-            /* Dark Mode Primary Colors */
-            --primary-700: hsl(174, 62%, 65%);
-            --primary-600: hsl(174, 62%, 55%);
-            
-            /* Dark Mode Semantic Colors */
-            --success-text: hsl(142, 76%, 65%);
-            --warning-text: hsl(38, 92%, 65%);
-            --error-text: hsl(0, 86%, 65%);
-            --info-text: hsl(174, 62%, 65%);
-        }
-        
-        /* Dark Blue Sidebar */
-        [data-testid="stSidebar"] {
-            min-width: 342px !important;
-            max-width: 342px !important;
-            background: transparent !important;
-            border-right: 1px solid hsl(220, 30%, 25%) !important;
-            box-shadow: none !important;
-        }
-        
-        /* Remove card backgrounds from sidebar elements in dark mode */
-        [data-testid="stSidebar"] .element-container,
-        [data-testid="stSidebar"] .stMarkdown,
-        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        
-        [data-testid="stSidebar"] > div:first-child {
-            background: transparent !important;
-        }
-        
-        /* Sidebar Text - High Contrast */
-        [data-testid="stSidebar"] label,
-        [data-testid="stSidebar"] p,
-        [data-testid="stSidebar"] span,
-        [data-testid="stSidebar"] div {
-            color: hsl(210, 20%, 95%) !important;
-            font-size: 0.85rem !important;
-        }
-        
-        /* Sidebar Headers */
-        [data-testid="stSidebar"] h1,
-        [data-testid="stSidebar"] h2,
-        [data-testid="stSidebar"] h3 {
-            color: hsl(174, 62%, 75%) !important;
-            font-size: 1rem !important;
-        }
-        
-        /* Sidebar Checkboxes - Smaller Text */
-        [data-testid="stSidebar"] [data-testid="stCheckbox"] label {
-            color: hsl(210, 20%, 95%) !important;
-            font-size: 0.82rem !important;
-        }
-        
-        /* Sidebar Radio Buttons */
-        [data-testid="stSidebar"] [role="radiogroup"] label {
-            color: hsl(210, 20%, 95%) !important;
-        }
-        
-        /* Sidebar Markdown */
-        [data-testid="stSidebar"] .stMarkdown {
-            color: hsl(210, 20%, 95%) !important;
-        }
-        
-        /* Main Content Area */
-        .main {
-            background: var(--background) !important;
-        }
-        
-        /* Cards and Surfaces */
-        .stTabs,
-        .element-container,
-        [data-testid="stDataFrame"],
-        [data-testid="stTable"] {
-            background: var(--surface) !important;
-            color: var(--text-primary) !important;
-        }
-        
-        /* Metric Cards - Dark Mode */
-        [data-testid="stMetric"] {
-            background: var(--surface-elevated) !important;
-            border: 1px solid var(--border) !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-        }
-        
-        [data-testid="stMetric"]:hover {
-            border-color: var(--primary-600) !important;
-            box-shadow: 0 4px 12px rgba(23, 162, 184, 0.2) !important;
-        }
-        
-        [data-testid="stMetricValue"] {
-            color: hsl(174, 62%, 70%) !important;
-            background: transparent !important;
-        }
-        
-        [data-testid="stMetricLabel"] {
-            color: var(--text-secondary) !important;
-        }
-        
-        /* Text Elements */
-        p, span, div, label {
-            color: var(--text-primary) !important;
-        }
-        
-        /* Headers */
-        h1, h2, h3, h4, h5, h6 {
-            color: var(--text-primary) !important;
-        }
-        
-        h1 {
-            background: linear-gradient(135deg, hsl(174, 62%, 65%), hsl(174, 62%, 75%));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        /* Input Fields */
-        input, select, textarea {
-            background: var(--surface) !important;
-            border: 1px solid var(--border) !important;
-            color: var(--text-primary) !important;
-        }
-        
-        /* Buttons */
-        .stButton > button {
-            background: var(--primary-600) !important;
-            color: white !important;
-        }
-        
-        /* Metrics */
-        [data-testid="stMetricValue"] {
-            color: var(--text-primary) !important;
-        }
-        
-        [data-testid="stMetricLabel"] {
-            color: var(--text-secondary) !important;
-        }
-        
-        /* DataFrames */
-        [data-testid="stDataFrame"] table {
-            background: var(--surface) !important;
-            color: var(--text-primary) !important;
-        }
-        
-        [data-testid="stDataFrame"] th {
-            background: var(--surface-elevated) !important;
-            color: var(--text-primary) !important;
-            border-bottom: 1px solid var(--border) !important;
-        }
-        
-        [data-testid="stDataFrame"] td {
-            color: var(--text-primary) !important;
-            border-bottom: 1px solid var(--border) !important;
-        }
-        
-        /* Tabs */
-        .stTabs [data-baseweb="tab-list"] {
-            background: var(--surface) !important;
-            border-bottom: 1px solid var(--border) !important;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            color: var(--text-secondary) !important;
-        }
-        
-        .stTabs [aria-selected="true"] {
-            color: var(--primary-600) !important;
-            border-bottom-color: var(--primary-600) !important;
-        }
-        
-        /* Success/Warning/Error Messages */
-        .stSuccess, .stWarning, .stError, .stInfo {
-            background: var(--surface-elevated) !important;
-            border: 1px solid var(--border) !important;
-        }
-        
-        .stSuccess {
-            color: var(--success-text) !important;
-        }
-        
-        .stWarning {
-            color: var(--warning-text) !important;
-        }
-        
-        .stError {
-            color: var(--error-text) !important;
-        }
-        
-        .stInfo {
-            color: var(--info-text) !important;
-        }
-    }
 </style>
 """, unsafe_allow_html=True)
 
