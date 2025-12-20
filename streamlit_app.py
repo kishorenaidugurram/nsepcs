@@ -4684,208 +4684,212 @@ def create_main_scanner_tab(config):
             # Display results
             # Store results in session state for persistence
             st.session_state['scan_results'] = results
-            
-            # Display results with dropdown interface
-            st.markdown("---")
-            st.markdown("### 📋 Scan Results - Select Stock for Analysis")
-            
-            # Build summary table
-            summary_data = []
-            for result in results:
-                max_strength = max(p['strength'] for p in result['patterns'])
-                overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
-                has_current_breakout = any('Current Day' in p['type'] for p in result['patterns'])
-                has_news = result.get('news_data') and result['news_data']['news_count'] > 0
-                stock_key = result['symbol'].replace('.NS', '').replace('^', '')
-                
-                summary_data.append({
-                    'Symbol': stock_key,
-                    'Confidence': overall_confidence,
-                    'Strength': f"{max_strength:.0f}%",
-                    'Price': f"₹{result['current_price']:.2f}",
-                    'Volume': f"{result['volume_ratio']:.1f}x",
-                    'RSI': f"{result['rsi']:.1f}",
-                    'ADX': f"{result['adx']:.1f}",
-                    'Today': '🔥' if has_current_breakout else '',
-                    'News': '📰' if has_news else '',
-                    'Patterns': len(result['patterns'])
-                })
-            
-            # Display summary table
-            if summary_data:
-                summary_df = pd.DataFrame(summary_data)
-                st.dataframe(
-                    summary_df,
-                    use_container_width=True,
-                    hide_index=True,
-                    height=min(400, len(summary_df) * 35 + 38)
-                )
-                
-                st.markdown("---")
-                
-                # Stock selector dropdown
-                stock_options = [f"{row['Symbol']} - {row['Confidence']} ({row['Strength']})" for row in summary_data]
-                
-                # Initialize selection in session state
-                if 'selected_stock_idx' not in st.session_state:
-                    st.session_state['selected_stock_idx'] = 0
-                
-                selected_display = st.selectbox(
-                    "🔍 Select a stock to view detailed analysis:",
-                    options=stock_options,
-                    index=st.session_state['selected_stock_idx'],
-                    key='stock_selector'
-                )
-                
-                # Update selected index
-                st.session_state['selected_stock_idx'] = stock_options.index(selected_display)
-                result = results[st.session_state['selected_stock_idx']]
-                
-                # Display detailed analysis for selected stock
-                stock_key = result['symbol'].replace('.NS', '').replace('^', '')
-                max_strength = max(p['strength'] for p in result['patterns'])
-                overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
-                
-                st.markdown("---")
-                st.markdown(f"## 📊 Detailed Analysis: **{stock_key}**")
-                
-                # Create tabs for organized display
-                detail_tabs = st.tabs(["📈 Overview", "🎯 Patterns", "🚀 Enhancements", "📊 Charts"])
-                
-                with detail_tabs[0]:  # Overview tab
-                    # Stock metrics
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        st.metric("💰 Current Price", f"₹{result['current_price']:.2f}")
-                    with col2:
-                        volume_color = "inverse" if result['volume_ratio'] >= 2 else "normal"
-                        st.metric("📊 Volume Today", f"{result['volume_ratio']:.2f}x", delta_color=volume_color)
-                    with col3:
-                        st.metric("📈 RSI", f"{result['rsi']:.1f}")
-                    with col4:
-                        st.metric("⚡ ADX", f"{result['adx']:.1f}")
-                    
-                    # Current day trading info
-                    current_day_data = result['data'].iloc[-1]
-                    trading_date = current_day_data.name.strftime('%Y-%m-%d')
-                    
-                    st.markdown(f"""
-                    **🗓️ Trading Date:** {trading_date} | 
-                    **📊 Day Range:** ₹{current_day_data['Low']:.2f} - ₹{current_day_data['High']:.2f} |
-                    **💹 Day Change:** {((current_day_data['Close'] - current_day_data['Open']) / current_day_data['Open'] * 100):+.2f}%
-                    """)
-                    
-                    # NEWS ANALYSIS
-                    has_news = result.get('news_data') and result['news_data']['news_count'] > 0
-                    if has_news:
-                        news_data = result['news_data']
-                        sentiment_emoji = "🟢" if news_data['overall_sentiment'] == 'positive' else "🔴" if news_data['overall_sentiment'] == 'negative' else "🟡"
-                        
-                        st.markdown(f"### {sentiment_emoji} Today's News - {news_data['overall_sentiment'].upper()} Sentiment")
-                        
-                        for news_item in news_data['news_items'][:2]:
-                            relevance_emoji = "🔥" if news_item['relevance'] == 'high' else "⚡" if news_item['relevance'] == 'medium' else "📄"
-                            st.info(f"**{relevance_emoji}** {news_item['headline']}")
-                
-                with detail_tabs[1]:  # Patterns tab
-                    for pattern in result['patterns']:
-                        confidence_emoji = "🟢" if pattern['confidence'] == 'HIGH' else "🟡" if pattern['confidence'] == 'MEDIUM' else "🔴"
-                        
-                        st.markdown(f"### {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence")
-                        
-                        # Pattern metrics
-                        pcol1, pcol2, pcol3 = st.columns(3)
-                        with pcol1:
-                            st.metric("Strength", f"{pattern['strength']}%")
-                        with pcol2:
-                            st.metric("Success Rate", f"{pattern['success_rate']}%")
-                        with pcol3:
-                            st.metric("PCS Fit", f"{pattern['pcs_suitability']}%")
-                        
-                        # Weekly validation if present
-                        weekly_val = pattern.get('weekly_validation', {})
-                        if weekly_val.get('weekly_validation', False):
-                            st.success(f"📈 Weekly Confirmation: {weekly_val.get('weekly_context', '')}")
-                        elif weekly_val.get('weekly_strength_bonus', 0) > 0:
-                            st.warning(f"📊 Weekly Support: {weekly_val.get('weekly_context', '')}")
-                        
-                        st.markdown("---")
-                
-                with detail_tabs[2]:  # Enhancements tab
-                    enhancements = result.get('enhancements', {})
-                    
-                    if enhancements:
-                        st.markdown("### 🚀 Enhancement Analysis")
-                        
-                        # Delivery Volume
-                        if 'delivery_volume' in enhancements:
-                            delivery = enhancements['delivery_volume']
-                            if delivery.get('delivery_percentage') is not None:
-                                st.markdown("#### 📊 Delivery Volume Analysis")
-                                ecol1, ecol2 = st.columns(2)
-                                with ecol1:
-                                    st.metric("Estimated Delivery", f"{delivery.get('delivery_percentage', 0):.1f}%")
-                                with ecol2:
-                                    st.metric("Confidence", delivery.get('confidence', 'Low'))
-                                st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'N/A')}")
-                        
-                        # F&O Consolidation
-                        if 'fno_consolidation' in enhancements:
-                            consolidation = enhancements['fno_consolidation']
-                            st.markdown("#### 🔄 F&O Consolidation")
-                            ecol1, ecol2 = st.columns(2)
-                            with ecol1:
-                                st.metric("Status", "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected")
-                            with ecol2:
-                                st.metric("Strength", f"{consolidation.get('consolidation_strength', 0)}/100")
-                            st.write(f"**Analysis:** {consolidation.get('analysis', 'N/A')}")
-                        
-                        # Breakout-Pullback
-                        if 'breakout_pullback' in enhancements:
-                            breakout = enhancements['breakout_pullback']
-                            st.markdown("#### 📈 Breakout-Pullback")
-                            ecol1, ecol2 = st.columns(2)
-                            with ecol1:
-                                st.metric("Status", "✅ Detected" if breakout.get('pattern_detected') else "❌ Not Detected")
-                            with ecol2:
-                                st.metric("Strength", f"{breakout.get('pattern_strength', 0)}/100")
-                            st.write(f"**Analysis:** {breakout.get('analysis', 'N/A')}")
-                        
-                        # Enhanced S&R
-                        if 'enhanced_sr' in enhancements:
-                            sr = enhancements['enhanced_sr']
-                            if sr.get('analysis_available'):
-                                st.markdown("#### 🎯 Enhanced Support & Resistance")
-                                ecol1, ecol2 = st.columns(2)
-                                with ecol1:
-                                    st.metric("Support Levels", len(sr.get('support_levels', [])))
-                                with ecol2:
-                                    st.metric("Resistance Levels", len(sr.get('resistance_levels', [])))
-                                st.write(f"**Position:** {sr.get('position_analysis', {}).get('position_strength', 'N/A')}")
-                    else:
-                        st.info("No enhancement analysis available for this stock")
-                
-                with detail_tabs[3]:  # Charts tab
-                    if config['show_charts']:
-                        st.markdown("#### 📊 Technical Chart Analysis")
-                        chart = scanner.create_tradingview_chart(
-                            result['data'], 
-                            result['symbol'], 
-                            result['patterns'][0] if result['patterns'] else None
-                        )
-                        if chart:
-                            st.plotly_chart(chart, use_container_width=True)
-                    else:
-                        st.info("📊 Charts are disabled. Enable in sidebar settings.")
 
-        else:
-            st.warning("🔍 No current day patterns found. Try adjusting filters.")
+    # Display results (works on button click and subsequent reruns)
+    if st.session_state.get('scan_results'):
+        results = st.session_state['scan_results']
+
+        # Display results with dropdown interface
+        st.markdown("---")
+        st.markdown("### 📋 Scan Results - Select Stock for Analysis")
             
-            st.markdown("### 💡 Suggestions:")
-            st.markdown("- Lower **Pattern Strength** to 50-60%")
-            st.markdown("- Reduce **Volume Ratio** to 1.0x")  
-            st.markdown("- Expand **RSI range** to 25-85")
-            st.markdown("- Check if markets traded today")
+        # Build summary table
+        summary_data = []
+        for result in results:
+            max_strength = max(p['strength'] for p in result['patterns'])
+            overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
+            has_current_breakout = any('Current Day' in p['type'] for p in result['patterns'])
+            has_news = result.get('news_data') and result['news_data']['news_count'] > 0
+            stock_key = result['symbol'].replace('.NS', '').replace('^', '')
+                
+            summary_data.append({
+                'Symbol': stock_key,
+                'Confidence': overall_confidence,
+                'Strength': f"{max_strength:.0f}%",
+                'Price': f"₹{result['current_price']:.2f}",
+                'Volume': f"{result['volume_ratio']:.1f}x",
+                'RSI': f"{result['rsi']:.1f}",
+                'ADX': f"{result['adx']:.1f}",
+                'Today': '🔥' if has_current_breakout else '',
+                'News': '📰' if has_news else '',
+                'Patterns': len(result['patterns'])
+            })
+            
+        # Display summary table
+        if summary_data:
+            summary_df = pd.DataFrame(summary_data)
+            st.dataframe(
+                summary_df,
+                use_container_width=True,
+                hide_index=True,
+                height=min(400, len(summary_df) * 35 + 38)
+            )
+                
+            st.markdown("---")
+                
+            # Stock selector dropdown
+            stock_options = [f"{row['Symbol']} - {row['Confidence']} ({row['Strength']})" for row in summary_data]
+                
+            # Initialize selection in session state
+            if 'selected_stock_idx' not in st.session_state:
+                st.session_state['selected_stock_idx'] = 0
+                
+            selected_display = st.selectbox(
+                "🔍 Select a stock to view detailed analysis:",
+                options=stock_options,
+                index=st.session_state['selected_stock_idx'],
+                key='stock_selector'
+            )
+                
+            # Update selected index
+            st.session_state['selected_stock_idx'] = stock_options.index(selected_display)
+            result = results[st.session_state['selected_stock_idx']]
+                
+            # Display detailed analysis for selected stock
+            stock_key = result['symbol'].replace('.NS', '').replace('^', '')
+            max_strength = max(p['strength'] for p in result['patterns'])
+            overall_confidence = 'HIGH' if max_strength >= 85 else 'MEDIUM' if max_strength >= 70 else 'LOW'
+                
+            st.markdown("---")
+            st.markdown(f"## 📊 Detailed Analysis: **{stock_key}**")
+                
+            # Create tabs for organized display
+            detail_tabs = st.tabs(["📈 Overview", "🎯 Patterns", "🚀 Enhancements", "📊 Charts"])
+                
+            with detail_tabs[0]:  # Overview tab
+                # Stock metrics
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("💰 Current Price", f"₹{result['current_price']:.2f}")
+                with col2:
+                    volume_color = "inverse" if result['volume_ratio'] >= 2 else "normal"
+                    st.metric("📊 Volume Today", f"{result['volume_ratio']:.2f}x", delta_color=volume_color)
+                with col3:
+                    st.metric("📈 RSI", f"{result['rsi']:.1f}")
+                with col4:
+                    st.metric("⚡ ADX", f"{result['adx']:.1f}")
+                    
+                # Current day trading info
+                current_day_data = result['data'].iloc[-1]
+                trading_date = current_day_data.name.strftime('%Y-%m-%d')
+                    
+                st.markdown(f"""
+                **🗓️ Trading Date:** {trading_date} | 
+                **📊 Day Range:** ₹{current_day_data['Low']:.2f} - ₹{current_day_data['High']:.2f} |
+                **💹 Day Change:** {((current_day_data['Close'] - current_day_data['Open']) / current_day_data['Open'] * 100):+.2f}%
+                """)
+                    
+                # NEWS ANALYSIS
+                has_news = result.get('news_data') and result['news_data']['news_count'] > 0
+                if has_news:
+                    news_data = result['news_data']
+                    sentiment_emoji = "🟢" if news_data['overall_sentiment'] == 'positive' else "🔴" if news_data['overall_sentiment'] == 'negative' else "🟡"
+                        
+                    st.markdown(f"### {sentiment_emoji} Today's News - {news_data['overall_sentiment'].upper()} Sentiment")
+                        
+                    for news_item in news_data['news_items'][:2]:
+                        relevance_emoji = "🔥" if news_item['relevance'] == 'high' else "⚡" if news_item['relevance'] == 'medium' else "📄"
+                        st.info(f"**{relevance_emoji}** {news_item['headline']}")
+                
+            with detail_tabs[1]:  # Patterns tab
+                for pattern in result['patterns']:
+                    confidence_emoji = "🟢" if pattern['confidence'] == 'HIGH' else "🟡" if pattern['confidence'] == 'MEDIUM' else "🔴"
+                        
+                    st.markdown(f"### {confidence_emoji} {pattern['type']} - {pattern['confidence']} Confidence")
+                        
+                    # Pattern metrics
+                    pcol1, pcol2, pcol3 = st.columns(3)
+                    with pcol1:
+                        st.metric("Strength", f"{pattern['strength']}%")
+                    with pcol2:
+                        st.metric("Success Rate", f"{pattern['success_rate']}%")
+                    with pcol3:
+                        st.metric("PCS Fit", f"{pattern['pcs_suitability']}%")
+                        
+                    # Weekly validation if present
+                    weekly_val = pattern.get('weekly_validation', {})
+                    if weekly_val.get('weekly_validation', False):
+                        st.success(f"📈 Weekly Confirmation: {weekly_val.get('weekly_context', '')}")
+                    elif weekly_val.get('weekly_strength_bonus', 0) > 0:
+                        st.warning(f"📊 Weekly Support: {weekly_val.get('weekly_context', '')}")
+                        
+                    st.markdown("---")
+                
+            with detail_tabs[2]:  # Enhancements tab
+                enhancements = result.get('enhancements', {})
+                    
+                if enhancements:
+                    st.markdown("### 🚀 Enhancement Analysis")
+                        
+                    # Delivery Volume
+                    if 'delivery_volume' in enhancements:
+                        delivery = enhancements['delivery_volume']
+                        if delivery.get('delivery_percentage') is not None:
+                            st.markdown("#### 📊 Delivery Volume Analysis")
+                            ecol1, ecol2 = st.columns(2)
+                            with ecol1:
+                                st.metric("Estimated Delivery", f"{delivery.get('delivery_percentage', 0):.1f}%")
+                            with ecol2:
+                                st.metric("Confidence", delivery.get('confidence', 'Low'))
+                            st.write(f"**Analysis:** {delivery.get('delivery_analysis', 'N/A')}")
+                        
+                    # F&O Consolidation
+                    if 'fno_consolidation' in enhancements:
+                        consolidation = enhancements['fno_consolidation']
+                        st.markdown("#### 🔄 F&O Consolidation")
+                        ecol1, ecol2 = st.columns(2)
+                        with ecol1:
+                            st.metric("Status", "✅ Detected" if consolidation.get('consolidation_detected') else "❌ Not Detected")
+                        with ecol2:
+                            st.metric("Strength", f"{consolidation.get('consolidation_strength', 0)}/100")
+                        st.write(f"**Analysis:** {consolidation.get('analysis', 'N/A')}")
+                        
+                    # Breakout-Pullback
+                    if 'breakout_pullback' in enhancements:
+                        breakout = enhancements['breakout_pullback']
+                        st.markdown("#### 📈 Breakout-Pullback")
+                        ecol1, ecol2 = st.columns(2)
+                        with ecol1:
+                            st.metric("Status", "✅ Detected" if breakout.get('pattern_detected') else "❌ Not Detected")
+                        with ecol2:
+                            st.metric("Strength", f"{breakout.get('pattern_strength', 0)}/100")
+                        st.write(f"**Analysis:** {breakout.get('analysis', 'N/A')}")
+                        
+                    # Enhanced S&R
+                    if 'enhanced_sr' in enhancements:
+                        sr = enhancements['enhanced_sr']
+                        if sr.get('analysis_available'):
+                            st.markdown("#### 🎯 Enhanced Support & Resistance")
+                            ecol1, ecol2 = st.columns(2)
+                            with ecol1:
+                                st.metric("Support Levels", len(sr.get('support_levels', [])))
+                            with ecol2:
+                                st.metric("Resistance Levels", len(sr.get('resistance_levels', [])))
+                            st.write(f"**Position:** {sr.get('position_analysis', {}).get('position_strength', 'N/A')}")
+                else:
+                    st.info("No enhancement analysis available for this stock")
+                
+            with detail_tabs[3]:  # Charts tab
+                if config['show_charts']:
+                    st.markdown("#### 📊 Technical Chart Analysis")
+                    chart = scanner.create_tradingview_chart(
+                        result['data'], 
+                        result['symbol'], 
+                        result['patterns'][0] if result['patterns'] else None
+                    )
+                    if chart:
+                        st.plotly_chart(chart, use_container_width=True)
+                else:
+                    st.info("📊 Charts are disabled. Enable in sidebar settings.")
+
+    else:
+        st.warning("🔍 No current day patterns found. Try adjusting filters.")
+            
+        st.markdown("### 💡 Suggestions:")
+        st.markdown("- Lower **Pattern Strength** to 50-60%")
+        st.markdown("- Reduce **Volume Ratio** to 1.0x")  
+        st.markdown("- Expand **RSI range** to 25-85")
+        st.markdown("- Check if markets traded today")
 
 def main():
     # FIXED: Angel One Style Compact Header
