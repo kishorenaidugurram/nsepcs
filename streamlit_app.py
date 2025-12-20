@@ -278,57 +278,8 @@ st.markdown("""
         background: transparent !important;
     }
     
-    /* === METRICS - Bloomberg Style === */
-    [data-testid="stMetric"] {
-        background: var(--bg-secondary) !important;
-        padding: 16px !important;
-        border: 1px solid var(--border-primary) !important;
-        border-left: 3px solid var(--bloomberg-orange) !important;
-        border-radius: 0 !important;
-    }
-    
-    [data-testid="stMetric"]:hover {
-        background: var(--bg-hover) !important;
-        border-left-color: var(--bloomberg-orange-hover) !important;
-    }
-    
-    [data-testid="stMetricLabel"] {
-        color: #999999 !important;
-        text-transform: uppercase !important;
-        font-size: 11px !important;
-        letter-spacing: 0.5px !important;
-        font-weight: 600 !important;
-    }
-    
-    [data-testid="stMetricValue"] {
-        font-size: 28px !important;
-        font-weight: 700 !important;
-        color: #ffffff !important;
-        font-family: 'Roboto Mono', monospace !important;
-    }
-    
-    [data-testid="stMetricDelta"] {
-        font-family: 'Roboto Mono', monospace !important;
-    }
-    
-    /* Positive/Negative Delta Color Coding */
-    [data-testid="stMetricDelta"] svg[fill*="green"],
-    [data-testid="stMetricDelta"]:has(svg[fill*="green"]) {
-        color: var(--bloomberg-green) !important;
-    }
-    
-    [data-testid="stMetricDelta"] svg[fill*="red"],
-    [data-testid="stMetricDelta"]:has(svg[fill*="red"]) {
-        color: var(--bloomberg-red) !important;
-    }
-    
-    [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Up"] {
-        color: var(--bloomberg-green) !important;
-    }
-    
-    [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Down"] {
-        color: var(--bloomberg-red) !important;
-    }
+    /* === METRICS - NO CUSTOM STYLING (Let Streamlit Default Work) === */
+    /* All metric CSS removed to fix display issue */
     
     /* === DATAFRAMES & TABLES - Bloomberg Terminal Style === */
     [data-testid="stDataFrame"],
@@ -5325,6 +5276,16 @@ def create_main_scanner_tab(config):
                 
                 # Debug: Show what we have
                 st.markdown("### 🚀 Enhancement Analysis")
+                
+                # TEST: Simple hardcoded metric to verify CSS
+                st.markdown("#### 🧪 TEST METRICS (Hardcoded)")
+                test_col1, test_col2 = st.columns(2)
+                with test_col1:
+                    st.metric("TEST LABEL 1", "TEST VALUE 1")
+                with test_col2:
+                    st.metric("TEST LABEL 2", "TEST VALUE 2")
+                st.markdown("---")
+                
                 with st.expander("🔍 Debug: Enhancement Data", expanded=False):
                     st.json(enhancements)
                     
