@@ -326,30 +326,37 @@ st.markdown("""
         border: 1px solid var(--border-primary) !important;
         border-left: 3px solid var(--bloomberg-orange) !important;
         border-radius: 0 !important;
+        transition: all 0.3s ease !important;
+        margin-bottom: var(--spacing-3) !important;
     }
-    
+
     [data-testid="stMetric"]:hover {
         background: var(--bg-hover) !important;
         border-left-color: var(--bloomberg-orange-hover) !important;
+        transform: translateY(-1px) !important;
     }
-    
+
     [data-testid="stMetricValue"] {
         font-size: 1.8rem !important;
         font-weight: 700 !important;
         color: var(--text-primary) !important;
         font-family: var(--font-mono) !important;
+        margin-bottom: var(--spacing-2) !important;
     }
-    
+
     [data-testid="stMetricLabel"] {
         color: var(--text-secondary) !important;
         text-transform: uppercase !important;
         font-size: var(--font-size-xs) !important;
         letter-spacing: 0.5px !important;
         font-weight: 600 !important;
+        margin-bottom: var(--spacing-2) !important;
     }
-    
+
     [data-testid="stMetricDelta"] {
         font-family: var(--font-mono) !important;
+        font-size: var(--font-size-sm) !important;
+        font-weight: 600 !important;
     }
     
     /* === DATAFRAMES & TABLES - Bloomberg Terminal Style === */
@@ -444,294 +451,45 @@ st.markdown("""
         color: var(--bloomberg-orange) !important;
     }
     
-    [data-testid="stMetric"] {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: var(--spacing-4);
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-    }
-    
-    [data-testid="stMetric"]:hover {
-        border-color: var(--primary-500);
-        box-shadow: var(--shadow-md);
-        transform: translateY(-2px);
-    }
-    
-    [data-testid="stMetricLabel"] {
-        font-size: var(--font-size-sm) !important;
-        font-weight: 600 !important;
-        color: var(--text-secondary) !important;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: var(--spacing-2);
-    }
-    
-    [data-testid="stMetricDelta"] {
-        font-size: var(--font-size-sm) !important;
-        font-weight: 500 !important;
-    }
-    
     /* Checkboxes & Radio */
     .stCheckbox, .stRadio {
         padding: var(--spacing-2) 0;
     }
-    
+
     .stCheckbox > label,
     .stRadio > label {
-        color: var(--text-primary);
-        font-size: var(--font-size-sm);
-        font-weight: 500;
+        color: var(--text-primary) !important;
+        font-size: var(--font-size-sm) !important;
+        font-weight: 500 !important;
     }
-    
+
     /* Slider */
     .stSlider > div > div > div {
-        background: var(--primary-500);
-    }
-    
-    /* Metrics - Enhanced Cards */
-    [data-testid="stMetricValue"] {
-        font-size: var(--font-size-2xl);
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-    
-    [data-testid="stMetricDelta"] {
-        font-size: var(--font-size-sm);
-        font-weight: 600;
-    }
-    
-    div[data-testid="stMetricValue"] > div {
-        background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    /* DataFrame Styling */
-    .dataframe {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        font-size: var(--font-size-sm);
-    }
-    
-    .dataframe thead th {
-        background: var(--primary-600);
-        color: white;
-        font-weight: 700;
-        padding: var(--spacing-3) var(--spacing-4);
-        text-align: left;
-        border-bottom: 2px solid var(--primary-700);
-    }
-    
-    .dataframe tbody td {
-        padding: var(--spacing-3) var(--spacing-4);
-        border-bottom: 1px solid var(--border);
-        color: var(--text-primary);
-    }
-    
-    .dataframe tbody tr:hover {
-        background: var(--primary-50);
+        background: var(--bloomberg-orange) !important;
     }
     
     /* Expander Component */
     .streamlit-expanderHeader {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--spacing-4);
-        font-weight: 600;
-        color: var(--text-primary);
-        transition: all 0.2s ease;
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        border-radius: 0 !important;
+        padding: 12px 16px !important;
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+        transition: all 0.2s ease !important;
     }
-    
+
     .streamlit-expanderHeader:hover {
-        background: var(--primary-50);
-        border-color: var(--primary-300);
+        background: var(--bg-hover) !important;
+        border-color: var(--bloomberg-orange) !important;
     }
-    
+
     .streamlit-expanderContent {
-        border: 1px solid var(--border);
-        border-top: none;
-        border-radius: 0 0 var(--radius) var(--radius);
-        padding: var(--spacing-4);
-        background: var(--surface);
-    }
-    
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: var(--spacing-2);
-        background: var(--background-secondary);
-        padding: var(--spacing-2);
-        border-radius: var(--radius);
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        background: transparent;
-        border: none;
-        color: var(--text-secondary);
-        font-weight: 600;
-        padding: var(--spacing-3) var(--spacing-6);
-        border-radius: var(--radius-sm);
-        transition: all 0.2s ease;
-    }
-    
-    .stTabs [data-baseweb="tab"]:hover {
-        background: var(--surface);
-        color: var(--primary-700);
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background: var(--primary-600);
-        color: white;
-        box-shadow: var(--shadow);
-    }
-    
-    /* Alert/Info Boxes */
-    .stAlert {
-        border-radius: var(--radius);
-        padding: var(--spacing-4);
-        border-left: 4px solid;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .stInfo {
-        background: var(--info-bg);
-        border-color: var(--info-text);
-        color: var(--info-text);
-    }
-    
-    .stSuccess {
-        background: var(--success-bg);
-        border-color: var(--success-text);
-        color: var(--success-text);
-    }
-    
-    .stWarning {
-        background: var(--warning-bg);
-        border-color: var(--warning-text);
-        color: var(--warning-text);
-    }
-    
-    .stError {
-        background: var(--error-bg);
-        border-color: var(--error-text);
-        color: var(--error-text);
-    }
-    
-    /* Progress Bar */
-    .stProgress > div > div > div {
-        background: var(--primary-600);
-        border-radius: var(--radius);
-    }
-    
-    /* Spinner */
-    .stSpinner > div {
-        border-color: var(--primary-600);
-    }
-    
-    /* Code Blocks */
-    code {
-        background: var(--neutral-100);
-        color: var(--primary-700);
-        padding: var(--spacing-1) var(--spacing-2);
-        border-radius: var(--radius-sm);
-        font-size: var(--font-size-sm);
-        font-family: 'Fira Code', monospace;
-    }
-    
-    pre {
-        background: var(--neutral-900);
-        color: var(--neutral-100);
-        padding: var(--spacing-4);
-        border-radius: var(--radius);
-        overflow-x: auto;
-        box-shadow: var(--shadow);
-    }
-    
-    /* Custom Card Component */
-    .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: var(--spacing-6);
-        box-shadow: var(--shadow);
-        transition: all 0.3s ease;
-        margin-bottom: var(--spacing-4);
-    }
-    
-    .card:hover {
-        box-shadow: var(--shadow-lg);
-        transform: translateY(-2px);
-        border-color: var(--primary-300);
-    }
-    
-    .card-header {
-        font-size: var(--font-size-xl);
-        font-weight: 700;
-        color: var(--primary-700);
-        margin-bottom: var(--spacing-4);
-        padding-bottom: var(--spacing-3);
-        border-bottom: 2px solid var(--border);
-    }
-    
-    /* Badge Component */
-    .badge {
-        display: inline-block;
-        padding: var(--spacing-1) var(--spacing-3);
-        border-radius: var(--radius);
-        font-size: var(--font-size-xs);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    
-    .badge-primary {
-        background: var(--primary-100);
-        color: var(--primary-700);
-        border: 1px solid var(--primary-300);
-    }
-    
-    .badge-success {
-        background: var(--success-bg);
-        color: var(--success-text);
-        border: 1px solid var(--success-border);
-    }
-    
-    .badge-warning {
-        background: var(--warning-bg);
-        color: var(--warning-text);
-        border: 1px solid var(--warning-border);
-    }
-    
-    .badge-error {
-        background: var(--error-bg);
-        color: var(--error-text);
-        border: 1px solid var(--error-border);
-    }
-    
-    /* Scrollbar Styling */
-    ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: var(--background-secondary);
-        border-radius: var(--radius);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: var(--primary-400);
-        border-radius: var(--radius);
-        transition: all 0.2s ease;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--primary-600);
+        border: 1px solid var(--border-primary) !important;
+        border-top: none !important;
+        border-radius: 0 !important;
+        padding: 12px 16px !important;
+        background: var(--bg-secondary) !important;
     }
     
     /* Loading Animation */
@@ -899,43 +657,43 @@ st.markdown("""
     
     /* Custom Professional Elements */
     .pro-header {
-        background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
+        background: linear-gradient(135deg, var(--bloomberg-orange), var(--bloomberg-orange-dark));
         color: white;
         padding: var(--spacing-8);
-        border-radius: var(--radius-lg);
+        border-radius: 0;
         margin-bottom: var(--spacing-6);
-        box-shadow: var(--shadow-xl);
+        box-shadow: var(--shadow-lg);
     }
-    
+
     .pro-stat {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 0;
         padding: var(--spacing-4);
         text-align: center;
         transition: all 0.3s ease;
     }
-    
+
     .pro-stat:hover {
-        border-color: var(--primary-500);
+        border-color: var(--bloomberg-orange);
         box-shadow: var(--shadow-md);
         transform: scale(1.02);
     }
-    
+
     .pro-stat-value {
-        font-size: var(--font-size-3xl);
+        font-size: var(--font-size-2xl);
         font-weight: 800;
-        color: var(--primary-700);
+        color: var(--bloomberg-orange);
         display: block;
         margin-bottom: var(--spacing-2);
     }
-    
+
     .pro-stat-label {
         font-size: var(--font-size-sm);
         color: var(--text-secondary);
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.5px;
     }
     
 </style>
@@ -5444,7 +5202,7 @@ def create_main_scanner_tab(config):
             with col2:
                 st.metric("🔥 Current Day", current_day_breakouts)
             with col3:
-                st.metric("💪 Avg Strength", f"{avg_strength:.1f}%") if isinstance(avg_strength, (int, float)) and avg_strength == avg_strength else st.metric("💪 Avg Strength", "N/A")
+                st.metric("💪 Avg Strength", f"{avg_strength:.1f}%")
             with col4:
                 st.metric("🏆 High Confidence", high_confidence)
             
@@ -5527,20 +5285,14 @@ def create_main_scanner_tab(config):
                 # Stock metrics
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("💰 Current Price", f"₹{result['current_price']:.2f}") if isinstance(result.get('current_price', 0), (int, float)) and result.get('current_price', 0) > 0 else st.metric("💰 Current Price", "N/A")
+                    st.metric("💰 Current Price", f"₹{result['current_price']:.2f}")
                 with col2:
-                    volume_ratio = result.get('volume_ratio', 0)
-                    if isinstance(volume_ratio, (int, float)) and volume_ratio > 0:
-                        if volume_ratio >= 2:
-                            st.metric("📊 Volume Today", f"{volume_ratio:.2f}x", delta=f"+{(volume_ratio-1)*100:.0f}%", delta_color="inverse")
-                        else:
-                            st.metric("📊 Volume Today", f"{volume_ratio:.2f}x")
-                    else:
-                        st.metric("📊 Volume Today", "N/A")
+                    volume_color = "inverse" if result['volume_ratio'] >= 2 else "normal"
+                    st.metric("📊 Volume Today", f"{result['volume_ratio']:.2f}x", delta_color=volume_color)
                 with col3:
-                    st.metric("📈 RSI", f"{result['rsi']:.1f}") if isinstance(result.get('rsi', 0), (int, float)) and result.get('rsi', 0) == result.get('rsi', 0) else st.metric("📈 RSI", "N/A")
+                    st.metric("📈 RSI", f"{result['rsi']:.1f}")
                 with col4:
-                    st.metric("⚡ ADX", f"{result['adx']:.1f}") if isinstance(result.get('adx', 0), (int, float)) and result.get('adx', 0) == result.get('adx', 0) else st.metric("⚡ ADX", "N/A")
+                    st.metric("⚡ ADX", f"{result['adx']:.1f}")
                     
                 # Current day trading info
                 current_day_data = result['data'].iloc[-1]
