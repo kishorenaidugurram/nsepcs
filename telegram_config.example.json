@@ -1,0 +1,31 @@
+{
+  "telegram": {
+    "bot_token": "YOUR_BOT_TOKEN_HERE",
+    "chat_id": "YOUR_CHAT_ID_HERE"
+  },
+  "scanner": {
+    "rsi_min": 30,
+    "rsi_max": 70,
+    "adx_min": 20,
+    "ma_support": true,
+    "ma_tolerance": 5,
+    "ma_type": "EMA",
+    "pattern_strength_min": 65,
+    "lookback_days": 20,
+    "volume_breakout_ratio": 2.0,
+    "analysis_mode": "Daily + Weekly Combined (Recommended)",
+    "pattern_filters": {
+      "current_day_breakout": true,
+      "cup_and_handle": true,
+      "flat_base": true,
+      "bump_and_run": true,
+      "rectangle_bottom": true,
+      "double_bottom": true,
+      "three_rising_valleys": true,
+      "rounding_bottom": true
+    },
+    "pattern_priority": "PCS Optimized (>90% suitability)",
+    "enable_enhancements": true,
+    "universe": "Nifty 50"
+  }
+}
