@@ -212,6 +212,68 @@ We welcome contributions to improve the NSE F&O PCS Screener:
 - Update documentation for changes
 - Test thoroughly before submitting PRs
 
+## 🤖 Telegram Automation
+
+### Automated Daily Scanning with Telegram Notifications
+
+The standalone **Telegram PCS Scanner** runs automated scans and sends qualifying stocks directly to your Telegram:
+
+#### Quick Start
+```bash
+# 1. Set up Telegram bot credentials
+export TELEGRAM_BOT_TOKEN="your_bot_token"
+export TELEGRAM_CHAT_ID="your_chat_id"
+
+# 2. Run the scanner
+python3 telegram_pcs_scanner.py
+
+# 3. Or use the interactive setup
+bash setup_telegram.sh
+```
+
+#### Features
+- **Standalone Script**: No Streamlit UI required
+- **Automated Scheduling**: Run via cron for daily/multiple scans
+- **Custom Filters**: Configurable technical criteria
+- **Quick Results**: Formatted Telegram messages with top opportunities
+- **Zero Manual Work**: Set once, get daily notifications
+
+#### Setup Instructions
+See **[TELEGRAM_SETUP.md](TELEGRAM_SETUP.md)** for:
+- Creating a Telegram bot via BotFather
+- Finding your Chat ID
+- Environment variable configuration
+- Cron job setup for automation
+- Troubleshooting and advanced usage
+
+#### Example Usage
+```bash
+# Scan specific stocks
+python3 telegram_pcs_scanner.py RELIANCE.NS INFY.NS HDFCBANK.NS
+
+# Scan all in default list
+python3 telegram_pcs_scanner.py
+
+# Automate with cron (9:15 AM daily)
+bash setup_telegram.sh
+```
+
+#### Sample Telegram Output
+```
+📊 NSE F&O PCS Scanner Results
+⏰ 2026-07-31 09:30:00 IST
+📈 Found: 5 stocks
+
+1. RELIANCE.NS
+   💪 Strength: 78/100
+   🎯 PCS Fit: 85%
+   💹 Price: ₹2450.50
+
+⚠️ Not financial advice. Trade at your own risk.
+```
+
+---
+
 ## 📞 Support & Feedback
 
 ### Getting Help
