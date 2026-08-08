@@ -1,0 +1,174 @@
+================================================================================
+NSE F&O PCS SCANNER - LATEST RESULTS
+================================================================================
+Scan Time: 08-Aug-2026 09:13:12 IST
+Filter Settings:
+  - RSI Range: 30-75 (optimal momentum zone)
+  - ADX Minimum: 20 (trend strength requirement)
+  - Minimum PCS Score: 55 (quality threshold)
+
+================================================================================
+SCAN SUMMARY
+================================================================================
+Total Stocks Analyzed: 39
+Stocks Meeting Criteria: 9
+
+Breakdown by Confidence:
+  🟢 HIGH Confidence (Score 75+):     1 stock
+  🟡 MEDIUM Confidence (Score 60-74): 5 stocks  
+  🔴 LOW Confidence (Score <60):      3 stocks
+
+================================================================================
+🟢 HIGH CONFIDENCE STOCKS (Best Candidates)
+================================================================================
+
+1. TECHM
+   Score: 76.56/100
+   Price: ₹3,381.39 | SMA20: ₹3,212.76
+   Technical Indicators:
+     - RSI: 65.12 (Bullish momentum)
+     - ADX: 38.5 (Strong trend)
+   PCS Recommendation:
+     - Short Strike: 5% OTM (₹3,212)
+     - Long Strike: 10% OTM (₹2,904)
+     - Width: ₹308 | Probability: 70-80%
+
+================================================================================
+🟡 MEDIUM CONFIDENCE STOCKS (Balanced Opportunities)
+================================================================================
+
+1. NTPC
+   Score: 71.64/100
+   Price: ₹1,440.04 | SMA20: ₹1,371.87
+   RSI: 56.01 | ADX: 42.0 (Strongest trend)
+
+2. MARUTI  
+   Score: 68.12/100
+   Price: ₹2,283.92 | SMA20: ₹2,248.85
+   RSI: 57.5 | ADX: 35.66
+
+3. EICHERMOT
+   Score: 67.53/100
+   Price: ₹1,304.42 | SMA20: ₹1,194.73
+   RSI: 68.6 (Overbought zone) | ADX: 20.93
+
+4. BHARTIARTL
+   Score: 65.46/100
+   Price: ₹1,334.07 | SMA20: ₹1,311.63
+   RSI: 61.96 | ADX: 26.61
+
+5. TATASTEEL
+   Score: 63.52/100
+   Price: ₹201.89 | SMA20: ₹202.19
+   RSI: 52.37 | ADX: 34.21
+
+================================================================================
+🔴 LOW CONFIDENCE STOCKS (Higher Risk)
+================================================================================
+
+1. HEROMOTOCO
+   Score: 58.25/100
+   Price: ₹3,611.73 | SMA20: ₹3,615.10
+   RSI: 54.41 | ADX: 23.59
+
+2. WIPRO
+   Score: 58.01/100
+   Price: ₹1,480.55 | SMA20: ₹1,519.42
+   RSI: 41.72 (Oversold) | ADX: 37.37
+
+3. ONGC
+   Score: 56.34/100
+   Price: ₹852.28 | SMA20: ₹904.07
+   RSI: 47.42 | ADX: 37.56
+
+================================================================================
+STOCKS NOT MEETING CRITERIA (26 stocks)
+================================================================================
+
+Failed RSI Filter (30-75 range):
+  NIFTY, BANKNIFTY, RELIANCE, TCS, HDFCBANK, INFY, ICICIBANK, SBIN, LT, ITC,
+  KOTAKBANK, AXISBANK, HCLTECH, ASIANPAINT, SUNPHARMA, TATAMOTORS, ADANIENT,
+  ADANIPORTS, BAJFINANCE, BAJAJFINSV, INDUSINDBK, TITAN, NESTLEIND, ULTRACEMCO,
+  POWERGRID
+
+Failed ADX Filter (minimum 20):
+  GRASIM, MAHINDRA
+
+================================================================================
+SCORING METHODOLOGY
+================================================================================
+
+PCS Score Calculation:
+  Component              Weight  Formula
+  ────────────────────────────────────────────────
+  Bullish Momentum       30%     RSI-based strength
+  Trend Strength        25%     ADX indicator value
+  Support Proximity     20%     Price vs SMA-20
+  Volume Confirmation   25%     Liquidity analysis
+
+Result Interpretation:
+  - 75+:   HIGH confidence (5% OTM strikes, ~75% success)
+  - 60-74: MEDIUM confidence (8% OTM strikes, ~65% success)
+  - <60:   LOW confidence (12% OTM strikes, ~55% success)
+
+================================================================================
+ACTION ITEMS
+================================================================================
+
+✅ IMMEDIATE:
+  1. Review HIGH confidence stock (TECHM) for potential trades
+  2. Confirm technical levels before entering trades
+  3. Apply your position sizing rules (max 2% per trade)
+
+✅ SHORT-TERM:
+  1. Monitor MEDIUM confidence stocks for setup confirmation
+  2. Watch for price action around SMA-20 levels
+  3. Track ADX for trend confirmation
+
+✅ ONGOING:
+  1. Set stop loss at 3% below entry
+  2. Target profit at 20% portfolio cap
+  3. Review results daily/weekly
+
+================================================================================
+SETUP FOR AUTOMATED TELEGRAM NOTIFICATIONS
+================================================================================
+
+To receive automatic scan results via Telegram:
+
+1. Get Telegram Bot Token:
+   - Message @BotFather on Telegram
+   - Follow setup instructions
+   - Save the token
+
+2. Get Your Chat ID:
+   - Message your bot
+   - Visit: https://api.telegram.org/botTOKEN/getUpdates
+   - Find your chat_id in the response
+
+3. Configure Environment:
+   export TELEGRAM_BOT_TOKEN='your_token'
+   export TELEGRAM_CHAT_ID='your_chat_id'
+
+4. Run Scanner:
+   python3 run_scanner.py
+
+5. Schedule Automated Runs (optional):
+   Add to crontab: 30 4 * * * python3 run_scanner.py
+
+================================================================================
+DISCLAIMER
+================================================================================
+
+This is an automated screening tool for EDUCATIONAL PURPOSES ONLY.
+- Past performance does not guarantee future results
+- Options trading involves substantial risk of loss
+- Always perform your own due diligence
+- Consult with a financial advisor before trading
+- Never risk more than you can afford to lose
+- PAPER TRADE FIRST before live implementation
+
+================================================================================
+Last Generated: 08-Aug-2026 09:13:12 IST
+Results File: pcs_results_20260808_091312.json
+================================================================================
