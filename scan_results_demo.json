@@ -1,0 +1,64 @@
+[
+  {
+    "symbol": "RELIANCE",
+    "price": 2845.5,
+    "rsi": 58.3,
+    "adx": 28.5,
+    "volume_ratio": 1.85,
+    "strength": 85,
+    "signals": [
+      "Volume Breakout (1.85x)",
+      "Price Breakout (+1.23%)",
+      "Above SMA20",
+      "Strong RSI (58.3)"
+    ]
+  },
+  {
+    "symbol": "TCS",
+    "price": 3820.25,
+    "rsi": 62.1,
+    "adx": 26.3,
+    "volume_ratio": 1.72,
+    "strength": 78,
+    "signals": [
+      "Volume Breakout (1.72x)",
+      "Price Breakout (+0.89%)",
+      "Strong RSI (62.1)"
+    ]
+  },
+  {
+    "symbol": "HDFCBANK",
+    "price": 1685.4,
+    "rsi": 55.8,
+    "adx": 24.2,
+    "volume_ratio": 1.56,
+    "strength": 72,
+    "signals": [
+      "Volume Breakout (1.56x)",
+      "Above SMA20"
+    ]
+  },
+  {
+    "symbol": "INFY",
+    "price": 2245.75,
+    "rsi": 61.5,
+    "adx": 22.8,
+    "volume_ratio": 1.43,
+    "strength": 68,
+    "signals": [
+      "Strong RSI (61.5)",
+      "Above SMA20"
+    ]
+  },
+  {
+    "symbol": "ICICIBANK",
+    "price": 995.5,
+    "rsi": 59.2,
+    "adx": 20.5,
+    "volume_ratio": 1.38,
+    "strength": 65,
+    "signals": [
+      "Volume Breakout (1.38x)"
+    ]
+  }
+]
