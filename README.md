@@ -160,6 +160,54 @@ Visit the live deployment: **[NSE F&O PCS Screener](https://nse-fo-pcs-screener.
 - **Use stop losses** and risk management protocols
 - **Continuously educate yourself** about options trading
 
+## 📱 Automated Telegram Scanner
+
+New feature: Get stock scan results directly in Telegram!
+
+### Quick Setup
+
+1. **Create Telegram Bot**
+   - Chat with @BotFather on Telegram
+   - Create a new bot and get your BOT TOKEN
+
+2. **Get Your Chat ID**
+   - Chat with @userinfobot on Telegram
+   - Note your User ID
+
+3. **Run Scanner**
+   ```bash
+   export TELEGRAM_BOT_TOKEN="your_bot_token"
+   export TELEGRAM_CHAT_ID="your_chat_id"
+   python3 run_scanner_standalone.py
+   ```
+
+### Features
+
+- **Daily Automated Scans**: Set up cron jobs for scheduled analysis
+- **Quick Results**: Top qualifying stocks sent directly to Telegram
+- **Technical Filters**: RSI, MACD, Volume, SMA-based screening
+- **Score-Based Ranking**: Stocks ranked by filter compliance score
+
+### Scheduling Examples
+
+**Daily at 9:30 AM IST (market open):**
+```bash
+30 9 * * 1-5 cd /home/user/nsepcs && TELEGRAM_BOT_TOKEN="token" TELEGRAM_CHAT_ID="id" python3 run_scanner_standalone.py
+```
+
+**Every 30 minutes during market hours:**
+```bash
+*/30 9-15 * * 1-5 cd /home/user/nsepcs && TELEGRAM_BOT_TOKEN="token" TELEGRAM_CHAT_ID="id" python3 run_scanner_standalone.py
+```
+
+### Documentation
+
+See [TELEGRAM_SETUP.md](TELEGRAM_SETUP.md) for:
+- Complete setup guide
+- Cron scheduling on all platforms
+- Troubleshooting tips
+- Configuration options
+
 ## 🛠️ Local Development
 
 ### Prerequisites
