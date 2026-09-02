@@ -1,0 +1,33 @@
+{
+  "telegram": {
+    "bot_token": "${TELEGRAM_BOT_TOKEN}",
+    "chat_id": "${TELEGRAM_CHAT_ID}"
+  },
+  "scanner": {
+    "rsi_min": 30,
+    "rsi_max": 80,
+    "adx_min": 15,
+    "pattern_strength_min": 70,
+    "volume_ratio": 1.5,
+    "volume_breakout_ratio": 2.0,
+    "lookback_days": 20,
+    "ma_support": true,
+    "ma_type": "SMA",
+    "ma_tolerance": 3,
+    "max_stocks": 50,
+    "analysis_mode": "Daily + Weekly Combined (Recommended)",
+    "enable_daily_analysis": true,
+    "enable_weekly_validation": true,
+    "pattern_filters": {
+      "current_day_breakout": true,
+      "cup_and_handle": true,
+      "flat_base": true,
+      "bump_and_run": true,
+      "rectangle_bottom": true,
+      "head_shoulders_bottom": true,
+      "double_bottom": true,
+      "three_rising_valleys": true,
+      "rounding_bottom": true
+    }
+  }
+}
