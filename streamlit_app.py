@@ -2,7 +2,83 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import ta
+
+# Handle ta import with fallback
+try:
+    import ta
+except ImportError:
+    # Fallback: mock ta module with basic implementations
+    class MockTA:
+        class momentum:
+            @staticmethod
+            def RSIIndicator(close_series):
+                class RSI:
+                    def __init__(self, close):
+                        self.close = close
+                        self.rsi_val = self._calculate_rsi()
+                    def _calculate_rsi(self):
+                        delta = self.close.diff()
+                        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                        rs = gain / loss
+                        return 100 - (100 / (1 + rs))
+                    def rsi(self):
+                        return self.rsi_val
+                return RSI(close_series)
+
+        class trend:
+            @staticmethod
+            def SMAIndicator(close_series, window=20):
+                class SMA:
+                    def __init__(self, close, w):
+                        self.sma_val = close.rolling(window=w).mean()
+                    def sma_indicator(self):
+                        return self.sma_val
+                return SMA(close_series, window)
+
+            @staticmethod
+            def EMAIndicator(close_series, window=20):
+                class EMA:
+                    def __init__(self, close, w):
+                        self.ema_val = close.ewm(span=w).mean()
+                    def ema_indicator(self):
+                        return self.ema_val
+                return EMA(close_series, window)
+
+            @staticmethod
+            def MACD(close_series):
+                class MACD:
+                    def __init__(self, close):
+                        self.macd_val = close.ewm(span=12).mean() - close.ewm(span=26).mean()
+                        self.signal_val = self.macd_val.ewm(span=9).mean()
+                        self.hist_val = self.macd_val - self.signal_val
+                    def macd(self):
+                        return self.macd_val
+                    def macd_signal(self):
+                        return self.signal_val
+                    def macd_diff(self):
+                        return self.hist_val
+                return MACD(close_series)
+
+        class volatility:
+            @staticmethod
+            def BollingerBands(close_series, window=20, window_dev=2):
+                class BB:
+                    def __init__(self, close, w, wd):
+                        self.ma = close.rolling(window=w).mean()
+                        self.std = close.rolling(window=w).std()
+                        self.upper = self.ma + (self.std * wd)
+                        self.lower = self.ma - (self.std * wd)
+                    def bollinger_hband(self):
+                        return self.upper
+                    def bollinger_lband(self):
+                        return self.lower
+                    def bollinger_mavg(self):
+                        return self.ma
+                return BB(close_series, w, wd)
+
+    ta = MockTA()
+
 from datetime import datetime, timedelta
 import pytz
 import plotly.graph_objects as go
