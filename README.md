@@ -8,6 +8,41 @@ A professional-grade Streamlit application that analyzes NSE F&O stocks for opti
 
 **Deployed on Streamlit Community Cloud**: [Access the live application here](https://nse-fo-pcs-screener.streamlit.app)
 
+## 🤖 Telegram Integration
+
+### Automated Stock Screening with Telegram Alerts
+
+The `telegram_screening.py` script enables automated stock screening with Telegram notifications:
+
+```bash
+python3 telegram_screening.py
+```
+
+**Setup Instructions:**
+
+1. **Create a Telegram Bot** via [@BotFather](https://t.me/botfather)
+2. **Get your Chat ID** from [@userinfobot](https://t.me/userinfobot)
+3. **Set Environment Variables:**
+   ```bash
+   export TELEGRAM_BOT_TOKEN="your_bot_token_here"
+   export TELEGRAM_CHAT_ID="your_chat_id_here"
+   ```
+4. **Run the screening** and results will be sent to your Telegram chat
+
+**Example Output:**
+```
+🎯 NSE F&O Stock Screening Results
+📅 Date: 2026-09-11 15:30:00 IST
+📊 Stocks Found: 5
+
+Matching Stocks:
+1. INFY
+   Price: ₹2,450.25 | RSI: 62.5 | Strength: 75.3%
+2. TCS
+   Price: ₹3,850.00 | RSI: 58.2 | Strength: 72.1%
+...
+```
+
 ## ✨ Key Features
 
 ### 📊 Advanced Analytics Engine
