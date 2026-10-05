@@ -1,0 +1,155 @@
+================================================================================
+NSE F&O PCS SCANNER - QUICK START GUIDE
+================================================================================
+
+WHAT WAS CREATED:
+  ✅ Standalone Python scanner (simple_scanner.py)
+  ✅ Telegram integration for automated notifications
+  ✅ Technical indicator calculations (RSI, MACD, ADX, etc.)
+  ✅ Pattern detection (breakouts, support/resistance)
+  ✅ CSV export of results
+
+REQUIREMENTS:
+  - Python 3.7+
+  - pandas, numpy, yfinance, requests
+  - Telegram bot token (optional)
+
+================================================================================
+SETUP IN 3 STEPS:
+================================================================================
+
+1. GET TELEGRAM CREDENTIALS (Optional but recommended)
+
+   Bot Token:
+   - Open Telegram and message @BotFather
+   - Send /newbot and follow prompts
+   - Copy the token you receive
+
+   Chat ID:
+   - Message @userinfobot on Telegram
+   - Note your User ID shown in the response
+
+2. SET ENVIRONMENT VARIABLES
+
+   In your terminal:
+   export TELEGRAM_BOT_TOKEN="your_bot_token_here"
+   export TELEGRAM_CHAT_ID="your_chat_id_here"
+
+   For persistent setup, add to ~/.bashrc or ~/.bash_profile
+
+3. INSTALL DEPENDENCIES (if needed)
+
+   pip install pandas numpy yfinance requests
+
+================================================================================
+RUN THE SCANNER:
+================================================================================
+
+Quick Scan (30 stocks):
+  python3 simple_scanner.py
+
+Scan 50 Stocks:
+  python3 simple_scanner.py --limit 50
+
+Scan ALL 208 F&O Stocks:
+  python3 simple_scanner.py --all
+
+With Custom Stock List:
+  Edit COMPLETE_NSE_FO_UNIVERSE list in simple_scanner.py
+
+================================================================================
+EXPECTED OUTPUT:
+================================================================================
+
+The scanner will show:
+  ✓ Progress: [1/30] RELIANCE ✅ (89%)
+  ✓ Results: Found X stocks matching criteria
+  ✓ Telegram: Message sent to your Telegram chat
+  ✓ File: CSV saved as scan_results_20241005_154530.csv
+
+Messages Look Like:
+  🎯 NSE F&O PCS Scan Results
+  📅 2024-10-05 15:45 IST
+  📊 Found 15 stocks
+
+  🟢 HIGH CONFIDENCE (85%+)
+    • RELIANCE @ ₹2850.45 (89%) - Breakout
+    • HDFCBANK @ ₹1920.30 (85%) - Pattern
+
+================================================================================
+AUTOMATE DAILY SCANS (OPTIONAL):
+================================================================================
+
+Edit your crontab:
+  crontab -e
+
+Add one of these lines:
+
+Market Close (3:45 PM):
+  45 15 * * 1-5 cd /home/user/nsepcs && TELEGRAM_BOT_TOKEN="token" TELEGRAM_CHAT_ID="id" python3 simple_scanner.py --limit 50
+
+Market Open (9:15 AM):
+  15 9 * * 1-5 cd /home/user/nsepcs && TELEGRAM_BOT_TOKEN="token" TELEGRAM_CHAT_ID="id" python3 simple_scanner.py --limit 50
+
+Every 2 Hours:
+  30 */2 * * 1-5 cd /home/user/nsepcs && TELEGRAM_BOT_TOKEN="token" TELEGRAM_CHAT_ID="id" python3 simple_scanner.py --limit 30
+
+================================================================================
+FILTER CRITERIA (Default):
+================================================================================
+
+RSI:           30 - 75  (healthy momentum for short puts)
+ADX:           >= 20    (trend confirmation)
+Volume:        >= 1.2x  (above average volume)
+Lookback:      20 days  (consolidation period)
+
+To Customize:
+  Edit simple_scanner.py in the SimplePCSScanner.check_basic_criteria() method
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+No stocks found:
+  → Try: python3 simple_scanner.py --all
+  → Wait a few minutes (data sync delay)
+  → Check network: curl https://finance.yahoo.com
+
+"Telegram credentials not set":
+  → Normal in dry-run mode - results still shown
+  → Set environment variables if you want Telegram notifications
+  → Results are always saved to CSV file
+
+Connection errors:
+  → May need proxy/VPN configuration
+  → Try again - yfinance sometimes has rate limits
+  → Check network connectivity
+
+================================================================================
+IMPORTANT:
+================================================================================
+
+⚠️  DISCLAIMER: This is a technical analysis tool for EDUCATIONAL PURPOSES.
+    NOT financial advice. Always validate with your own analysis.
+
+✅  Features:
+    - Identifies technical patterns in NSE F&O stocks
+    - Calculates pattern strength (0-100%)
+    - Provides risk confirmation from volume and trend
+
+❌  Does NOT:
+    - Guarantee profit
+    - Provide entry/exit prices
+    - Include fundamental analysis
+    - Replace a financial advisor
+
+================================================================================
+MORE INFORMATION:
+================================================================================
+
+See full documentation in:
+  - TELEGRAM_SETUP.md (detailed setup guide)
+  - SCAN_EXECUTION_SUMMARY.md (technical details)
+  - simple_scanner.py (source code with comments)
+
+================================================================================
