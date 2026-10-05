@@ -1,0 +1,255 @@
+⚠️  Telegram credentials not set (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+   Running in dry-run mode - results shown in terminal and saved to file
+
+======================================================================
+NSE F&O PCS SCANNER - STANDALONE MODE
+======================================================================
+
+🚀 Scanning 30 stocks...
+  [ 1/30] 360ONE       Cookie fetch from fc.yahoo.com failed (ConnectionError), continuing without it
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker '360ONE.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+
+1 Failed download:
+['360ONE.NS']: ConnectionError('Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.')
+❌ No data
+  [ 2/30] ABB          Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ABB.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+
+1 Failed download:
+['ABB.NS']: ConnectionError('Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.')
+❌ No data
+  [ 3/30] APLAPOLLO    Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'APLAPOLLO.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$APLAPOLLO.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['APLAPOLLO.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [ 4/30] AUBANK       Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'AUBANK.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$AUBANK.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['AUBANK.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [ 5/30] ADANIENSOL   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ADANIENSOL.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ADANIENSOL.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ADANIENSOL.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [ 6/30] ADANIENT     Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ADANIENT.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ADANIENT.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ADANIENT.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [ 7/30] ADANIGREEN   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ADANIGREEN.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ADANIGREEN.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ADANIGREEN.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [ 8/30] ADANIPORTS   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ADANIPORTS.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ADANIPORTS.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ADANIPORTS.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [ 9/30] ABCAPITAL    Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ABCAPITAL.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ABCAPITAL.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ABCAPITAL.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [10/30] ALKEM        Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ALKEM.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ALKEM.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ALKEM.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [11/30] AMBER        Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'AMBER.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$AMBER.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['AMBER.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [12/30] AMBUJACEM    Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'AMBUJACEM.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$AMBUJACEM.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['AMBUJACEM.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [13/30] ANGELONE     Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ANGELONE.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ANGELONE.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ANGELONE.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [14/30] APOLLOHOSP   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'APOLLOHOSP.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$APOLLOHOSP.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['APOLLOHOSP.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [15/30] ASHOKLEY     Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ASHOKLEY.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ASHOKLEY.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ASHOKLEY.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [16/30] ASIANPAINT   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ASIANPAINT.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ASIANPAINT.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ASIANPAINT.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [17/30] ASTRAL       Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'ASTRAL.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$ASTRAL.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['ASTRAL.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [18/30] AUROPHARMA   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'AUROPHARMA.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$AUROPHARMA.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['AUROPHARMA.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [19/30] DMART        Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'DMART.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$DMART.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['DMART.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [20/30] AXISBANK     Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'AXISBANK.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$AXISBANK.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['AXISBANK.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [21/30] BSE          Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BSE.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BSE.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BSE.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [22/30] BAJAJ-AUTO   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BAJAJ-AUTO.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BAJAJ-AUTO.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BAJAJ-AUTO.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [23/30] BAJFINANCE   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BAJFINANCE.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BAJFINANCE.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BAJFINANCE.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [24/30] BAJAJFINSV   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BAJAJFINSV.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BAJAJFINSV.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BAJAJFINSV.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [25/30] BAJAJHLDNG   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BAJAJHLDNG.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BAJAJHLDNG.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BAJAJHLDNG.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [26/30] BANDHANBNK   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BANDHANBNK.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BANDHANBNK.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BANDHANBNK.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [27/30] BANKBARODA   Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BANKBARODA.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BANKBARODA.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BANKBARODA.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [28/30] BANKINDIA    Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BANKINDIA.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BANKINDIA.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BANKINDIA.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [29/30] BDL          Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BDL.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BDL.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BDL.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+  [30/30] BEL          Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+Failed to get ticker 'BEL.NS' reason: Failed to perform, curl: (7) CONNECT tunnel failed, response 403. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+Cookie/crumb fetch failed (ConnectionError), continuing without crumb
+$BEL.NS: possibly delisted; no price data found  (period=3mo)
+
+1 Failed download:
+['BEL.NS']: possibly delisted; no price data found  (period=3mo)
+❌ No data
+
+✅ Found 0 qualifying stocks
+
+📋 SCAN RESULTS:
+======================================================================
+❌ No stocks found matching criteria.
+======================================================================
+
