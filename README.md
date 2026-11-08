@@ -225,6 +225,28 @@ We welcome contributions to improve the NSE F&O PCS Screener:
 - **Technical Analysis**: Study indicator interpretation and market timing
 - **Paper Trading**: Practice strategies without financial risk
 
+## 📱 Telegram Integration
+
+Automatically receive bullish stock alerts directly to your Telegram:
+
+```bash
+# Set your Telegram credentials
+export TELEGRAM_BOT_TOKEN='your_bot_token'
+export TELEGRAM_CHAT_ID='your_chat_id'
+
+# Run the scanner and send to Telegram
+python3 scan_and_send_telegram.py
+```
+
+**Features:**
+- 🤖 Automated stock screening
+- 📊 Bullish momentum detection
+- ✅ Confidence-based filtering
+- 📱 Direct Telegram delivery
+- ⏰ Scheduled runs support
+
+For detailed setup instructions, see **[TELEGRAM_SETUP.md](TELEGRAM_SETUP.md)**
+
 ---
 
 ## 🏆 About This Project
